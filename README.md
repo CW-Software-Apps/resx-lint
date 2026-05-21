@@ -1,11 +1,9 @@
-![resx-lint banner](banner.png)
+![resx-lint banner](https://raw.githubusercontent.com/CW-Software-Apps/resx-lint/master/banner.png)
 
-<p align="center">
-  <a href="https://www.nuget.org/packages/ResxLint"><img src="https://img.shields.io/nuget/v/ResxLint?color=1a237e&label=nuget" alt="NuGet"></a>
-  <a href="https://www.nuget.org/packages/ResxLint"><img src="https://img.shields.io/nuget/dt/ResxLint?color=00bcd4&label=downloads" alt="Downloads"></a>
-  <a href="https://github.com/CW-Software-Apps/resx-lint/actions"><img src="https://github.com/CW-Software-Apps/resx-lint/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="MIT License"></a>
-</p>
+[![NuGet](https://img.shields.io/nuget/v/ResxLint?color=1a237e&label=nuget)](https://www.nuget.org/packages/ResxLint)
+[![Downloads](https://img.shields.io/nuget/dt/ResxLint?color=00bcd4&label=downloads)](https://www.nuget.org/packages/ResxLint)
+[![CI](https://github.com/CW-Software-Apps/resx-lint/actions/workflows/ci.yml/badge.svg)](https://github.com/CW-Software-Apps/resx-lint/actions)
+[![MIT License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
 ---
 
