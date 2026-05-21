@@ -84,12 +84,16 @@ The snippet below checks whether `resx-lint` is installed **before** running it 
 
   <!-- Run validation -->
   <Exec
-    Command="resx-lint --project-dir &quot;$(MSBuildProjectDirectory)&quot; --resx-file &quot;$(MSBuildProjectDirectory)\Resources\AppResources.resx&quot;"
+    Command="resx-lint --project-dir &quot;$(MSBuildProjectDirectory)&quot; --resx-file &quot;$(MSBuildProjectDirectory)/Resources/AppResources.resx&quot;"
     ConsoleToMSBuild="true"
     IgnoreExitCode="false" />
 
 </Target>
 ```
+
+> **Linux / CI / Docker:** Always use **forward slashes** (`/`) in the `--resx-file` path.
+> Backslashes (`\`) are Windows-only separators — on Linux the path is treated as a literal string and the file is not found, producing exit code 2.
+> `$(MSBuildProjectDirectory)/Resources/AppResources.resx` works on both Windows and Linux.
 
 If the tool is missing, the build stops with:
 
