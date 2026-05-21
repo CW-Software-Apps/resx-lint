@@ -1,3 +1,5 @@
+![resx-lint banner](banner.png)
+
 # resx-lint
 
 A .NET global tool that validates `.resx` localization keys against XAML and C# usage. Auto-fixes common issues like duplicate keys, missing Designer.cs properties, and orphaned language entries.
