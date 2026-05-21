@@ -65,21 +65,42 @@ resx-lint --project-dir <dir> --resx-file <path> [options]
 
 ## MSBuild Integration
 
-Drop this target into your `.csproj` to validate on every build:
+Drop this target into your `.csproj` to validate on every build.
+
+The snippet below checks whether `resx-lint` is installed **before** running it and emits a clear, actionable error message if it is not — instead of the cryptic `exited with code 9009` you'd get otherwise:
 
 ```xml
-<Target Name="ValidateTranslations" BeforeTargets="Build">
-  <Exec Command="resx-lint --project-dir &quot;$(ProjectDir)&quot; --resx-file &quot;$(ProjectDir)Resources\AppResources.resx&quot;" />
+<Target Name="ValidateTranslationKeys" BeforeTargets="BeforeBuild">
+
+  <!-- Friendly error if resx-lint is not installed -->
+  <Exec Command="resx-lint --help"
+        ConsoleToMSBuild="true"
+        IgnoreExitCode="true"
+        StandardOutputImportance="low"
+        StandardErrorImportance="low">
+    <Output TaskParameter="ExitCode" PropertyName="_ResxLintExitCode" />
+  </Exec>
+  <Error
+    Condition="'$(_ResxLintExitCode)' == '9009' OR '$(_ResxLintExitCode)' == '127'"
+    Text="resx-lint is not installed. Run: dotnet tool install --global ResxLint   |   Docs: https://github.com/CW-Software-Apps/resx-lint" />
+
+  <!-- Run validation -->
+  <Exec
+    Command="resx-lint --project-dir &quot;$(MSBuildProjectDirectory)&quot; --resx-file &quot;$(MSBuildProjectDirectory)\Resources\AppResources.resx&quot;"
+    ConsoleToMSBuild="true"
+    IgnoreExitCode="false" />
+
 </Target>
 ```
 
-Strict mode for CI (warnings become errors):
+If the tool is missing, the build stops with:
 
-```xml
-<Target Name="ValidateTranslations" BeforeTargets="Build">
-  <Exec Command="resx-lint --project-dir &quot;$(ProjectDir)&quot; --resx-file &quot;$(ProjectDir)Resources\AppResources.resx&quot; --fail-on-warnings" />
-</Target>
 ```
+error : resx-lint is not installed. Run: dotnet tool install --global ResxLint
+        Docs: https://github.com/CW-Software-Apps/resx-lint
+```
+
+For strict mode (warnings become errors), add `--fail-on-warnings` to the `Exec` command.
 
 ---
 
@@ -94,7 +115,7 @@ Strict mode for CI (warnings become errors):
     dotnet-version: '10.x'
 
 - name: Restore tools
-  run: dotnet tool restore
+  run: dotnet tool restore        # reads .config/dotnet-tools.json
 
 - name: Validate translations
   run: resx-lint --project-dir . --resx-file Resources/AppResources.resx --fail-on-warnings
@@ -105,30 +126,23 @@ Strict mode for CI (warnings become errors):
 If your CI/CD builds via Docker (e.g. Coolify on Hostinger), install the tool in your `Dockerfile` and run it before `dotnet publish`:
 
 ```dockerfile
-# Install resx-lint globally
+# Install resx-lint
 RUN dotnet tool install --global ResxLint
 ENV PATH="${PATH}:/root/.dotnet/tools"
 
-# Validate translations before building — fails the Docker build if keys are missing
-RUN resx-lint \
-    --project-dir /src/app \
-    --resx-file /src/YourLibrary/Resources/AppResources.resx \
-    --fail-on-warnings
-```
-
-Place the `RUN resx-lint ...` step **after** all source files are copied but **before** `dotnet publish`:
-
-```dockerfile
+# Copy sources
 COPY [".", "/src/app"]
 
-# ✅ Validate translations
-RUN resx-lint --project-dir /src/app --resx-file /src/YourLibrary/Resources/AppResources.resx
+# ✅ Validate translations — fails the Docker build if keys are missing
+RUN resx-lint \
+    --project-dir /src/app \
+    --resx-file /src/YourLibrary/Resources/AppResources.resx
 
 # Build
 RUN dotnet publish MyApp.csproj -f net10.0-android -c Release
 ```
 
-> **Tip:** The tool exits with code `3` on fatal errors, which causes the Docker build to fail and stops the Coolify deployment before a broken build reaches production.
+The tool exits with code `3` on fatal errors, which causes the Docker build to fail and stops the Coolify deployment before a broken build reaches production.
 
 ---
 
