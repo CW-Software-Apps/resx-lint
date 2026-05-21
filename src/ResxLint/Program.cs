@@ -1,20 +1,19 @@
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Xml;
 using System.Xml.Linq;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // resx-lint — dotnet tool
 //
-// Códigos:
-//   TRANS001 — chave em {maui:Translate X} (XAML) ausente no .resx base  → FATAL
-//   TRANS002 — chave duplicada em algum .resx                             → AUTO-FIX
-//   TRANS003 — chave no .resx base sem propriedade no Designer.cs         → AUTO-FIX
-//   TRANS004 — chave em AppResources.Key (C#) ausente no .resx base       → FATAL
-//   TRANS005 — chave em idioma sem equivalente no .resx base              → AUTO-FIX
-//   TRANS006 — chave no .resx base sem tradução em algum idioma           → AVISO
-//   TRANS007 — valor vazio ou placeholder no .resx base                   → AVISO
-//   TRANS008 — valor idêntico ao base em todos os idiomas                 → INFO
+// Diagnostic codes:
+//   TRANS001 — key used in {maui:Translate X} (XAML) not found in base .resx  → FATAL
+//   TRANS002 — duplicate key in any .resx                                       → AUTO-FIX
+//   TRANS003 — key in base .resx without property in Designer.cs               → AUTO-FIX
+//   TRANS004 — key used as AppResources.Key (C#) not found in base .resx       → FATAL
+//   TRANS005 — key in language file not found in base .resx                    → AUTO-FIX
+//   TRANS006 — key in base .resx missing translation in some language          → WARNING
+//   TRANS007 — empty or placeholder value in base .resx                        → WARNING
+//   TRANS008 — value identical to base language in translated file             → INFO
 // ─────────────────────────────────────────────────────────────────────────────
 
 var cliArgs = new CliArgs(args: Environment.GetCommandLineArgs()[1..]);
@@ -28,7 +27,7 @@ if (cliArgs.Help)
 if (!cliArgs.Validate(out var paramError))
 {
     Console.ForegroundColor = ConsoleColor.Red;
-    Console.Error.WriteLine($"ERRO: {paramError}");
+    Console.Error.WriteLine($"ERROR: {paramError}");
     Console.ResetColor();
     PrintHelp();
     return 2;
@@ -40,26 +39,26 @@ return runner.Run();
 static void PrintHelp()
 {
     Console.WriteLine("""
-        resx-lint — Validador de chaves de localização .resx
+        resx-lint — .resx localization key validator
 
-        USO:
-          resx-lint --project-dir <dir> --resx-file <path> [opções]
+        USAGE:
+          resx-lint --project-dir <dir> --resx-file <path> [options]
 
-        OPÇÕES:
-          --project-dir <dir>     Raiz do projeto (onde ficam os .xaml e .cs)
-          --resx-file <path>      Caminho do .resx base (ex: Resources/AppResources.resx)
-          --what-if               Mostra o que faria sem modificar arquivos
-          --fail-on-warnings      TRANS006/TRANS007 também interrompem o build
-          --quiet                 Suprime mensagens OK e INFO
-          --help                  Exibe esta ajuda
+        OPTIONS:
+          --project-dir <dir>     Project root directory (where .xaml and .cs files live)
+          --resx-file <path>      Path to the base .resx file (e.g. Resources/AppResources.resx)
+          --what-if               Preview changes without writing any files
+          --fail-on-warnings      Treat TRANS006/TRANS007 as fatal errors
+          --quiet                 Suppress OK and INFO messages
+          --help                  Show this help
 
         EXIT CODES:
-          0  Tudo OK
-          1  Correções automáticas aplicadas (reinicie o build)
-          2  Parâmetros inválidos
-          3  Erros fatais (TRANS001, TRANS004)
+          0  All OK
+          1  Auto-fixes applied — restart the build
+          2  Invalid parameters
+          3  Fatal errors (TRANS001, TRANS004)
 
-        EXEMPLO (.csproj):
+        EXAMPLE (.csproj):
           <Target Name="ValidateTranslations" BeforeTargets="Build">
             <Exec Command="resx-lint --project-dir &quot;$(ProjectDir)&quot; --resx-file &quot;$(ProjectDir)Resources\AppResources.resx&quot;" />
           </Target>
@@ -110,12 +109,12 @@ class CliArgs
     {
         if (string.IsNullOrWhiteSpace(ProjectDir) || !Directory.Exists(ProjectDir))
         {
-            error = $"--project-dir inválido ou não encontrado: '{ProjectDir}'";
+            error = $"--project-dir is invalid or not found: '{ProjectDir}'";
             return false;
         }
         if (string.IsNullOrWhiteSpace(ResxFile) || !File.Exists(ResxFile))
         {
-            error = $"--resx-file inválido ou não encontrado: '{ResxFile}'";
+            error = $"--resx-file is invalid or not found: '{ResxFile}'";
             return false;
         }
         error = "";
@@ -135,12 +134,12 @@ class LintRunner(CliArgs args)
     bool _fixesApplied = false;
     int  _statsFixed   = 0;
 
-    static readonly Regex PlaceholderRx = new(@"^\[TRADUZIR.*?\]$|^TODO$|^FIXME$|^#N/A$|^$", RegexOptions.Compiled);
+    static readonly Regex PlaceholderRx = new(@"^\[TRANSLATE.*?\]$|^\[TRADUZIR.*?\]$|^TODO$|^FIXME$|^#N/A$|^$", RegexOptions.Compiled);
 
     public int Run()
     {
         if (args.WhatIf)
-            WriteColor("\n[MODO WHATIF] Nenhum arquivo será modificado.\n", ConsoleColor.Magenta);
+            WriteColor("\n[WHAT-IF MODE] No files will be modified.\n", ConsoleColor.Magenta);
 
         Step1_Duplicates();
         var (baseData, resxSet) = Step2_LoadBase();
@@ -153,25 +152,25 @@ class LintRunner(CliArgs args)
 
         if (_fatalErrors.Count > 0 || (args.FailOnWarnings && _warnings.Count > 0))
         {
-            WriteErr($"Build cancelado: {_fatalErrors.Count} erro(s) fatal(is). Corrija as chaves ausentes e rebuilde.");
+            WriteErr($"Build cancelled: {_fatalErrors.Count} fatal error(s). Fix the missing keys and rebuild.");
             return 3;
         }
 
         if (_fixesApplied && !args.WhatIf)
         {
-            WriteWarn("Correções automáticas aplicadas. Reinicie o build para validar novamente.");
+            WriteWarn("Auto-fixes were applied. Restart the build to re-validate.");
             return 1;
         }
 
-        WriteOk($"resx-lint concluído sem erros. {resxSet.Count} chaves OK.");
+        WriteOk($"resx-lint completed with no errors. {resxSet.Count} keys OK.");
         return 0;
     }
 
-    // ── 1. Duplicatas ─────────────────────────────────────────────────────────
+    // ── 1. Duplicates ─────────────────────────────────────────────────────────
 
     void Step1_Duplicates()
     {
-        WriteHeader("1/6 Duplicatas em .resx");
+        WriteHeader("1/6 Duplicate keys in .resx files");
 
         var resxFiles = EnumerateFiles(_projectDir, "*.resx");
         foreach (var rf in resxFiles)
@@ -191,7 +190,7 @@ class LintRunner(CliArgs args)
 
             if (dupes.Count == 0)
             {
-                WriteOk($"{rel} — sem duplicatas");
+                WriteOk($"{rel} — no duplicates");
                 continue;
             }
 
@@ -199,7 +198,7 @@ class LintRunner(CliArgs args)
             foreach (var key in uniqueDupes)
             {
                 var count = blockRx.Matches(content).Count(m => m.Groups[1].Value == key);
-                WriteMsBuildWarn(rel, 0, "TRANS002", $"Chave duplicada '{key}' — aparece {count} vezes. Ocorrências extras serão removidas.");
+                WriteMsBuildWarn(rel, 0, "TRANS002", $"Duplicate key '{key}' — found {count} times. Extra occurrences will be removed.");
             }
 
             if (!args.WhatIf)
@@ -212,51 +211,51 @@ class LintRunner(CliArgs args)
                 });
                 File.WriteAllText(rf, newContent, Encoding.UTF8);
                 foreach (var key in uniqueDupes)
-                    WriteFix($"TRANS002: duplicatas de '{key}' removidas em {rel}");
+                    WriteFix($"TRANS002: duplicate entries for '{key}' removed in {rel}");
                 _fixesApplied = true;
                 _statsFixed += uniqueDupes.Count;
             }
             else
             {
                 foreach (var key in uniqueDupes)
-                    WriteInfo($"TRANS002 (WhatIf): removeria duplicatas de '{key}' em {rel}");
+                    WriteInfo($"TRANS002 (what-if): would remove duplicates of '{key}' in {rel}");
             }
         }
     }
 
-    // ── 2. Carrega base ───────────────────────────────────────────────────────
+    // ── 2. Load base .resx ────────────────────────────────────────────────────
 
     (Dictionary<string, string> baseData, HashSet<string> resxSet) Step2_LoadBase()
     {
-        WriteHeader("2/6 Carregando .resx base");
+        WriteHeader("2/6 Loading base .resx");
 
         var baseData = LoadResxData(_resxFile);
         var resxSet  = new HashSet<string>(baseData.Keys, StringComparer.Ordinal);
         var rel      = Rel(_resxFile);
 
-        WriteOk($"{rel} — {resxSet.Count} chaves carregadas");
+        WriteOk($"{rel} — {resxSet.Count} keys loaded");
 
         foreach (var kvp in baseData)
         {
             if (PlaceholderRx.IsMatch(kvp.Value))
             {
-                var desc = kvp.Value == "" ? "valor vazio" : $"placeholder: '{kvp.Value}'";
-                WriteMsBuildWarn(rel, 0, "TRANS007", $"Chave '{kvp.Key}' com {desc} no .resx base — tradução pendente.");
+                var desc = kvp.Value == "" ? "empty value" : $"placeholder: '{kvp.Value}'";
+                WriteMsBuildWarn(rel, 0, "TRANS007", $"Key '{kvp.Key}' has {desc} in base .resx — translation pending.");
                 _warnings.Add($"TRANS007: '{kvp.Key}'");
             }
         }
 
         if (_warnings.Count == 0)
-            WriteOk("Nenhum placeholder/vazio encontrado no .resx base");
+            WriteOk("No placeholders or empty values found in base .resx");
 
         return (baseData, resxSet);
     }
 
-    // ── 3. Arquivos de idioma ─────────────────────────────────────────────────
+    // ── 3. Language files ─────────────────────────────────────────────────────
 
     void Step3_LanguageFiles(Dictionary<string, string> baseData, HashSet<string> resxSet)
     {
-        WriteHeader("3/6 Verificando arquivos de idioma");
+        WriteHeader("3/6 Checking language files");
 
         var resxDir      = Path.GetDirectoryName(_resxFile)!;
         var resxBaseName = Path.GetFileNameWithoutExtension(_resxFile);
@@ -264,11 +263,11 @@ class LintRunner(CliArgs args)
 
         if (langFiles.Length == 0)
         {
-            WriteWarn($"Nenhum arquivo de idioma encontrado ({resxBaseName}.*.resx)");
+            WriteWarn($"No language files found ({resxBaseName}.*.resx)");
             return;
         }
 
-        WriteInfo($"Idiomas encontrados: {string.Join(", ", langFiles.Select(Path.GetFileName))}");
+        WriteInfo($"Languages found: {string.Join(", ", langFiles.Select(Path.GetFileName))}");
 
         foreach (var lf in langFiles)
         {
@@ -276,9 +275,9 @@ class LintRunner(CliArgs args)
             var langRel  = Rel(lf);
             var lang     = Path.GetExtension(Path.GetFileNameWithoutExtension(lf)).TrimStart('.');
 
-            WriteInfo($"{langRel} — {langData.Count} chaves");
+            WriteInfo($"{langRel} — {langData.Count} keys");
 
-            // TRANS005: chave no idioma mas não na base → adiciona na base
+            // TRANS005: key in language file but not in base → add to base
             var onlyInLang = langData.Keys.Where(k => !resxSet.Contains(k)).ToList();
             if (onlyInLang.Count > 0)
             {
@@ -286,19 +285,19 @@ class LintRunner(CliArgs args)
                 foreach (var key in onlyInLang)
                 {
                     var langValue = langData[key];
-                    WriteMsBuildWarn(langRel, 0, "TRANS005", $"Chave '{key}' existe em [{lang}] mas não no .resx base. Será adicionada.");
+                    WriteMsBuildWarn(langRel, 0, "TRANS005", $"Key '{key}' exists in [{lang}] but not in base .resx. Will be added.");
                     if (!args.WhatIf)
                     {
-                        var insertion = $"""  <data name="{key}" xml:space="preserve">{Environment.NewLine}    <value>[TRADUZIR: {langValue}]</value>{Environment.NewLine}  </data>{Environment.NewLine}""";
+                        var insertion = $"""  <data name="{key}" xml:space="preserve">{Environment.NewLine}    <value>[TRANSLATE: {langValue}]</value>{Environment.NewLine}  </data>{Environment.NewLine}""";
                         baseContent = baseContent.Replace("</root>", $"{insertion}</root>");
                         resxSet.Add(key);
-                        baseData[key] = $"[TRADUZIR: {langValue}]";
-                        WriteFix($"TRANS005: '{key}' adicionado ao .resx base");
+                        baseData[key] = $"[TRANSLATE: {langValue}]";
+                        WriteFix($"TRANS005: '{key}' added to base .resx");
                         _statsFixed++;
                     }
                     else
                     {
-                        WriteInfo($"TRANS005 (WhatIf): adicionaria '{key}' ao .resx base (valor: '{langValue}')");
+                        WriteInfo($"TRANS005 (what-if): would add '{key}' to base .resx (value: '{langValue}')");
                     }
                 }
                 if (!args.WhatIf)
@@ -308,22 +307,22 @@ class LintRunner(CliArgs args)
                 }
             }
 
-            // TRANS006: chave na base mas não no idioma → AVISO
+            // TRANS006: key in base but not in language file → WARNING
             var missingInLang = resxSet.Where(k => !langData.ContainsKey(k)).ToList();
             if (missingInLang.Count > 0)
             {
                 var preview = string.Join("', '", missingInLang.Take(5));
-                var extra   = missingInLang.Count > 5 ? $" (e mais {missingInLang.Count - 5})" : "";
-                WriteMsBuildWarn(langRel, 0, "TRANS006", $"{missingInLang.Count} chave(s) sem tradução em [{lang}]: '{preview}'{extra}");
+                var extra   = missingInLang.Count > 5 ? $" (and {missingInLang.Count - 5} more)" : "";
+                WriteMsBuildWarn(langRel, 0, "TRANS006", $"{missingInLang.Count} key(s) missing translation in [{lang}]: '{preview}'{extra}");
                 foreach (var k in missingInLang)
-                    _warnings.Add($"TRANS006: '{k}' ausente em {lang}");
+                    _warnings.Add($"TRANS006: '{k}' missing in {lang}");
             }
             else
             {
-                WriteOk($"{lang} — todas as {resxSet.Count} chaves traduzidas ✓");
+                WriteOk($"{lang} — all {resxSet.Count} keys translated ✓");
             }
 
-            // TRANS008: valor idêntico ao base (informativo)
+            // TRANS008: value identical to base (informational)
             var identical = langData.Keys
                 .Where(k => resxSet.Contains(k)
                     && langData[k] == baseData.GetValueOrDefault(k)
@@ -334,7 +333,7 @@ class LintRunner(CliArgs args)
             if (identical.Count > 0)
             {
                 var preview = string.Join("', '", identical.Take(3));
-                WriteInfo($"TRANS008: {identical.Count} chave(s) em [{lang}] com valor idêntico ao base (pode ser intencional): '{preview}'...");
+                WriteInfo($"TRANS008: {identical.Count} key(s) in [{lang}] have the same value as the base (may be intentional): '{preview}'...");
             }
         }
     }
@@ -343,10 +342,10 @@ class LintRunner(CliArgs args)
 
     void Step4_XamlReferences(HashSet<string> resxSet)
     {
-        WriteHeader("4/6 Validando uso em XAML ({maui:Translate})");
+        WriteHeader("4/6 Validating XAML usage ({maui:Translate})");
 
-        var xamlFiles  = EnumerateFiles(_projectDir, "*.xaml");
-        var xamlRx     = new Regex(@"\{(?:maui|localize):Translate\s+([\w\.]+)\}", RegexOptions.Compiled);
+        var xamlFiles   = EnumerateFiles(_projectDir, "*.xaml");
+        var xamlRx      = new Regex(@"\{(?:maui|localize):Translate\s+([\w\.]+)\}", RegexOptions.Compiled);
         int xamlChecked = 0;
 
         foreach (var file in xamlFiles)
@@ -363,28 +362,28 @@ class LintRunner(CliArgs args)
                 if (!resxSet.Contains(key))
                 {
                     var similar = FindSimilarKeys(key, resxSet);
-                    var hint    = similar.Length > 0 ? $" Chaves similares: '{string.Join("', '", similar)}'." : "";
-                    WriteMsBuildError(rel, line, "TRANS001", $"Chave de tradução '{key}' não existe no AppResources.resx.{hint}");
-                    _fatalErrors.Add($"TRANS001 — XAML {rel}({line}): '{key}' não encontrada.{hint}");
+                    var hint    = similar.Length > 0 ? $" Similar keys: '{string.Join("', '", similar)}'." : "";
+                    WriteMsBuildError(rel, line, "TRANS001", $"Translation key '{key}' not found in AppResources.resx.{hint}");
+                    _fatalErrors.Add($"TRANS001 — XAML {rel}({line}): '{key}' not found.{hint}");
                 }
             }
         }
 
         if (xamlChecked == 0)
-            WriteInfo("Nenhuma referência {maui:Translate} encontrada nos XAML.");
+            WriteInfo("No {maui:Translate} references found in XAML files.");
         else if (!_fatalErrors.Any(e => e.StartsWith("TRANS001")))
-            WriteOk($"{xamlChecked} referência(s) XAML validadas — todas OK");
+            WriteOk($"{xamlChecked} XAML reference(s) validated — all OK");
     }
 
     // ── 5. C#: AppResources.Key ───────────────────────────────────────────────
 
     void Step5_CSharpReferences(HashSet<string> resxSet)
     {
-        WriteHeader("5/6 Validando uso em C# (AppResources.Key)");
+        WriteHeader("5/6 Validating C# usage (AppResources.Key)");
 
-        var csFiles  = EnumerateFiles(_projectDir, "*.cs")
+        var csFiles   = EnumerateFiles(_projectDir, "*.cs")
             .Where(f => !f.EndsWith(".Designer.cs", StringComparison.OrdinalIgnoreCase));
-        var csRx     = new Regex(@"\bAppResources\.([A-Z][A-Za-z0-9_]+)\b", RegexOptions.Compiled);
+        var csRx      = new Regex(@"\bAppResources\.([A-Z][A-Za-z0-9_]+)\b", RegexOptions.Compiled);
         var infraKeys = new HashSet<string>(["ResourceManager", "Culture", "resourceCulture", "resourceMan"], StringComparer.Ordinal);
         int csChecked = 0;
 
@@ -406,29 +405,29 @@ class LintRunner(CliArgs args)
                 if (!resxSet.Contains(key))
                 {
                     var similar = FindSimilarKeys(key, resxSet);
-                    var hint    = similar.Length > 0 ? $" Chaves similares: '{string.Join("', '", similar)}'." : "";
-                    WriteMsBuildError(rel, line, "TRANS004", $"Propriedade 'AppResources.{key}' não existe no .resx base.{hint}");
-                    _fatalErrors.Add($"TRANS004 — C# {rel}({line}): 'AppResources.{key}' sem chave no .resx base.{hint}");
+                    var hint    = similar.Length > 0 ? $" Similar keys: '{string.Join("', '", similar)}'." : "";
+                    WriteMsBuildError(rel, line, "TRANS004", $"Property 'AppResources.{key}' not found in base .resx.{hint}");
+                    _fatalErrors.Add($"TRANS004 — C# {rel}({line}): 'AppResources.{key}' has no matching key in base .resx.{hint}");
                 }
             }
         }
 
         if (csChecked == 0)
-            WriteInfo("Nenhuma referência AppResources.Key encontrada nos arquivos .cs.");
+            WriteInfo("No AppResources.Key references found in .cs files.");
         else if (!_fatalErrors.Any(e => e.StartsWith("TRANS004")))
-            WriteOk($"{csChecked} referência(s) C# validadas — todas OK");
+            WriteOk($"{csChecked} C# reference(s) validated — all OK");
     }
 
     // ── 6. Designer.cs ────────────────────────────────────────────────────────
 
     void Step6_DesignerCs(HashSet<string> resxSet)
     {
-        WriteHeader("6/6 Verificando Designer.cs");
+        WriteHeader("6/6 Checking Designer.cs");
 
         var designerFile = Path.ChangeExtension(_resxFile, "Designer.cs");
         if (!File.Exists(designerFile))
         {
-            WriteInfo($"Designer.cs não encontrado — pulando verificação.");
+            WriteInfo("Designer.cs not found — skipping.");
             return;
         }
 
@@ -442,17 +441,17 @@ class LintRunner(CliArgs args)
         var missing = resxSet.Where(k => !designerKeys.Contains(k)).ToList();
         if (missing.Count == 0)
         {
-            WriteOk($"Designer.cs — todas as {designerKeys.Count} propriedades presentes ✓");
+            WriteOk($"Designer.cs — all {designerKeys.Count} properties present ✓");
             return;
         }
 
-        WriteWarn($"TRANS003: {missing.Count} chave(s) sem propriedade no Designer.cs");
+        WriteWarn($"TRANS003: {missing.Count} key(s) in base .resx have no property in Designer.cs");
         foreach (var key in missing)
-            WriteMsBuildWarn(designerRel, 0, "TRANS003", $"Chave '{key}' sem propriedade no Designer.cs. Será adicionada automaticamente.");
+            WriteMsBuildWarn(designerRel, 0, "TRANS003", $"Key '{key}' has no property in Designer.cs. Will be added automatically.");
 
         if (args.WhatIf)
         {
-            WriteInfo($"TRANS003 (WhatIf): adicionaria {missing.Count} propriedade(s) ao Designer.cs");
+            WriteInfo($"TRANS003 (what-if): would add {missing.Count} property/properties to Designer.cs");
             return;
         }
 
@@ -460,7 +459,7 @@ class LintRunner(CliArgs args)
         foreach (var key in missing)
         {
             var propName = Regex.Replace(key, @"[^\w]", "_");
-            WriteFix($"TRANS003: adicionando propriedade '{propName}' ao Designer.cs");
+            WriteFix($"TRANS003: adding property '{propName}' to Designer.cs");
             sb.AppendLine($"        public static string {propName} {{");
             sb.AppendLine("            get {");
             sb.AppendLine($"                return ResourceManager.GetString(\"{key}\", resourceCulture);");
@@ -479,11 +478,11 @@ class LintRunner(CliArgs args)
         }
         else
         {
-            WriteErr("TRANS003: Não foi possível encontrar posição de inserção no Designer.cs — corrija manualmente.");
+            WriteErr("TRANS003: Could not find insertion point in Designer.cs — fix manually.");
         }
     }
 
-    // ── Resumo ─────────────────────────────────────────────────────────────────
+    // ── Summary ───────────────────────────────────────────────────────────────
 
     void PrintSummary(int totalKeys)
     {
@@ -493,19 +492,19 @@ class LintRunner(CliArgs args)
 
         Console.WriteLine();
         Console.WriteLine(new string('─', 60));
-        WriteColor(" RESUMO — resx-lint", ConsoleColor.White);
+        WriteColor(" SUMMARY — resx-lint", ConsoleColor.White);
         Console.WriteLine(new string('─', 60));
-        WriteColor($"  .resx base         : {Rel(_resxFile)}", ConsoleColor.Gray);
-        WriteColor($"  Chaves no base     : {totalKeys}", ConsoleColor.Gray);
-        WriteColor($"  Idiomas            : {langFiles.Length}  ({string.Join(", ", langFiles.Select(Path.GetFileName))})", ConsoleColor.Gray);
-        WriteColor($"  Correções aplicadas: {_statsFixed}", _statsFixed > 0 ? ConsoleColor.Cyan : ConsoleColor.Gray);
-        WriteColor($"  Avisos (TRANS006+) : {_warnings.Count}", _warnings.Count > 0 ? ConsoleColor.Yellow : ConsoleColor.Gray);
-        WriteColor($"  Erros fatais       : {_fatalErrors.Count}", _fatalErrors.Count > 0 ? ConsoleColor.Red : ConsoleColor.Green);
+        WriteColor($"  Base .resx         : {Rel(_resxFile)}", ConsoleColor.Gray);
+        WriteColor($"  Keys in base       : {totalKeys}", ConsoleColor.Gray);
+        WriteColor($"  Languages          : {langFiles.Length}  ({string.Join(", ", langFiles.Select(Path.GetFileName))})", ConsoleColor.Gray);
+        WriteColor($"  Auto-fixes applied : {_statsFixed}", _statsFixed > 0 ? ConsoleColor.Cyan : ConsoleColor.Gray);
+        WriteColor($"  Warnings           : {_warnings.Count}", _warnings.Count > 0 ? ConsoleColor.Yellow : ConsoleColor.Gray);
+        WriteColor($"  Fatal errors       : {_fatalErrors.Count}", _fatalErrors.Count > 0 ? ConsoleColor.Red : ConsoleColor.Green);
 
         if (_fatalErrors.Count > 0)
         {
             Console.WriteLine();
-            WriteColor("  ERROS FATAIS:", ConsoleColor.Red);
+            WriteColor("  FATAL ERRORS:", ConsoleColor.Red);
             foreach (var e in _fatalErrors)
                 WriteColor($"    • {e}", ConsoleColor.Red);
         }
@@ -559,12 +558,11 @@ class LintRunner(CliArgs args)
 
     string Rel(string path) => path.Replace(_projectDir, "").TrimStart(Path.DirectorySeparatorChar, '/');
 
-    // Output helpers
-    void WriteOk(string msg)   { if (!args.Quiet) WriteColor($"  ✓ {msg}", ConsoleColor.Green); }
-    void WriteInfo(string msg) { if (!args.Quiet) WriteColor($"  ℹ {msg}", ConsoleColor.Cyan); }
-    void WriteWarn(string msg) => WriteColor($"  ⚠ {msg}", ConsoleColor.Yellow);
-    void WriteErr(string msg)  => WriteColor($"  ✖ {msg}", ConsoleColor.Red);
-    void WriteFix(string msg)  => WriteColor($"  ✔ [AUTO-FIX] {msg}", ConsoleColor.DarkCyan);
+    void WriteOk(string msg)     { if (!args.Quiet) WriteColor($"  ✓ {msg}", ConsoleColor.Green); }
+    void WriteInfo(string msg)   { if (!args.Quiet) WriteColor($"  ℹ {msg}", ConsoleColor.Cyan); }
+    void WriteWarn(string msg)   => WriteColor($"  ⚠ {msg}", ConsoleColor.Yellow);
+    void WriteErr(string msg)    => WriteColor($"  ✖ {msg}", ConsoleColor.Red);
+    void WriteFix(string msg)    => WriteColor($"  ✔ [AUTO-FIX] {msg}", ConsoleColor.DarkCyan);
     void WriteHeader(string msg) { Console.WriteLine(); WriteColor($"═══ {msg} ═══", ConsoleColor.White); }
 
     static void WriteColor(string msg, ConsoleColor color)

@@ -2,7 +2,7 @@
 
 [![NuGet](https://img.shields.io/nuget/v/ResxLint?color=1a237e&label=nuget)](https://www.nuget.org/packages/ResxLint)
 [![Downloads](https://img.shields.io/nuget/dt/ResxLint?color=00bcd4&label=downloads)](https://www.nuget.org/packages/ResxLint)
-[![CI](https://github.com/CW-Software-Apps/resx-lint/actions/workflows/ci.yml/badge.svg)](https://github.com/CW-Software-Apps/resx-lint/actions)
+[![CI](https://img.shields.io/github/actions/workflow/status/CW-Software-Apps/resx-lint/ci.yml?label=CI)](https://github.com/CW-Software-Apps/resx-lint/actions)
 [![MIT License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
 ---
