@@ -75,8 +75,9 @@ class WebStartup
             var inputDirs = dir.Split(new[] { ';', ',', '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
             var results = new List<ProjectResxInfo>();
 
-            foreach (var inputDir in inputDirs)
+            foreach (var rawDir in inputDirs)
             {
+                var inputDir = Path.GetFullPath(rawDir);
                 if (!Directory.Exists(inputDir)) continue;
 
                 var allResx = Directory.GetFiles(inputDir, "*.resx", SearchOption.AllDirectories)
@@ -199,6 +200,65 @@ class WebStartup
                         i.Code, i.Key, i.File, i.FixDescription
                     }),
                     result = fixResult
+                });
+            }
+            catch (Exception ex)
+            {
+                return Results.BadRequest(new { error = ex.Message });
+            }
+        });
+
+        api.MapGet("/project/discover", (string? root) =>
+        {
+            if (string.IsNullOrWhiteSpace(root))
+                return Results.BadRequest(new { error = "Root directory path is required" });
+
+            root = Path.GetFullPath(root);
+            if (!Directory.Exists(root))
+                return Results.BadRequest(new { error = $"Directory not found: {root}" });
+
+            try
+            {
+                var projects = new List<object>();
+
+                var csprojFiles = Directory.GetFiles(root, "*.csproj", SearchOption.AllDirectories)
+                    .Where(f => !f.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}") &&
+                                !f.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}") &&
+                                !f.Contains("/obj/") && !f.Contains("/bin/"));
+
+                foreach (var csproj in csprojFiles)
+                {
+                    var projDir = Path.GetDirectoryName(csproj)!;
+                    var projName = Path.GetFileNameWithoutExtension(csproj);
+                    var relPath = Path.GetRelativePath(root, projDir);
+
+                    var resxFiles = Directory.GetFiles(projDir, "*.resx", SearchOption.AllDirectories)
+                        .Where(f => !f.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}") &&
+                                    !f.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}") &&
+                                    !f.Contains("/obj/") && !f.Contains("/bin/"))
+                        .Count();
+
+                    projects.Add(new
+                    {
+                        ProjectName = projName,
+                        ProjectDir = projDir,
+                        RelativePath = relPath == "." ? "" : relPath,
+                        ResxCount = resxFiles
+                    });
+                }
+
+                var slnFiles = Directory.GetFiles(root, "*.sln", SearchOption.TopDirectoryOnly);
+                var solutions = slnFiles.Select(s => new
+                {
+                    SolutionName = Path.GetFileNameWithoutExtension(s),
+                    SolutionFile = s
+                }).ToList();
+
+                return Results.Ok(new
+                {
+                    projects,
+                    solutions,
+                    totalProjects = projects.Count
                 });
             }
             catch (Exception ex)
