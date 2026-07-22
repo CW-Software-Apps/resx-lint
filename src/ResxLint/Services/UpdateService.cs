@@ -82,8 +82,8 @@ class UpdateService
             var scriptContent = $@"@echo off
 timeout /t 2 /nobreak > nul
 taskkill /F /PID {currentPid} > nul 2>&1
-dotnet tool update --global ResxLint
-start resx-lint
+dotnet tool update --global ResxLint > nul 2>&1
+start "" resx-lint
 (goto) 2>nul & del ""%~f0""
 ";
 

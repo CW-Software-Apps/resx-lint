@@ -112,9 +112,12 @@ if (cmdArgs.Length == 0)
             Thread.Sleep(50);
         }
     }
-    catch { }
+    catch
+    {
+        // Console not available (e.g. launched from script) — proceed directly
+    }
 
-    Console.WriteLine();
+    try { Console.WriteLine(); } catch { }
 
     if (keyPressed)
     {
@@ -138,13 +141,21 @@ if (cmdArgs.Length == 0)
 
     if (foundResx != null)
     {
-        Console.WriteLine($"Auto-detected: {foundResx.Replace(cwd, "").TrimStart('\\', '/')}");
+        try { Console.WriteLine($"Auto-detected: {foundResx.Replace(cwd, "").TrimStart('\\', '/')}"); } catch { }
         cmdArgs = ["--project-dir", cwd, "--resx-file", foundResx];
     }
     else
     {
-        Console.WriteLine("No .resx files found in current directory — opening Web UI...");
-        WebStartup.Start(5123, false);
+        try { Console.WriteLine("No .resx files found in current directory — opening Web UI..."); } catch { }
+        try
+        {
+            WebStartup.Start(5123, false);
+        }
+        catch (Exception webEx)
+        {
+            try { Console.Error.WriteLine($"ERROR: Failed to start Web UI: {webEx.Message}"); } catch { }
+            return 3;
+        }
         return 0;
     }
 }
