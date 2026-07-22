@@ -160,6 +160,14 @@ class WebStartup
             return Results.Ok(info);
         });
 
+        api.MapPost("/update/install", async () =>
+        {
+            var result = await UpdateService.InstallAsync();
+            return result.Error != null
+                ? Results.BadRequest(result)
+                : Results.Ok(result);
+        });
+
         app.MapHub<LintHub>("/hubs/lint");
 
         if (!noOpen)

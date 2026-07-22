@@ -543,7 +543,9 @@ async function checkUpdate() {
     if (info.isUpdateAvailable) {
       badge.textContent = `📦 ${info.latestVersion} available!`;
       badge.style.color = 'var(--accent)';
-      showToast(`Update ${info.latestVersion} available! Run: dotnet tool update --global ResxLint`);
+      if (confirm(`Update ${info.currentVersion} → ${info.latestVersion} available! Install now?`)) {
+        installUpdate();
+      }
     } else {
       badge.textContent = `✓ ${info.currentVersion}`;
       badge.style.color = 'var(--green)';
@@ -552,6 +554,25 @@ async function checkUpdate() {
     }
   } catch (e) {
     showToast(`Update check failed: ${e.message}`, true);
+    badge.textContent = 'v2.0';
+  }
+}
+
+async function installUpdate() {
+  const badge = document.getElementById('versionBadge');
+  badge.textContent = '⏳ Installing...';
+  try {
+    const result = await api('/api/update/install', { method: 'POST' });
+    if (result.error) {
+      showToast(`Update failed: ${result.error}`, true);
+      badge.textContent = 'Update failed';
+      return;
+    }
+    badge.textContent = `✓ ${result.latestVersion}`;
+    badge.style.color = 'var(--green)';
+    showToast(`Updated to ${result.latestVersion}! Please restart resx-lint.`);
+  } catch (e) {
+    showToast(`Update failed: ${e.message}`, true);
     badge.textContent = 'v2.0';
   }
 }

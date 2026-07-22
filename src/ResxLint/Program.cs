@@ -24,6 +24,32 @@ if (cmdArgs.Length > 0 && cmdArgs[0] is "--serve" or "-s")
     return 0;
 }
 
+if (cmdArgs.Length > 0 && cmdArgs[0] is "--auto-update")
+{
+    Console.WriteLine("Checking for updates...");
+    var check = UpdateService.CheckAsync().GetAwaiter().GetResult();
+    if (!check.IsUpdateAvailable)
+    {
+        Console.ForegroundColor = ConsoleColor.Green;
+        Console.WriteLine($"resx-lint {check.CurrentVersion} is up to date.");
+        Console.ResetColor();
+        return 0;
+    }
+    Console.WriteLine($"Updating from {check.CurrentVersion} to {check.LatestVersion}...");
+    var installResult = UpdateService.InstallAsync().GetAwaiter().GetResult();
+    if (installResult.Error != null)
+    {
+        Console.ForegroundColor = ConsoleColor.Red;
+        Console.WriteLine($"Update failed: {installResult.Error}");
+        Console.ResetColor();
+        return 1;
+    }
+    Console.ForegroundColor = ConsoleColor.Green;
+    Console.WriteLine($"Updated to {installResult.LatestVersion}. Restart to use the new version.");
+    Console.ResetColor();
+    return 0;
+}
+
 if (cmdArgs.Length > 0 && cmdArgs[0] is "--check-update" or "-u")
 {
     var info = UpdateService.CheckAsync().GetAwaiter().GetResult();
@@ -40,7 +66,6 @@ if (cmdArgs.Length > 0 && cmdArgs[0] is "--check-update" or "-u")
     {
         Console.ForegroundColor = ConsoleColor.Cyan;
         Console.WriteLine($"Update available! Download: {info.DownloadUrl}");
-        Console.WriteLine("Run: dotnet tool update --global ResxLint");
         Console.ResetColor();
     }
     else

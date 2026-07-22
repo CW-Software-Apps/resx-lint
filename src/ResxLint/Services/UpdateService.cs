@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Text.Json;
 
 namespace ResxLint.Services;
@@ -48,6 +49,52 @@ class UpdateService
                 LatestVersion = latest,
                 DownloadUrl = $"{PackageUrl}/{latest}",
                 IsUpdateAvailable = latestV > current
+            };
+        }
+        catch (Exception ex)
+        {
+            return new UpdateInfo
+            {
+                CurrentVersion = CurrentVersion,
+                Error = ex.Message
+            };
+        }
+    }
+
+    public static async Task<UpdateInfo> InstallAsync()
+    {
+        try
+        {
+            var info = await CheckAsync();
+            if (!info.IsUpdateAvailable)
+                return new UpdateInfo { CurrentVersion = CurrentVersion, Error = "No update available" };
+
+            var psi = new ProcessStartInfo("dotnet", "tool update --global ResxLint")
+            {
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false
+            };
+
+            using var proc = Process.Start(psi);
+            if (proc == null)
+                return new UpdateInfo { CurrentVersion = CurrentVersion, Error = "Failed to start update process" };
+
+            var output = await proc.StandardOutput.ReadToEndAsync();
+            var error = await proc.StandardError.ReadToEndAsync();
+            await proc.WaitForExitAsync();
+
+            if (proc.ExitCode != 0)
+                return new UpdateInfo { CurrentVersion = CurrentVersion, Error = error.Trim() };
+
+            var newVersion = output.Split(' ').LastOrDefault()?.Trim() ?? info.LatestVersion ?? "";
+
+            return new UpdateInfo
+            {
+                CurrentVersion = CurrentVersion,
+                LatestVersion = newVersion,
+                IsUpdateAvailable = false,
+                DownloadUrl = info.DownloadUrl
             };
         }
         catch (Exception ex)
