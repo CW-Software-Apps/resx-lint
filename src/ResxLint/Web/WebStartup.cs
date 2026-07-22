@@ -75,12 +75,6 @@ class WebStartup
             var inputDirs = dir.Split(new[] { ';', ',', '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
             var results = new List<ProjectResxInfo>();
 
-            var enumOptions = new EnumerationOptions
-            {
-                RecurseSubdirectories = true,
-                IgnoreInaccessible = true
-            };
-
             foreach (var rawDir in inputDirs)
             {
                 var inputDir = Path.GetFullPath(rawDir);
@@ -89,11 +83,7 @@ class WebStartup
                 List<string> allResx;
                 try
                 {
-                    allResx = Directory.GetFiles(inputDir, "*.resx", enumOptions)
-                        .Where(f => !f.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}") &&
-                                    !f.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}") &&
-                                    !f.Contains("/obj/") && !f.Contains("/bin/"))
-                        .ToList();
+                    allResx = EnumerateFilesPruned(inputDir, "*.resx");
                 }
                 catch (UnauthorizedAccessException)
                 {
@@ -303,11 +293,7 @@ class WebStartup
                 List<string> csprojFiles;
                 try
                 {
-                    csprojFiles = Directory.GetFiles(root, "*.csproj", new EnumerationOptions { RecurseSubdirectories = true, IgnoreInaccessible = true })
-                        .Where(f => !f.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}") &&
-                                    !f.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}") &&
-                                    !f.Contains("/obj/") && !f.Contains("/bin/"))
-                        .ToList();
+                    csprojFiles = EnumerateFilesPruned(root, "*.csproj");
                 }
                 catch
                 {
@@ -323,11 +309,7 @@ class WebStartup
                     int resxFiles;
                     try
                     {
-                        resxFiles = Directory.GetFiles(projDir, "*.resx", new EnumerationOptions { RecurseSubdirectories = true, IgnoreInaccessible = true })
-                            .Where(f => !f.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}") &&
-                                        !f.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}") &&
-                                        !f.Contains("/obj/") && !f.Contains("/bin/"))
-                            .Count();
+                        resxFiles = EnumerateFilesPruned(projDir, "*.resx").Count;
                     }
                     catch
                     {
@@ -453,5 +435,40 @@ class WebStartup
         {
             return false;
         }
+    }
+
+    static readonly string[] PrunedDirNames = ["bin", "obj", "node_modules", ".git", ".vs", "packages"];
+
+    /// <summary>
+    /// Recursively finds files by extension while skipping build/vcs/dependency folders entirely
+    /// (instead of walking into them and filtering afterward), which is what made scans on large
+    /// repos hang. Falls back to skipping directories it can't access.
+    /// </summary>
+    static List<string> EnumerateFilesPruned(string root, string searchPattern)
+    {
+        var results = new List<string>();
+        var stack = new Stack<string>();
+        stack.Push(root);
+
+        while (stack.Count > 0)
+        {
+            var dir = stack.Pop();
+
+            try
+            {
+                results.AddRange(Directory.EnumerateFiles(dir, searchPattern, SearchOption.TopDirectoryOnly));
+
+                foreach (var sub in Directory.EnumerateDirectories(dir))
+                {
+                    var name = Path.GetFileName(sub);
+                    if (PrunedDirNames.Contains(name, StringComparer.OrdinalIgnoreCase)) continue;
+                    stack.Push(sub);
+                }
+            }
+            catch (UnauthorizedAccessException) { }
+            catch (DirectoryNotFoundException) { }
+        }
+
+        return results;
     }
 }

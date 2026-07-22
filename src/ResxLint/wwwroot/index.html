@@ -206,9 +206,23 @@
 
   .editor-grid {
     overflow-x: auto;
+    overflow-y: auto;
+    max-height: calc(100vh - 340px);
+    min-height: 300px;
     border: 1px solid var(--border);
     border-radius: var(--radius-md);
+    position: relative;
   }
+  .editor-loading {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    gap: 10px; background: var(--surface); z-index: 5; font-size: 13px; color: var(--ink-2);
+  }
+  .spinner {
+    width: 18px; height: 18px; border-radius: 50%;
+    border: 2px solid var(--border); border-top-color: var(--accent);
+    animation: spin .7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
   .editor-grid table {
     width: 100%;
     border-collapse: collapse;
@@ -507,7 +521,9 @@
   option { background: var(--surface); color: var(--ink); }
 
   .section-title { font-size: 16px; font-weight: 600; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
-  .lang-flag { font-size: 14px; }
+  .flag-icon { border-radius: 2.5px; box-shadow: 0 0 0 1px oklch(0 0 0 / 0.15); vertical-align: -2px; flex-shrink: 0; }
+  .lang-flag { display: inline-flex; align-items: center; }
+  .lang-flag .icon { width: 14px; height: 14px; }
   .lang-picker-item {
     display: flex; align-items: center; gap: 10px; width: 100%;
     padding: 10px 12px; background: none; border: none; border-radius: var(--radius-sm);
@@ -516,7 +532,8 @@
   }
   .lang-picker-item:hover, .lang-picker-item:focus-visible { background: var(--surface-2); }
   .lang-picker-item.active { background: var(--accent-soft); }
-  .lang-picker-flag { font-size: 20px; width: 28px; text-align: center; }
+  .lang-picker-flag { width: 28px; display: flex; align-items: center; justify-content: center; }
+  .lang-picker-flag .flag-icon { width: 24px; height: 16px; }
   .lang-picker-code { font-family: var(--mono); font-size: 13px; font-weight: 600; min-width: 56px; }
   .lang-picker-name { color: var(--ink-2); font-size: 13px; }
   .lang-flags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
@@ -537,7 +554,7 @@
     <button class="nav-btn" onclick="checkUpdate()" title="Check for updates" aria-label="Check for updates"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 9.4 7.55 4.24"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="M3.29 7 12 12l8.71-5M12 22V12"/></svg></button>
     <button class="nav-btn" onclick="toggleTheme()" title="Toggle dark/light theme" aria-label="Toggle dark/light theme"><svg class="icon" id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg></button>
     <a class="nav-btn" href="https://github.com/CW-Software-Apps/resx-lint" target="_blank" title="Documentation" aria-label="Open documentation"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg></a>
-    <button class="nav-btn" onclick="configureDefaultLang()" title="Set default base language" aria-label="Set default base language">🌐</button>
+    <button class="nav-btn" id="defaultLangBtn" onclick="configureDefaultLang()" title="Set default base language" aria-label="Set default base language"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></button>
     <button class="nav-btn" id="sfxBtn" onclick="toggleSfx()" title="Toggle sound effects" aria-label="Toggle sound effects">🔇</button>
   </header>
 
@@ -657,7 +674,7 @@
             <label style="font-size:12px;color:var(--ink-2);display:block;margin-bottom:4px">Selected Resource File (.resx)</label>
             <select class="input-field" id="editorResxSelect"><option value="">— select a .resx file —</option></select>
           </div>
-          <button class="btn btn-primary" onclick="loadEditor()">Load Matrix</button>
+          <button class="btn btn-primary" id="loadMatrixBtn" onclick="loadEditor()">Load Matrix</button>
           <button class="btn btn-secondary" onclick="openAiConfig()"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="14" x="4" y="6" rx="2"/><path d="M12 6V2"/><path d="M9 14h6"/><path d="M12 17v-3"/></svg> AI Batch Translate</button>
           <button class="btn btn-secondary" onclick="configureDefaultLang()" title="Set default base language">⚙ Default Lang</button>
         </div>
@@ -839,15 +856,72 @@ function icon(name) {
   };
   return I[name] || '';
 }
+// Windows renders regional-indicator flag emoji as plain two-letter text (no color emoji font
+// for flags), so we draw small vector flags ourselves instead of relying on the emoji glyph.
+function _stripesH(colors) {
+  const h = 16 / colors.length;
+  return colors.map((c, i) => `<rect x="0" y="${(i * h).toFixed(2)}" width="24" height="${(h + 0.4).toFixed(2)}" fill="${c}"/>`).join('');
+}
+function _stripesV(colors) {
+  const w = 24 / colors.length;
+  return colors.map((c, i) => `<rect x="${(i * w).toFixed(2)}" y="0" width="${(w + 0.4).toFixed(2)}" height="16" fill="${c}"/>`).join('');
+}
+function _nordicCross(bg, cross) {
+  return `<rect width="24" height="16" fill="${bg}"/><rect x="7" width="3" height="16" fill="${cross}"/><rect y="6.5" width="24" height="3" fill="${cross}"/>`;
+}
+
+const FLAG_DEFS = {
+  US: `<rect width="24" height="16" fill="#B22234"/>${_stripesH(['#B22234', '#fff', '#B22234', '#fff', '#B22234', '#fff', '#B22234'])}<rect width="10" height="8.6" fill="#3C3B6E"/>`,
+  GB: `<rect width="24" height="16" fill="#012169"/><path d="M0 0L24 16M24 0L0 16" stroke="#fff" stroke-width="3"/><path d="M0 0L24 16M24 0L0 16" stroke="#C8102E" stroke-width="1.3"/><rect x="9.5" width="5" height="16" fill="#fff"/><rect y="5.5" width="24" height="5" fill="#fff"/><rect x="10.4" width="3.2" height="16" fill="#C8102E"/><rect y="6.4" width="24" height="3.2" fill="#C8102E"/>`,
+  BR: `<rect width="24" height="16" fill="#009C3B"/><polygon points="12,2 22,8 12,14 2,8" fill="#FFDF00"/><circle cx="12" cy="8" r="3.4" fill="#002776"/>`,
+  PT: `<rect width="24" height="16" fill="#DA291C"/><rect width="9.6" height="16" fill="#046A38"/><circle cx="9.6" cy="8" r="2.8" fill="#FFCC00"/>`,
+  ES: `<rect width="24" height="16" fill="#AA151B"/><rect y="4" width="24" height="8" fill="#F1BF00"/>`,
+  FR: _stripesV(['#0055A4', '#fff', '#EF4135']),
+  DE: _stripesH(['#000', '#DD0000', '#FFCE00']),
+  IT: _stripesV(['#009246', '#fff', '#CE2B37']),
+  JP: `<rect width="24" height="16" fill="#fff"/><circle cx="12" cy="8" r="4.6" fill="#BC002D"/>`,
+  KR: `<rect width="24" height="16" fill="#fff"/><circle cx="12" cy="8" r="4" fill="#C60C30"/><path d="M12 4a4 4 0 010 8 2 2 0 010-4 2 2 0 000-4" fill="#003478"/>`,
+  CN: `<rect width="24" height="16" fill="#DE2910"/><polygon points="5,3 6,6 3,4.2 7,4.2 4,6" fill="#FFDE00"/>`,
+  TW: `<rect width="24" height="16" fill="#FE0000"/><rect width="12" height="8" fill="#000095"/><circle cx="6" cy="4" r="2.4" fill="#fff"/>`,
+  RU: _stripesH(['#fff', '#0039A6', '#D52B1E']),
+  SA: `<rect width="24" height="16" fill="#006C35"/>`,
+  NL: _stripesH(['#AE1C28', '#fff', '#21468B']),
+  PL: _stripesH(['#fff', '#DC143C']),
+  SE: _nordicCross('#006AA7', '#FECC00'),
+  DK: _nordicCross('#C60C30', '#fff'),
+  FI: _nordicCross('#fff', '#003580'),
+  NO: `<rect width="24" height="16" fill="#BA0C2F"/><rect x="7" width="3" height="16" fill="#fff"/><rect y="6.5" width="24" height="3" fill="#fff"/><rect x="7.8" width="1.4" height="16" fill="#00205B"/><rect y="7.3" width="24" height="1.4" fill="#00205B"/>`,
+  TH: _stripesH(['#A51931', '#fff', '#2D2A4A', '#fff', '#A51931']),
+  VN: `<rect width="24" height="16" fill="#DA251D"/><polygon points="12,3 13.2,6.6 17,6.6 13.9,8.8 15,12.4 12,10.2 9,12.4 10.1,8.8 7,6.6 10.8,6.6" fill="#FFFF00"/>`,
+  TR: `<rect width="24" height="16" fill="#E30A17"/><circle cx="9" cy="8" r="3.4" fill="#fff"/><circle cx="10.2" cy="8" r="2.8" fill="#E30A17"/><polygon points="13.5,8 15.5,7.3 14.3,9 14.3,7 15.5,8.7" fill="#fff"/>`,
+  CZ: `${_stripesH(['#fff', '#D7141A'])}<polygon points="0,0 0,16 9,8" fill="#11457E"/>`,
+  HU: _stripesH(['#CE2939', '#fff', '#477050']),
+  RO: _stripesV(['#002B7F', '#FCD116', '#CE1126']),
+  UA: _stripesH(['#005BBB', '#FFD500']),
+  GR: `${_stripesH(['#0D5EAF', '#fff', '#0D5EAF', '#fff', '#0D5EAF', '#fff', '#0D5EAF', '#fff', '#0D5EAF'])}<rect width="9" height="9" fill="#0D5EAF"/><rect x="3.5" width="2" height="9" fill="#fff"/><rect y="3.5" width="9" height="2" fill="#fff"/>`,
+  IL: `<rect width="24" height="16" fill="#fff"/><rect y="1.5" width="24" height="2" fill="#0038B8"/><rect y="12.5" width="24" height="2" fill="#0038B8"/><polygon points="12,5 13.7,8 10.3,8" fill="none" stroke="#0038B8" stroke-width="0.8"/><polygon points="12,11 13.7,8 10.3,8" fill="none" stroke="#0038B8" stroke-width="0.8"/>`,
+  IN: `${_stripesH(['#FF9933', '#fff', '#138808'])}<circle cx="12" cy="8" r="2.2" fill="none" stroke="#000080" stroke-width="0.5"/>`,
+};
+
+// Two-letter language subtag -> ISO region, used when the locale code has no explicit region (e.g. "pt", "en").
+const FLAG_LANG_FALLBACK = {
+  en: 'GB', es: 'ES', pt: 'BR', de: 'DE', fr: 'FR', it: 'IT', ja: 'JP', ru: 'RU', ko: 'KR',
+  ar: 'SA', nl: 'NL', pl: 'PL', sv: 'SE', da: 'DK', fi: 'FI', nb: 'NO', th: 'TH', vi: 'VN',
+  tr: 'TR', cs: 'CZ', hu: 'HU', ro: 'RO', uk: 'UA', el: 'GR', he: 'IL', hi: 'IN',
+};
+
+function flagByRegion(region) {
+  const body = region && FLAG_DEFS[region];
+  if (!body) return icon('globe');
+  return `<svg class="flag-icon" viewBox="0 0 24 16" width="20" height="14" role="img" aria-label="${region}"><clipPath id="flagClip-${region}"><rect width="24" height="16" rx="2.5"/></clipPath><g clip-path="url(#flagClip-${region})">${body}</g></svg>`;
+}
+
 function localeToFlag(code) {
-  if (!code || code === 'Default') return '🌐';
-  const region = code.split('-')[1];
-  if (!region) {
-    const map = { en: '🇬🇧', es: '🇪🇸', pt: '🇧🇷', de: '🇩🇪', fr: '🇫🇷', it: '🇮🇹', ja: '🇯🇵', 'zh-CN': '🇨🇳', 'zh-TW': '🇹🇼', ru: '🇷🇺', ko: '🇰🇷', ar: '🇸🇦', nl: '🇳🇱', pl: '🇵🇱', sv: '🇸🇪', da: '🇩🇰', fi: '🇫🇮', nb: '🇳🇴', th: '🇹🇭', vi: '🇻🇳', tr: '🇹🇷', cs: '🇨🇿', hu: '🇭🇺', ro: '🇷🇴', uk: '🇺🇦', el: '🇬🇷', he: '🇮🇱', hi: '🇮🇳' };
-    return map[code.toLowerCase()] || '🌐';
-  }
-  const a = region.toUpperCase().split('').map(c => String.fromCodePoint(0x1F1E6 + c.charCodeAt(0) - 65));
-  return a.join('');
+  if (!code || code === 'Default') return icon('globe');
+  const parts = code.split('-');
+  let region = parts.length > 1 ? parts[1].toUpperCase() : null;
+  if (!region) region = FLAG_LANG_FALLBACK[code.toLowerCase()] || null;
+  return flagByRegion(region);
 }
 
 // ====== SOUND EFFECTS ======
@@ -909,6 +983,14 @@ function getDefaultLang() {
 
 function setDefaultLang(code) {
   localStorage.setItem('resx-lint-default-lang', code || 'Default');
+  updateDefaultLangBtn();
+}
+
+function updateDefaultLangBtn() {
+  const btn = document.getElementById('defaultLangBtn');
+  if (!btn) return;
+  const current = getDefaultLang();
+  btn.innerHTML = localeToFlag(current === 'Default' ? null : current);
 }
 
 function configureDefaultLang() {
@@ -918,36 +1000,36 @@ function configureDefaultLang() {
   const current = getDefaultLang();
 
   const knownLangs = [
-    { code: 'pt-BR', name: 'Portuguese (Brazil)', flag: '🇧🇷' },
-    { code: 'pt', name: 'Portuguese', flag: '🇵🇹' },
-    { code: 'en', name: 'English', flag: '🇬🇧' },
-    { code: 'en-US', name: 'English (US)', flag: '🇺🇸' },
-    { code: 'es', name: 'Spanish', flag: '🇪🇸' },
-    { code: 'fr', name: 'French', flag: '🇫🇷' },
-    { code: 'de', name: 'German', flag: '🇩🇪' },
-    { code: 'it', name: 'Italian', flag: '🇮🇹' },
-    { code: 'ja', name: 'Japanese', flag: '🇯🇵' },
-    { code: 'ko', name: 'Korean', flag: '🇰🇷' },
-    { code: 'zh-CN', name: 'Chinese (Simplified)', flag: '🇨🇳' },
-    { code: 'zh-TW', name: 'Chinese (Traditional)', flag: '🇹🇼' },
-    { code: 'ru', name: 'Russian', flag: '🇷🇺' },
-    { code: 'ar', name: 'Arabic', flag: '🇸🇦' },
-    { code: 'nl', name: 'Dutch', flag: '🇳🇱' },
-    { code: 'pl', name: 'Polish', flag: '🇵🇱' },
-    { code: 'sv', name: 'Swedish', flag: '🇸🇪' },
-    { code: 'da', name: 'Danish', flag: '🇩🇰' },
-    { code: 'fi', name: 'Finnish', flag: '🇫🇮' },
-    { code: 'nb', name: 'Norwegian', flag: '🇳🇴' },
-    { code: 'th', name: 'Thai', flag: '🇹🇭' },
-    { code: 'vi', name: 'Vietnamese', flag: '🇻🇳' },
-    { code: 'tr', name: 'Turkish', flag: '🇹🇷' },
-    { code: 'cs', name: 'Czech', flag: '🇨🇿' },
-    { code: 'hu', name: 'Hungarian', flag: '🇭🇺' },
-    { code: 'ro', name: 'Romanian', flag: '🇷🇴' },
-    { code: 'uk', name: 'Ukrainian', flag: '🇺🇦' },
-    { code: 'el', name: 'Greek', flag: '🇬🇷' },
-    { code: 'he', name: 'Hebrew', flag: '🇮🇱' },
-    { code: 'hi', name: 'Hindi', flag: '🇮🇳' },
+    { code: 'pt-BR', name: 'Portuguese (Brazil)', region: 'BR' },
+    { code: 'pt', name: 'Portuguese', region: 'PT' },
+    { code: 'en', name: 'English', region: 'GB' },
+    { code: 'en-US', name: 'English (US)', region: 'US' },
+    { code: 'es', name: 'Spanish', region: 'ES' },
+    { code: 'fr', name: 'French', region: 'FR' },
+    { code: 'de', name: 'German', region: 'DE' },
+    { code: 'it', name: 'Italian', region: 'IT' },
+    { code: 'ja', name: 'Japanese', region: 'JP' },
+    { code: 'ko', name: 'Korean', region: 'KR' },
+    { code: 'zh-CN', name: 'Chinese (Simplified)', region: 'CN' },
+    { code: 'zh-TW', name: 'Chinese (Traditional)', region: 'TW' },
+    { code: 'ru', name: 'Russian', region: 'RU' },
+    { code: 'ar', name: 'Arabic', region: 'SA' },
+    { code: 'nl', name: 'Dutch', region: 'NL' },
+    { code: 'pl', name: 'Polish', region: 'PL' },
+    { code: 'sv', name: 'Swedish', region: 'SE' },
+    { code: 'da', name: 'Danish', region: 'DK' },
+    { code: 'fi', name: 'Finnish', region: 'FI' },
+    { code: 'nb', name: 'Norwegian', region: 'NO' },
+    { code: 'th', name: 'Thai', region: 'TH' },
+    { code: 'vi', name: 'Vietnamese', region: 'VN' },
+    { code: 'tr', name: 'Turkish', region: 'TR' },
+    { code: 'cs', name: 'Czech', region: 'CZ' },
+    { code: 'hu', name: 'Hungarian', region: 'HU' },
+    { code: 'ro', name: 'Romanian', region: 'RO' },
+    { code: 'uk', name: 'Ukrainian', region: 'UA' },
+    { code: 'el', name: 'Greek', region: 'GR' },
+    { code: 'he', name: 'Hebrew', region: 'IL' },
+    { code: 'hi', name: 'Hindi', region: 'IN' },
   ];
 
   function renderLangPicker(filter) {
@@ -961,7 +1043,7 @@ function configureDefaultLang() {
     if (q) items = items.filter(l => l.code.toLowerCase().includes(q) || l.name.toLowerCase().includes(q));
     list.innerHTML = items.map(l => `
       <button class="lang-picker-item${l.code === current ? ' active' : ''}" onclick="pickDefaultLang('${l.code}')">
-        <span class="lang-picker-flag">${l.flag}</span>
+        <span class="lang-picker-flag">${flagByRegion(l.region)}</span>
         <span class="lang-picker-code">${l.code}</span>
         <span class="lang-picker-name">${l.name}</span>
       </button>
@@ -1007,6 +1089,7 @@ if (savedTheme) {
   document.documentElement.setAttribute('data-theme', savedTheme);
   updateThemeIcon(savedTheme);
 }
+updateDefaultLangBtn();
 
 // ====== SAVED PROJECTS ======
 function getSavedProjects() {
@@ -1680,6 +1763,11 @@ async function loadEditor() {
   document.getElementById('editorContent').style.display = 'none';
   document.getElementById('editorEmpty').style.display = 'none';
 
+  const btn = document.getElementById('loadMatrixBtn');
+  const btnOrig = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = `<span class="spinner" style="border-top-color:currentColor;width:14px;height:14px;display:inline-block;vertical-align:-2px;margin-right:6px"></span>Loading…`;
+
   try {
     const data = await api(`/api/translate/resx-data?resxFile=${encodeURIComponent(resxFile)}`);
     editorData = data;
@@ -1691,13 +1779,21 @@ async function loadEditor() {
     aiSel.innerHTML = '<option value="">— Translate missing in ALL languages —</option>' +
       data.languages.map(l => `<option value="${l.code}">${localeToFlag(l.code)} ${l.code}</option>`).join('');
 
-    renderEditor();
     document.getElementById('editorContent').style.display = '';
+    // Let the browser paint the now-visible (empty) grid before the potentially heavy render pass.
+    await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+    renderEditor();
   } catch (e) {
     showToast(e.message, true);
     document.getElementById('editorEmpty').style.display = '';
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = btnOrig;
   }
 }
+
+const editorVirtual = { filteredKeys: [], langs: [], defaultLang: 'Default', rowHeight: 44, buffer: 12 };
+let editorScrollRaf = null;
 
 function renderEditor() {
   const grid = document.getElementById('editorGrid');
@@ -1733,11 +1829,14 @@ function renderEditor() {
     }
   }
 
-  const defaultLang = getDefaultLang();
-  let html = '<table><thead><tr><th style="min-width:180px">Key Name</th>';
+  editorVirtual.filteredKeys = filteredKeys;
+  editorVirtual.langs = langs;
+  editorVirtual.defaultLang = getDefaultLang();
+
+  let headerHtml = '<thead><tr><th style="min-width:180px">Key Name</th>';
   langs.forEach(l => {
     const isBase = l === 'base';
-    const langCode = isBase ? defaultLang : l;
+    const langCode = isBase ? editorVirtual.defaultLang : l;
     const info = isBase ? null : editorLanguages.find(lg => lg.code === l);
     let badge = '';
     let aiBtn = '';
@@ -1749,11 +1848,63 @@ function renderEditor() {
       }
     }
     const flag = localeToFlag(langCode);
-    html += `<th><span class="lang-flag" title="${langCode}">${flag}</span> ${langCode}${isBase ? ' (base)' : ''}${badge}${aiBtn}</th>`;
+    headerHtml += `<th><span class="lang-flag" title="${langCode}">${flag}</span> ${langCode}${isBase ? ' (base)' : ''}${badge}${aiBtn}</th>`;
   });
-  html += '</tr></thead><tbody>';
+  headerHtml += '</tr></thead>';
 
-  filteredKeys.forEach(k => {
+  if (!grid.querySelector('table')) {
+    grid.innerHTML = `<table>${headerHtml}<tbody id="editorTbody"></tbody></table>`;
+  } else {
+    grid.querySelector('thead').outerHTML = headerHtml;
+  }
+
+  if (!grid.dataset.scrollBound) {
+    grid.addEventListener('scroll', onEditorScroll, { passive: true });
+    window.addEventListener('resize', onEditorScroll);
+    grid.dataset.scrollBound = '1';
+  }
+
+  renderVisibleEditorRows();
+}
+
+function onEditorScroll() {
+  if (editorScrollRaf) return;
+  editorScrollRaf = requestAnimationFrame(() => {
+    editorScrollRaf = null;
+    renderVisibleEditorRows();
+  });
+}
+
+// Only mounts the rows currently in (or near) the viewport instead of all ~1000+ at once —
+// rendering + auto-resizing every textarea up front is what was freezing the tab on large resx files.
+function renderVisibleEditorRows() {
+  const grid = document.getElementById('editorGrid');
+  const tbody = document.getElementById('editorTbody');
+  if (!grid || !tbody) return;
+
+  const { filteredKeys, langs, rowHeight, buffer } = editorVirtual;
+  const total = filteredKeys.length;
+  const colCount = langs.length + 1;
+
+  if (total === 0) {
+    tbody.innerHTML = `<tr><td colspan="${colCount}" style="text-align:center;padding:40px;color:var(--ink-2)">No keys match the current filters.</td></tr>`;
+    return;
+  }
+
+  const scrollTop = grid.scrollTop;
+  const viewportH = grid.clientHeight || 600;
+
+  const startIdx = Math.max(0, Math.floor(scrollTop / rowHeight) - buffer);
+  const endIdx = Math.min(total, Math.ceil((scrollTop + viewportH) / rowHeight) + buffer);
+
+  const topSpacerH = startIdx * rowHeight;
+  const bottomSpacerH = Math.max(0, (total - endIdx) * rowHeight);
+
+  let html = '';
+  if (topSpacerH > 0) html += `<tr aria-hidden="true"><td colspan="${colCount}" style="padding:0;border:none;height:${topSpacerH}px"></td></tr>`;
+
+  for (let i = startIdx; i < endIdx; i++) {
+    const k = filteredKeys[i];
     html += `<tr><td style="font-family:var(--mono);font-weight:500;white-space:nowrap">${k.name}</td>`;
     langs.forEach(l => {
       const tv = k.translations[l];
@@ -1777,12 +1928,12 @@ function renderEditor() {
       }
     });
     html += '</tr>';
-  });
+  }
 
-  html += '</tbody></table>';
-  grid.innerHTML = html;
+  if (bottomSpacerH > 0) html += `<tr aria-hidden="true"><td colspan="${colCount}" style="padding:0;border:none;height:${bottomSpacerH}px"></td></tr>`;
 
-  grid.querySelectorAll('textarea').forEach(ta => autoResize(ta));
+  tbody.innerHTML = html;
+  tbody.querySelectorAll('textarea').forEach(ta => autoResize(ta));
 }
 
 function autoResize(el) {
@@ -1834,8 +1985,11 @@ function toggleFilter(el) {
   if (editorData) renderEditor();
 }
 
+let editorFilterDebounce = null;
 function filterEditor() {
-  if (editorData) renderEditor();
+  if (!editorData) return;
+  clearTimeout(editorFilterDebounce);
+  editorFilterDebounce = setTimeout(renderEditor, 180);
 }
 
 async function saveEditor() {
