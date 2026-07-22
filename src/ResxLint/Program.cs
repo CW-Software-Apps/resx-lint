@@ -85,8 +85,9 @@ if (cmdArgs.Length > 0 && (cmdArgs[0] is "--help" or "-h"))
 
 if (cmdArgs.Length == 0)
 {
+    Console.Title = $"resx-lint v{UpdateService.CurrentVersion}";
     Console.ForegroundColor = ConsoleColor.Cyan;
-    Console.Write("resx-lint — Press ");
+    Console.Write($"resx-lint v{UpdateService.CurrentVersion} — Press ");
     Console.ForegroundColor = ConsoleColor.White;
     Console.Write("W");
     Console.ForegroundColor = ConsoleColor.Cyan;
@@ -95,19 +96,23 @@ if (cmdArgs.Length == 0)
 
     var start = Environment.TickCount;
     var keyPressed = false;
-    while (Environment.TickCount - start < 3000)
+    try
     {
-        if (Console.KeyAvailable)
+        while (Environment.TickCount - start < 3000)
         {
-            var key = Console.ReadKey(true);
-            if (key.KeyChar is 'w' or 'W')
+            if (Console.KeyAvailable)
             {
-                keyPressed = true;
-                break;
+                var key = Console.ReadKey(true);
+                if (key.KeyChar is 'w' or 'W')
+                {
+                    keyPressed = true;
+                    break;
+                }
             }
+            Thread.Sleep(50);
         }
-        Thread.Sleep(50);
     }
+    catch { }
 
     Console.WriteLine();
 
@@ -129,8 +134,9 @@ if (cmdArgs.Length == 0)
     }
     else
     {
-        PrintHelp();
-        return 2;
+        Console.WriteLine("No .resx files found in current directory — opening Web UI...");
+        WebStartup.Start(5123, false);
+        return 0;
     }
 }
 
