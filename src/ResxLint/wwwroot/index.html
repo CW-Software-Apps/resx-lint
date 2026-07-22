@@ -354,7 +354,7 @@
   <header>
     <div class="logo">RL</div>
     <span style="font-weight:600;font-size:15px">resx-lint</span>
-    <span class="version-badge" id="versionBadge" style="cursor:pointer" onclick="checkUpdate()" title="Verificar atualizações">v2.1.0</span>
+    <span class="version-badge" id="versionBadge" style="cursor:pointer" onclick="checkUpdate()" title="Verificar atualizações">v2.1.1</span>
     <div class="tab-bar">
       <button class="nav-btn active" data-view="projects" onclick="switchView('projects')">📁 Projetos</button>
       <button class="nav-btn" data-view="lint" onclick="switchView('lint')">🔍 Verificar Traduções</button>
@@ -527,6 +527,29 @@
   </div>
 </div>
 
+<!-- Update Modal Popup -->
+<div class="ai-config-modal" id="updateModal">
+  <div class="ai-config-panel" style="max-width:540px">
+    <h3 style="margin-bottom:12px;font-size:17px;display:flex;align-items:center;gap:8px">
+      <span>📦 Atualização do resx-lint</span>
+      <span class="badge badge-blue" id="updateModalBadge">v2.1.0</span>
+    </h3>
+    <div style="display:grid;gap:12px">
+      <div id="updateModalInfo" style="font-size:13px;color:var(--ink-2)">
+        Verificando informações de versão...
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--ink-2);display:block;margin-bottom:4px">Log de Atualização (dotnet tool update --global ResxLint)</label>
+        <pre class="input-field" id="updateModalLog" style="height:140px;overflow-y:auto;white-space:pre-wrap;font-size:12px;color:var(--green)">Clique em 'Instalar Atualização' para iniciar.</pre>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:4px">
+        <button class="btn btn-primary" id="updateModalStartBtn" onclick="installUpdate()">⚡ Instalar Atualização</button>
+        <button class="btn btn-secondary" onclick="closeUpdateModal()">Fechar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Toast -->
 <div class="toast" id="toast"></div>
 
@@ -538,6 +561,7 @@ let editorData = null;
 let editorKeys = [];
 let editorLanguages = [];
 let dirtyCells = {};
+let updateCheckResult = null;
 
 // ====== FLAG HELPER ======
 function getLangFlag(code) {
@@ -567,51 +591,93 @@ function toggleTheme() {
 const savedTheme = localStorage.getItem('resx-lint-theme');
 if (savedTheme) document.documentElement.setAttribute('data-theme', savedTheme);
 
-// ====== UPDATE CHECK ======
+// ====== UPDATE CHECK & MODAL ======
 async function checkUpdate() {
   const badge = document.getElementById('versionBadge');
   badge.textContent = 'Verificando...';
   try {
     const info = await api('/api/update/check');
+    updateCheckResult = info;
     if (info.error) {
-      showToast(`Falha na atualização: ${info.error}`, true);
+      showToast(`Falha na verificação: ${info.error}`, true);
       badge.textContent = `v${info.currentVersion}`;
       return;
     }
+
+    openUpdateModal(info);
+
     if (info.isUpdateAvailable) {
       badge.textContent = `📦 ${info.latestVersion} disponível!`;
       badge.style.color = 'var(--accent)';
-      if (confirm(`Nova versão ${info.latestVersion} disponível! Instalar agora?`)) {
-        installUpdate();
-      }
     } else {
       badge.textContent = `✓ v${info.currentVersion}`;
       badge.style.color = 'var(--green)';
-      showToast(`resx-lint v${info.currentVersion} está atualizado`);
-      setTimeout(() => { badge.textContent = `v${info.currentVersion}`; badge.style.color = ''; }, 3000);
+      setTimeout(() => { badge.textContent = `v${info.currentVersion}`; badge.style.color = ''; }, 4000);
     }
   } catch (e) {
-    showToast(`Erro na atualização: ${e.message}`, true);
-    badge.textContent = 'v2.0';
+    showToast(`Erro na verificação: ${e.message}`, true);
+    badge.textContent = 'v2.1.0';
   }
 }
 
+function openUpdateModal(info) {
+  document.getElementById('updateModal').classList.add('open');
+  const badge = document.getElementById('updateModalBadge');
+  const infoDiv = document.getElementById('updateModalInfo');
+  const log = document.getElementById('updateModalLog');
+  const startBtn = document.getElementById('updateModalStartBtn');
+
+  badge.textContent = info.latestVersion ? `v${info.currentVersion} ➔ v${info.latestVersion}` : `v${info.currentVersion}`;
+
+  if (info.isUpdateAvailable) {
+    infoDiv.innerHTML = `Nova versão <strong style="color:var(--accent)">v${info.latestVersion}</strong> disponível no NuGet! Sua versão atual é <code>v${info.currentVersion}</code>.`;
+    startBtn.style.display = '';
+    startBtn.disabled = false;
+    startBtn.textContent = '⚡ Instalar Atualização';
+    log.textContent = "Clique em 'Instalar Atualização' para executar o comando 'dotnet tool update --global ResxLint'.";
+  } else {
+    infoDiv.innerHTML = `Você já está utilizando a versão mais recente (<strong style="color:var(--green)">v${info.currentVersion}</strong>).`;
+    startBtn.style.display = 'none';
+    log.textContent = "Sua instalação do resx-lint está atualizada.";
+  }
+}
+
+function closeUpdateModal() {
+  document.getElementById('updateModal').classList.remove('open');
+}
+
 async function installUpdate() {
+  const startBtn = document.getElementById('updateModalStartBtn');
+  const log = document.getElementById('updateModalLog');
+  const infoDiv = document.getElementById('updateModalInfo');
   const badge = document.getElementById('versionBadge');
-  badge.textContent = '⏳ Instalando...';
+
+  startBtn.disabled = true;
+  startBtn.textContent = '⏳ Instalando...';
+  log.textContent = "Executando: dotnet tool update --global ResxLint...\nAguarde alguns instantes.";
+
   try {
     const result = await api('/api/update/install', { method: 'POST' });
-    if (result.error) {
-      showToast(`Instalação falhou: ${result.error}`, true);
-      badge.textContent = 'Falhou';
-      return;
+    log.textContent = result.commandOutput || "Comando concluído.";
+
+    if (result.error || result.success === false) {
+      log.textContent += `\n\n❌ Erro: ${result.error || 'Falha ao atualizar'}`;
+      showToast(`Falha na atualização: ${result.error}`, true);
+      startBtn.disabled = false;
+      startBtn.textContent = '⚡ Tentar Novamente';
+    } else {
+      log.textContent += `\n\n✅ Processo de atualização concluído!`;
+      showToast(`Atualização finalizada! Reinicie o resx-lint no terminal.`);
+      infoDiv.innerHTML = `<strong style="color:var(--green)">✅ Atualização concluída com sucesso!</strong><br><span style="font-size:12px">Por favor, feche e abra o terminal/aplicação novamente para utilizar os novos binários da versão ${result.latestVersion || result.targetVersion || ''}.</span>`;
+      badge.textContent = `✓ v${result.latestVersion || result.targetVersion || '2.1.0'}`;
+      badge.style.color = 'var(--green)';
+      startBtn.style.display = 'none';
     }
-    badge.textContent = `✓ ${result.latestVersion}`;
-    badge.style.color = 'var(--green)';
-    showToast(`Atualizado para ${result.latestVersion}! Reinicie a aplicação.`);
   } catch (e) {
+    log.textContent += `\n\n❌ Erro de conexão/API: ${e.message}`;
     showToast(`Erro ao instalar: ${e.message}`, true);
-    badge.textContent = 'v2.0';
+    startBtn.disabled = false;
+    startBtn.textContent = '⚡ Tentar Novamente';
   }
 }
 
@@ -703,7 +769,7 @@ function renderProjectExplorer(files) {
             <div style="font-weight:600;font-size:15px;color:var(--ink)">📄 ${item.baseName}.resx</div>
           </div>
           <div style="font-size:12px;color:var(--ink-2);font-family:var(--mono)">${folderText}</div>
-          
+
           <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px">
             ${langPills}
           </div>
@@ -733,7 +799,7 @@ function updateSelectOptions(files) {
 
   files.forEach(f => {
     const label = `${f.projectName} › ${f.baseName}.resx (${(f.languages || []).length} idiomas)`;
-    
+
     const opt1 = document.createElement('option');
     opt1.value = f.resxFile;
     opt1.textContent = label;

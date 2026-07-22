@@ -12,6 +12,16 @@ class UpdateInfo
     public string? Error { get; init; }
 }
 
+class InstallResult
+{
+    public bool Success { get; init; }
+    public string CurrentVersion { get; init; } = "";
+    public string TargetVersion { get; init; } = "";
+    public string LatestVersion => TargetVersion;
+    public string CommandOutput { get; init; } = "";
+    public string? Error { get; init; }
+}
+
 class UpdateService
 {
     const string NuGetApiUrl = "https://api.nuget.org/v3-flatcontainer/resxlint/index.json";
@@ -38,10 +48,10 @@ class UpdateService
                 .FirstOrDefault();
 
             if (latest == null)
-                return new UpdateInfo { CurrentVersion = CurrentVersion, Error = "No versions found" };
+                return new UpdateInfo { CurrentVersion = CurrentVersion, Error = "Nenhuma versão encontrada no NuGet" };
 
-            var current = new Version(CurrentVersion.TrimStart('v'));
-            var latestV = new Version(latest.TrimStart('v'));
+            var current = TryParseVersion(CurrentVersion);
+            var latestV = TryParseVersion(latest);
 
             return new UpdateInfo
             {
@@ -61,50 +71,65 @@ class UpdateService
         }
     }
 
-    public static async Task<UpdateInfo> InstallAsync()
+    public static async Task<InstallResult> InstallAsync()
     {
         try
         {
             var info = await CheckAsync();
-            if (!info.IsUpdateAvailable)
-                return new UpdateInfo { CurrentVersion = CurrentVersion, Error = "No update available" };
 
             var psi = new ProcessStartInfo("dotnet", "tool update --global ResxLint")
             {
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
-                UseShellExecute = false
+                UseShellExecute = false,
+                CreateNoWindow = true
             };
 
             using var proc = Process.Start(psi);
             if (proc == null)
-                return new UpdateInfo { CurrentVersion = CurrentVersion, Error = "Failed to start update process" };
+                return new InstallResult { Success = false, CurrentVersion = CurrentVersion, Error = "Não foi possível iniciar o processo dotnet tool." };
 
             var output = await proc.StandardOutput.ReadToEndAsync();
             var error = await proc.StandardError.ReadToEndAsync();
             await proc.WaitForExitAsync();
 
+            var fullOutput = string.IsNullOrWhiteSpace(error) ? output : $"{output}\n{error}";
+
             if (proc.ExitCode != 0)
-                return new UpdateInfo { CurrentVersion = CurrentVersion, Error = error.Trim() };
-
-            var newVersion = output.Split(' ').LastOrDefault()?.Trim() ?? info.LatestVersion ?? "";
-
-            return new UpdateInfo
             {
+                return new InstallResult
+                {
+                    Success = false,
+                    CurrentVersion = CurrentVersion,
+                    TargetVersion = info.LatestVersion ?? "",
+                    CommandOutput = fullOutput.Trim(),
+                    Error = $"Falha ao executar 'dotnet tool update' (código {proc.ExitCode})"
+                };
+            }
+
+            return new InstallResult
+            {
+                Success = true,
                 CurrentVersion = CurrentVersion,
-                LatestVersion = newVersion,
-                IsUpdateAvailable = false,
-                DownloadUrl = info.DownloadUrl
+                TargetVersion = info.LatestVersion ?? "",
+                CommandOutput = fullOutput.Trim()
             };
         }
         catch (Exception ex)
         {
-            return new UpdateInfo
+            return new InstallResult
             {
+                Success = false,
                 CurrentVersion = CurrentVersion,
                 Error = ex.Message
             };
         }
+    }
+
+    static Version TryParseVersion(string v)
+    {
+        var clean = v.TrimStart('v').Split('-')[0];
+        return Version.TryParse(clean, out var parsed) ? parsed : new Version(0, 0, 0);
     }
 }
 
