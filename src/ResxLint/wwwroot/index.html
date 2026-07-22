@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="pt-BR" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>resx-lint</title>
+<title>resx-lint — Gestão Inteligente de Recursos RESX</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/@microsoft/signalr@8.0.0/dist/browser/signalr.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -96,7 +96,7 @@
     transition: all .15s;
   }
   .nav-btn:hover { color: var(--ink); background: var(--surface-2); }
-  .nav-btn.active { color: var(--accent); background: var(--accent-bg, rgba(108,138,255,0.1)); }
+  .nav-btn.active { color: var(--accent); background: var(--accent-bg, rgba(108,138,255,0.1)); font-weight: 600; }
 
   .main-area {
     overflow-y: auto;
@@ -136,10 +136,11 @@
     cursor: pointer;
     transition: all .15s;
     font-family: var(--font);
+    white-space: nowrap;
   }
   .btn-primary { background: var(--accent); color: #fff; }
   .btn-primary:hover { background: var(--accent-hover); }
-  .btn-secondary { background: var(--surface-2); color: var(--ink); }
+  .btn-secondary { background: var(--surface-2); color: var(--ink); border: 1px solid var(--border); }
   .btn-secondary:hover { background: var(--border); }
   .btn-danger { background: var(--red-bg); color: var(--red); }
   .btn-danger:hover { background: rgba(248,113,113,0.2); }
@@ -149,7 +150,8 @@
   .badge {
     display: inline-flex;
     align-items: center;
-    padding: 2px 10px;
+    gap: 4px;
+    padding: 3px 10px;
     border-radius: 20px;
     font-size: 12px;
     font-weight: 600;
@@ -257,24 +259,17 @@
   .filter-chip.active { border-color: var(--accent); background: var(--accent-bg, rgba(108,138,255,0.1)); }
   .filter-chip input { display: none; }
 
-  .tooltip { position: relative; }
-  .tooltip::after {
-    content: attr(data-tip);
-    position: absolute;
-    bottom: calc(100% + 6px);
-    left: 50%;
-    transform: translateX(-50%);
-    background: var(--ink);
-    color: var(--bg);
-    padding: 4px 10px;
-    border-radius: 6px;
-    font-size: 12px;
-    white-space: nowrap;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity .15s;
+  .project-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    transition: border-color .15s, transform .15s;
   }
-  .tooltip:hover::after { opacity: 1; }
+  .project-card:hover { border-color: var(--accent); transform: translateY(-2px); }
 
   .step-progress { display: flex; gap: 4px; margin-bottom: 12px; }
   .step-dot {
@@ -284,8 +279,6 @@
   .step-dot.active { background: var(--accent); }
   .step-dot.done { background: var(--green); }
   .step-dot.error { background: var(--red); }
-  .step-label { font-size: 13px; color: var(--ink-2); text-align: center; }
-  .step-label.active { color: var(--accent); font-weight: 500; }
 
   @media (max-width: 768px) {
     .main-area { padding: 16px; }
@@ -311,7 +304,7 @@
     border-radius: 16px;
     padding: 24px;
     width: 90%;
-    max-width: 420px;
+    max-width: 440px;
   }
 
   .toast {
@@ -347,12 +340,13 @@
   }
   .empty-state .icon { font-size: 48px; opacity: 0.3; }
   .empty-state h3 { font-size: 18px; font-weight: 600; }
-  .empty-state p { color: var(--ink-2); max-width: 400px; }
+  .empty-state p { color: var(--ink-2); max-width: 420px; }
 
   select.input-field { cursor: pointer; }
   option { background: var(--surface); color: var(--ink); }
 
   .section-title { font-size: 16px; font-weight: 600; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+  .lang-flag { font-size: 14px; }
 </style>
 </head>
 <body>
@@ -360,31 +354,57 @@
   <header>
     <div class="logo">RL</div>
     <span style="font-weight:600;font-size:15px">resx-lint</span>
-    <span class="version-badge" id="versionBadge" style="cursor:pointer" onclick="checkUpdate()" title="Click to check for updates">v2.0</span>
+    <span class="version-badge" id="versionBadge" style="cursor:pointer" onclick="checkUpdate()" title="Verificar atualizações">v2.1.0</span>
     <div class="tab-bar">
-      <button class="nav-btn active" data-view="lint" onclick="switchView('lint')">Lint Dashboard</button>
-      <button class="nav-btn" data-view="editor" onclick="switchView('editor')">Translation Editor</button>
+      <button class="nav-btn active" data-view="projects" onclick="switchView('projects')">📁 Projetos</button>
+      <button class="nav-btn" data-view="lint" onclick="switchView('lint')">🔍 Verificar Traduções</button>
+      <button class="nav-btn" data-view="editor" onclick="switchView('editor')">🌐 Tradução por IA & Edição</button>
     </div>
-    <button class="nav-btn" onclick="checkUpdate()" title="Check for updates">📦</button>
-    <button class="nav-btn" onclick="toggleTheme()" title="Toggle theme">🌓</button>
+    <button class="nav-btn" onclick="checkUpdate()" title="Verificar atualizações">📦</button>
+    <button class="nav-btn" onclick="toggleTheme()" title="Alternar tema">🌓</button>
   </header>
 
   <div class="main-area" id="mainArea">
 
+    <!-- ====== PROJECTS EXPLORER VIEW ====== -->
+    <div id="view-projects">
+      <div class="card" style="margin-bottom:20px">
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <label style="font-size:13px;font-weight:600;color:var(--ink)">Diretórios de Projetos (Separe por ponto e vírgula ';' ou quebra de linha para múltiplos projetos)</label>
+          <div style="display:flex;gap:12px;align-items:center">
+            <textarea class="input-field" id="multiProjectDirs" rows="2" placeholder="Ex: K:\Programas\CWSoftware\ISI Sys; K:\Programas\CWSoftware\AppDeployHub" style="resize:vertical">.</textarea>
+            <button class="btn btn-primary" onclick="scanAllProjects()" style="height:48px">🔍 Escanear Projetos</button>
+          </div>
+          <span style="font-size:12px;color:var(--ink-2)">Você pode adicionar quantas pastas de projeto desejar. O resx-lint agrupará cada pasta e exibirá os idiomas em colunas.</span>
+        </div>
+      </div>
+
+      <div id="projectExplorerContent">
+        <div class="section-title">📦 Projetos e Recursos Encontrados</div>
+        <div id="projectGrid" style="display:grid;grid-template-columns:repeat(auto-fill, minmax(320px, 1fr));gap:16px"></div>
+      </div>
+
+      <div id="projectExplorerEmpty" class="empty-state" style="display:none">
+        <div class="icon">📁</div>
+        <h3>Nenhum arquivo .resx encontrado</h3>
+        <p>Informe um ou mais diretórios válidos e clique em <strong>Escanear Projetos</strong>.</p>
+      </div>
+    </div>
+
     <!-- ====== LINT DASHBOARD VIEW ====== -->
-    <div id="view-lint">
+    <div id="view-lint" style="display:none">
       <div class="card" style="margin-bottom:20px">
         <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:end">
           <div style="flex:2;min-width:200px">
-            <label style="font-size:12px;color:var(--ink-2);display:block;margin-bottom:4px">Project Directory</label>
-            <input class="input-field" id="projectDir" placeholder="e.g. C:\Projects\MyApp" value=".">
+            <label style="font-size:12px;color:var(--ink-2);display:block;margin-bottom:4px">Diretório do Projeto</label>
+            <input class="input-field" id="projectDir" placeholder="Ex: C:\Projects\MyApp" value=".">
           </div>
-          <div style="flex:1;min-width:160px">
-            <label style="font-size:12px;color:var(--ink-2);display:block;margin-bottom:4px">Resx File</label>
-            <select class="input-field" id="resxFileSelect"><option value="">— scan project —</option></select>
+          <div style="flex:1;min-width:180px">
+            <label style="font-size:12px;color:var(--ink-2);display:block;margin-bottom:4px">Arquivo .resx</label>
+            <select class="input-field" id="resxFileSelect"><option value="">— selecione .resx —</option></select>
           </div>
-          <button class="btn btn-primary" onclick="scanProject()">Scan</button>
-          <button class="btn btn-primary" onclick="runLint()" id="runLintBtn">Run Lint</button>
+          <button class="btn btn-secondary" onclick="scanProject()">Escanear</button>
+          <button class="btn btn-primary" onclick="runLint()" id="runLintBtn">🔍 Verificar Traduções</button>
         </div>
       </div>
 
@@ -392,7 +412,7 @@
         <div class="card" style="padding:20px">
           <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
             <span class="progress-ring"></span>
-            <span style="font-size:14px" id="progressMessage">Initializing...</span>
+            <span style="font-size:14px" id="progressMessage">Iniciando verificação...</span>
           </div>
           <div class="step-progress" id="stepProgress">
             <div class="step-dot" data-step="1"></div>
@@ -403,9 +423,9 @@
             <div class="step-dot" data-step="6"></div>
           </div>
           <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--ink-2)">
-            <span>Duplicates</span>
+            <span>Duplicadas</span>
             <span>Base .resx</span>
-            <span>Languages</span>
+            <span>Idiomas</span>
             <span>XAML</span>
             <span>C#</span>
             <span>Designer.cs</span>
@@ -418,20 +438,20 @@
 
         <div id="autoFixBar" style="display:none;margin-bottom:16px">
           <div class="card" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-            <span style="font-size:14px">🔧 <strong>Auto-fixable issues detected</strong></span>
-            <button class="btn btn-primary btn-sm" onclick="previewAutoFix()">Preview Fixes</button>
-            <button class="btn btn-danger btn-sm" onclick="applyAutoFix()">Apply All Fixes</button>
+            <span style="font-size:14px">🔧 <strong>Problemas corrigíveis automaticamente encontrados!</strong></span>
+            <button class="btn btn-primary btn-sm" onclick="previewAutoFix()">Visualizar Correções</button>
+            <button class="btn btn-danger btn-sm" onclick="applyAutoFix()">Aplicar Todas as Correções</button>
           </div>
         </div>
 
-        <div class="section-title">Issues</div>
+        <div class="section-title">Problemas Detectados</div>
         <div id="issueList"></div>
       </div>
 
       <div id="lintEmpty" class="empty-state">
         <div class="icon">🔍</div>
-        <h3>Ready to scan</h3>
-        <p>Select a project directory and .resx file, then click <strong>Run Lint</strong> to validate translations.</p>
+        <h3>Pronto para verificar</h3>
+        <p>Selecione um projeto e arquivo .resx, depois clique em <strong>Verificar Traduções</strong>.</p>
       </div>
     </div>
 
@@ -440,35 +460,35 @@
       <div class="card" style="margin-bottom:16px">
         <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:end">
           <div style="flex:2;min-width:200px">
-            <label style="font-size:12px;color:var(--ink-2);display:block;margin-bottom:4px">Resx File</label>
-            <select class="input-field" id="editorResxSelect"><option value="">— select a .resx file —</option></select>
+            <label style="font-size:12px;color:var(--ink-2);display:block;margin-bottom:4px">Arquivo .resx Selecionado</label>
+            <select class="input-field" id="editorResxSelect"><option value="">— selecione um arquivo .resx —</option></select>
           </div>
-          <button class="btn btn-primary" onclick="loadEditor()">Load Editor</button>
-          <button class="btn btn-secondary" onclick="openAiConfig()">🤖 AI Translate</button>
+          <button class="btn btn-primary" onclick="loadEditor()">Carregar Grade</button>
+          <button class="btn btn-secondary" onclick="openAiConfig()">🤖 Tradução IA em Lote</button>
         </div>
       </div>
 
       <div id="editorContent" style="display:none">
         <div id="editorToolbar" class="filter-bar">
-          <input class="input-field" id="editorSearch" placeholder="Search keys..." style="max-width:260px;font-family:var(--font)" oninput="filterEditor()">
-          <span style="color:var(--ink-2);font-size:13px">Status:</span>
+          <input class="input-field" id="editorSearch" placeholder="Buscar chaves ou valores..." style="max-width:260px;font-family:var(--font)" oninput="filterEditor()">
+          <span style="color:var(--ink-2);font-size:13px">Filtros de Status:</span>
           <label class="filter-chip active" data-filter="ok" onclick="toggleFilter(this)"><input type="checkbox" checked> ✅ OK</label>
-          <label class="filter-chip active" data-filter="missing" onclick="toggleFilter(this)"><input type="checkbox" checked> ❌ Missing</label>
-          <label class="filter-chip active" data-filter="placeholder" onclick="toggleFilter(this)"><input type="checkbox" checked> 🟠 Placeholder</label>
-          <label class="filter-chip active" data-filter="identical" onclick="toggleFilter(this)"><input type="checkbox" checked> ⚪ Identical</label>
-          <span style="color:var(--ink-2);font-size:13px;margin-left:8px" id="editorCount"></span>
+          <label class="filter-chip active" data-filter="missing" onclick="toggleFilter(this)"><input type="checkbox" checked> ❌ Faltantes</label>
+          <label class="filter-chip active" data-filter="placeholder" onclick="toggleFilter(this)"><input type="checkbox" checked> 🟠 Placeholders</label>
+          <label class="filter-chip active" data-filter="identical" onclick="toggleFilter(this)"><input type="checkbox" checked> ⚪ Idênticos</label>
+          <span style="color:var(--ink-2);font-size:13px;margin-left:auto" id="editorCount"></span>
         </div>
         <div id="editorGrid" class="editor-grid"></div>
         <div style="margin-top:12px;display:flex;gap:8px;justify-content:end">
-          <button class="btn btn-secondary" onclick="loadEditor()">Reset</button>
-          <button class="btn btn-primary" onclick="saveEditor()">💾 Save Changes</button>
+          <button class="btn btn-secondary" onclick="loadEditor()">Descartar Alterações</button>
+          <button class="btn btn-primary" onclick="saveEditor()">💾 Salvar Alterações</button>
         </div>
       </div>
 
       <div id="editorEmpty" class="empty-state">
         <div class="icon">🌐</div>
-        <h3>Translation Editor</h3>
-        <p>Load a .resx file to view and edit all translations across languages in a visual grid.</p>
+        <h3>Matriz de Tradução Visual</h3>
+        <p>Carregue um arquivo .resx para visualizar e editar todos os idiomas lado a lado em colunas.</p>
       </div>
     </div>
   </div>
@@ -477,31 +497,31 @@
 <!-- AI Config Modal -->
 <div class="ai-config-modal" id="aiModal">
   <div class="ai-config-panel">
-    <h3 style="margin-bottom:16px;font-size:17px">🤖 AI Translation</h3>
+    <h3 style="margin-bottom:16px;font-size:17px">🤖 Tradução por Inteligência Artificial</h3>
     <div style="display:grid;gap:12px">
       <div>
-        <label style="font-size:12px;color:var(--ink-2);display:block;margin-bottom:4px">Provider</label>
+        <label style="font-size:12px;color:var(--ink-2);display:block;margin-bottom:4px">Provedor AI</label>
         <select class="input-field" id="aiProvider">
-          <option value="gemini">Google Gemini 2.0 Flash</option>
+          <option value="gemini">Google Gemini 2.0 Flash (Recomendado)</option>
           <option value="claude">Anthropic Claude</option>
           <option value="openai">OpenAI GPT-4o-mini</option>
           <option value="deepseek">DeepSeek Chat</option>
         </select>
       </div>
       <div>
-        <label style="font-size:12px;color:var(--ink-2);display:block;margin-bottom:4px">API Key</label>
-        <input class="input-field" id="aiApiKey" type="password" placeholder="Enter your API key" style="font-family:var(--font)">
+        <label style="font-size:12px;color:var(--ink-2);display:block;margin-bottom:4px">Chave de API (API Key)</label>
+        <input class="input-field" id="aiApiKey" type="password" placeholder="Cole sua API Key aqui" style="font-family:var(--font)">
       </div>
       <div>
-        <label style="font-size:12px;color:var(--ink-2);display:block;margin-bottom:4px">Target Language</label>
-        <select class="input-field" id="aiTargetLang"><option value="">— translate missing in all —</option></select>
+        <label style="font-size:12px;color:var(--ink-2);display:block;margin-bottom:4px">Idioma Alvo</label>
+        <select class="input-field" id="aiTargetLang"><option value="">— Traduzir faltantes em TODOS os idiomas —</option></select>
       </div>
       <div style="display:flex;gap:8px;margin-top:8px">
-        <button class="btn btn-primary" onclick="aiTranslateAll()">Translate Missing</button>
-        <button class="btn btn-secondary" onclick="closeAiConfig()">Cancel</button>
+        <button class="btn btn-primary" onclick="aiTranslateAll()">⚡ Traduzir com IA</button>
+        <button class="btn btn-secondary" onclick="closeAiConfig()">Cancelar</button>
       </div>
       <div id="aiProgress" style="display:none;font-size:13px;color:var(--ink-2);text-align:center;padding:8px">
-        <span class="progress-ring"></span> Translating...
+        <span class="progress-ring"></span> Traduzindo em segundo plano...
       </div>
     </div>
   </div>
@@ -512,11 +532,29 @@
 
 <script>
 // ====== STATE ======
+let discoveredProjects = [];
 let lintResult = null;
 let editorData = null;
 let editorKeys = [];
 let editorLanguages = [];
 let dirtyCells = {};
+
+// ====== FLAG HELPER ======
+function getLangFlag(code) {
+  if (!code || code === 'Default' || code === 'base') return '🌐';
+  const c = code.toLowerCase();
+  if (c.includes('en')) return '🇺🇸';
+  if (c.includes('es')) return '🇪🇸';
+  if (c.includes('pt')) return '🇧🇷';
+  if (c.includes('de')) return '🇩🇪';
+  if (c.includes('fr')) return '🇫🇷';
+  if (c.includes('it')) return '🇮🇹';
+  if (c.includes('ja')) return '🇯🇵';
+  if (c.includes('zh')) return '🇨🇳';
+  if (c.includes('ru')) return '🇷🇺';
+  if (c.includes('ko')) return '🇰🇷';
+  return '🏳️';
+}
 
 // ====== THEME ======
 function toggleTheme() {
@@ -532,53 +570,54 @@ if (savedTheme) document.documentElement.setAttribute('data-theme', savedTheme);
 // ====== UPDATE CHECK ======
 async function checkUpdate() {
   const badge = document.getElementById('versionBadge');
-  badge.textContent = 'Checking...';
+  badge.textContent = 'Verificando...';
   try {
     const info = await api('/api/update/check');
     if (info.error) {
-      showToast(`Update check failed: ${info.error}`, true);
+      showToast(`Falha na atualização: ${info.error}`, true);
       badge.textContent = `v${info.currentVersion}`;
       return;
     }
     if (info.isUpdateAvailable) {
-      badge.textContent = `📦 ${info.latestVersion} available!`;
+      badge.textContent = `📦 ${info.latestVersion} disponível!`;
       badge.style.color = 'var(--accent)';
-      if (confirm(`Update ${info.currentVersion} → ${info.latestVersion} available! Install now?`)) {
+      if (confirm(`Nova versão ${info.latestVersion} disponível! Instalar agora?`)) {
         installUpdate();
       }
     } else {
-      badge.textContent = `✓ ${info.currentVersion}`;
+      badge.textContent = `✓ v${info.currentVersion}`;
       badge.style.color = 'var(--green)';
-      showToast(`resx-lint ${info.currentVersion} is up to date`);
+      showToast(`resx-lint v${info.currentVersion} está atualizado`);
       setTimeout(() => { badge.textContent = `v${info.currentVersion}`; badge.style.color = ''; }, 3000);
     }
   } catch (e) {
-    showToast(`Update check failed: ${e.message}`, true);
+    showToast(`Erro na atualização: ${e.message}`, true);
     badge.textContent = 'v2.0';
   }
 }
 
 async function installUpdate() {
   const badge = document.getElementById('versionBadge');
-  badge.textContent = '⏳ Installing...';
+  badge.textContent = '⏳ Instalando...';
   try {
     const result = await api('/api/update/install', { method: 'POST' });
     if (result.error) {
-      showToast(`Update failed: ${result.error}`, true);
-      badge.textContent = 'Update failed';
+      showToast(`Instalação falhou: ${result.error}`, true);
+      badge.textContent = 'Falhou';
       return;
     }
     badge.textContent = `✓ ${result.latestVersion}`;
     badge.style.color = 'var(--green)';
-    showToast(`Updated to ${result.latestVersion}! Please restart resx-lint.`);
+    showToast(`Atualizado para ${result.latestVersion}! Reinicie a aplicação.`);
   } catch (e) {
-    showToast(`Update failed: ${e.message}`, true);
+    showToast(`Erro ao instalar: ${e.message}`, true);
     badge.textContent = 'v2.0';
   }
 }
 
 // ====== NAVIGATION ======
 function switchView(name) {
+  document.getElementById('view-projects').style.display = name === 'projects' ? '' : 'none';
   document.getElementById('view-lint').style.display = name === 'lint' ? '' : 'none';
   document.getElementById('view-editor').style.display = name === 'editor' ? '' : 'none';
   document.querySelectorAll('.nav-btn[data-view]').forEach(b => b.classList.toggle('active', b.dataset.view === name));
@@ -605,29 +644,131 @@ async function api(url, opts = {}) {
   return res.json();
 }
 
+// ====== PROJECTS EXPLORER ======
+async function scanAllProjects() {
+  const input = document.getElementById('multiProjectDirs').value.trim();
+  if (!input) return showToast('Informe ao menos um diretório de projeto', true);
+
+  try {
+    const files = await api(`/api/project/resx-files?dir=${encodeURIComponent(input)}`);
+    discoveredProjects = files;
+    renderProjectExplorer(files);
+    updateSelectOptions(files);
+  } catch (e) {
+    showToast(e.message, true);
+  }
+}
+
+function renderProjectExplorer(files) {
+  const grid = document.getElementById('projectGrid');
+  const empty = document.getElementById('projectExplorerEmpty');
+
+  if (!files || files.length === 0) {
+    grid.innerHTML = '';
+    empty.style.display = '';
+    return;
+  }
+  empty.style.display = 'none';
+
+  const grouped = {};
+  files.forEach(f => {
+    const pName = f.projectName || 'Projeto';
+    if (!grouped[pName]) grouped[pName] = [];
+    grouped[pName].push(f);
+  });
+
+  let html = '';
+  for (const [projName, resxList] of Object.entries(grouped)) {
+    html += `
+      <div style="grid-column:1/-1;margin-top:12px;font-size:16px;font-weight:700;display:flex;align-items:center;gap:8px">
+        <span>📦 ${projName}</span>
+        <span class="badge badge-blue">${resxList.length} arquivo(s) .resx</span>
+      </div>
+    `;
+
+    resxList.forEach(item => {
+      const langs = item.languages || ['Default'];
+      const langPills = langs.map(l => `
+        <span class="badge badge-gray" style="font-size:11px">
+          <span class="lang-flag">${getLangFlag(l)}</span> ${l}
+        </span>
+      `).join('');
+
+      const escFile = encodeURIComponent(item.resxFile);
+      const folderText = item.relativeFolder ? `📁 ${item.relativeFolder}` : '📁 Raiz do Projeto';
+
+      html += `
+        <div class="project-card">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start">
+            <div style="font-weight:600;font-size:15px;color:var(--ink)">📄 ${item.baseName}.resx</div>
+          </div>
+          <div style="font-size:12px;color:var(--ink-2);font-family:var(--mono)">${folderText}</div>
+          
+          <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px">
+            ${langPills}
+          </div>
+
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <button class="btn btn-secondary btn-sm" onclick="quickLint('${escFile}')">
+              🔍 Auditar / Lint
+            </button>
+            <button class="btn btn-primary btn-sm" onclick="quickEdit('${escFile}')">
+              🌐 Editor & IA
+            </button>
+          </div>
+        </div>
+      `;
+    });
+  }
+
+  grid.innerHTML = html;
+}
+
+function updateSelectOptions(files) {
+  const selLint = document.getElementById('resxFileSelect');
+  const selEditor = document.getElementById('editorResxSelect');
+
+  selLint.innerHTML = '<option value="">— selecione .resx —</option>';
+  selEditor.innerHTML = '<option value="">— selecione .resx —</option>';
+
+  files.forEach(f => {
+    const label = `${f.projectName} › ${f.baseName}.resx (${(f.languages || []).length} idiomas)`;
+    
+    const opt1 = document.createElement('option');
+    opt1.value = f.resxFile;
+    opt1.textContent = label;
+    selLint.appendChild(opt1);
+
+    const opt2 = document.createElement('option');
+    opt2.value = f.resxFile;
+    opt2.textContent = label;
+    selEditor.appendChild(opt2);
+  });
+}
+
+function quickLint(fileUri) {
+  const decoded = decodeURIComponent(fileUri);
+  document.getElementById('resxFileSelect').value = decoded;
+  switchView('lint');
+  runLint();
+}
+
+function quickEdit(fileUri) {
+  const decoded = decodeURIComponent(fileUri);
+  document.getElementById('editorResxSelect').value = decoded;
+  switchView('editor');
+  loadEditor();
+}
+
 // ====== LINT DASHBOARD ======
 async function scanProject() {
   const dir = getProjectDir();
-  if (!dir) return showToast('Enter a project directory', true);
+  if (!dir) return showToast('Informe o diretório do projeto', true);
   try {
     const files = await api(`/api/project/resx-files?dir=${encodeURIComponent(dir)}`);
-    const sel = document.getElementById('resxFileSelect');
-    sel.innerHTML = '<option value="">— select .resx —</option>';
-    if (files.length === 0) {
-      sel.innerHTML += '<option value="" disabled>No .resx files found</option>';
-      showToast('No .resx files found in project', true);
-      return;
-    }
-    files.forEach(f => {
-      const opt = document.createElement('option');
-      opt.value = f.resxFile;
-      opt.textContent = f.resxFile.replace(dir.replace(/\/+$/, ''), '').replace(/^[\\\/]/, '') || f.baseName;
-      if (f.languageFiles && f.languageFiles.length > 0)
-        opt.textContent += ` (${f.languageFiles.length} languages)`;
-      sel.appendChild(opt);
-    });
-    if (files.length === 1) sel.value = files[0].resxFile;
-    showToast(`Found ${files.length} .resx file(s)`);
+    discoveredProjects = files;
+    updateSelectOptions(files);
+    showToast(`Encontrado(s) ${files.length} arquivo(s) .resx`);
   } catch (e) {
     showToast(e.message, true);
   }
@@ -665,13 +806,13 @@ function setStepProgress(step, total) {
 async function runLint() {
   const dir = getProjectDir();
   const resxFile = document.getElementById('resxFileSelect').value;
-  if (!resxFile) return showToast('Select a .resx file first', true);
+  if (!resxFile) return showToast('Selecione um arquivo .resx primeiro', true);
 
   document.getElementById('lintProgress').style.display = '';
   document.getElementById('lintResults').style.display = 'none';
   document.getElementById('lintEmpty').style.display = 'none';
   document.getElementById('runLintBtn').disabled = true;
-  document.getElementById('progressMessage').textContent = 'Connecting...';
+  document.getElementById('progressMessage').textContent = 'Conectando...';
   setStepProgress(0, 6);
 
   try {
@@ -693,7 +834,7 @@ async function runLint() {
         reject(new Error(err));
       });
       conn.invoke('RunLint', { projectDir: dir, resxFile }).catch(reject);
-      setTimeout(() => reject(new Error('Lint timed out after 120s')), 120000);
+      setTimeout(() => reject(new Error('Tempo limite excedido')), 120000);
     });
 
     lintResult = result;
@@ -709,15 +850,14 @@ async function runLint() {
 }
 
 function renderLintResults(r) {
-  // Summary cards
   const cards = document.getElementById('summaryCards');
   const items = [
-    { label: 'Keys', value: r.totalKeys, cls: 'badge-blue' },
-    { label: 'Languages', value: r.languageCount, cls: 'badge-blue' },
-    { label: 'Fatal', value: r.summary.fatalErrors, cls: r.summary.fatalErrors > 0 ? 'badge-red' : 'badge-gray' },
-    { label: 'Warnings', value: r.summary.warnings, cls: r.summary.warnings > 0 ? 'badge-orange' : 'badge-gray' },
-    { label: 'Auto-fixes', value: r.summary.autoFixesApplied, cls: r.summary.autoFixesApplied > 0 ? 'badge-green' : 'badge-gray' },
-    { label: 'Missing', value: r.summary.missingTranslations, cls: r.summary.missingTranslations > 0 ? 'badge-red' : 'badge-gray' },
+    { label: 'Chaves Totais', value: r.totalKeys, cls: 'badge-blue' },
+    { label: 'Idiomas', value: r.languageCount, cls: 'badge-blue' },
+    { label: 'Erros Fatais', value: r.summary.fatalErrors, cls: r.summary.fatalErrors > 0 ? 'badge-red' : 'badge-gray' },
+    { label: 'Avisos', value: r.summary.warnings, cls: r.summary.warnings > 0 ? 'badge-orange' : 'badge-gray' },
+    { label: 'Corrigíveis', value: r.summary.autoFixesApplied, cls: r.summary.autoFixesApplied > 0 ? 'badge-green' : 'badge-gray' },
+    { label: 'Faltantes', value: r.summary.missingTranslations, cls: r.summary.missingTranslations > 0 ? 'badge-red' : 'badge-gray' },
   ];
   cards.innerHTML = items.map(i => `
     <div class="card" style="text-align:center;padding:16px">
@@ -727,20 +867,18 @@ function renderLintResults(r) {
     </div>
   `).join('');
 
-  // Auto-fix bar
   const fixable = r.issues.filter(i => i.canAutoFix);
   document.getElementById('autoFixBar').style.display = fixable.length > 0 ? '' : 'none';
 
-  // Issues
   const list = document.getElementById('issueList');
   if (r.issues.length === 0) {
-    list.innerHTML = '<div class="card" style="text-align:center;padding:24px;color:var(--green)">✅ No issues found</div>';
+    list.innerHTML = '<div class="card" style="text-align:center;padding:24px;color:var(--green)">✅ Nenhum problema encontrado nas traduções!</div>';
   } else {
     list.innerHTML = r.issues.map(i => {
       const sev = i.severity;
       const icon = sev === 'fatal' ? '✖' : sev === 'warning' ? '⚠' : 'ℹ';
       const sim = i.similarKeys && i.similarKeys.length > 0
-        ? `<div style="font-size:12px;color:var(--ink-2);margin-top:2px">Similar: ${i.similarKeys.join(', ')}</div>`
+        ? `<div style="font-size:12px;color:var(--ink-2);margin-top:2px">Semelhantes: ${i.similarKeys.join(', ')}</div>`
         : '';
       return `<div class="issue-item ${sev}">
         <span class="issue-icon">${icon}</span>
@@ -764,12 +902,12 @@ async function previewAutoFix() {
   try {
     const data = await api(`/api/lint/auto-fix?projectDir=${encodeURIComponent(dir)}&resxFile=${encodeURIComponent(resxFile)}`);
     const fixList = data.preview || [];
-    if (fixList.length === 0) return showToast('No auto-fixable issues');
+    if (fixList.length === 0) return showToast('Nenhum problema corrigível automaticamente');
     const msg = fixList.map(f => `  • ${f.code}: ${f.fixDescription}`).join('\n');
-    if (confirm(`Preview of fixes:\n${msg}\n\nApply these fixes?`)) {
+    if (confirm(`Pré-visualização das correções:\n${msg}\n\nAplicar agora?`)) {
       lintResult = data.result;
       renderLintResults(data.result);
-      showToast(`Applied ${fixList.length} fix(es)`);
+      showToast(`Aplicada(s) ${fixList.length} correção(ões)`);
     }
   } catch (e) {
     showToast(e.message, true);
@@ -777,7 +915,7 @@ async function previewAutoFix() {
 }
 
 async function applyAutoFix() {
-  if (confirm('Apply all auto-fixes? This will modify files.')) {
+  if (confirm('Aplicar todas as correções automáticas? Isso modificará os arquivos no disco.')) {
     await previewAutoFix();
   }
 }
@@ -786,7 +924,7 @@ async function applyAutoFix() {
 async function loadEditor() {
   const sel = document.getElementById('editorResxSelect');
   const resxFile = sel.value;
-  if (!resxFile) return showToast('Select a .resx file', true);
+  if (!resxFile) return showToast('Selecione um arquivo .resx', true);
 
   document.getElementById('editorContent').style.display = 'none';
   document.getElementById('editorEmpty').style.display = 'none';
@@ -798,10 +936,9 @@ async function loadEditor() {
     editorLanguages = data.languages;
     dirtyCells = {};
 
-    // Populate AI target language select
     const aiSel = document.getElementById('aiTargetLang');
-    aiSel.innerHTML = '<option value="">— translate all languages —</option>' +
-      data.languages.map(l => `<option value="${l.code}">${l.code}</option>`).join('');
+    aiSel.innerHTML = '<option value="">— Traduzir faltantes em TODOS os idiomas —</option>' +
+      data.languages.map(l => `<option value="${l.code}">${getLangFlag(l.code)} ${l.code}</option>`).join('');
 
     renderEditor();
     document.getElementById('editorContent').style.display = '';
@@ -809,24 +946,6 @@ async function loadEditor() {
     showToast(e.message, true);
     document.getElementById('editorEmpty').style.display = '';
   }
-}
-
-async function scanEditorResx() {
-  const dir = getProjectDir();
-  if (!dir) return;
-  try {
-    const files = await api(`/api/project/resx-files?dir=${encodeURIComponent(dir)}`);
-    const sel = document.getElementById('editorResxSelect');
-    sel.innerHTML = '<option value="">— select a .resx file —</option>';
-    files.forEach(f => {
-      const opt = document.createElement('option');
-      opt.value = f.resxFile;
-      opt.textContent = f.resxFile.replace(dir.replace(/\/+$/, ''), '').replace(/^[\\\/]/, '') || f.baseName;
-      if (f.languageFiles && f.languageFiles.length > 0)
-        opt.textContent += ` (${f.languageFiles.length} languages)`;
-      sel.appendChild(opt);
-    });
-  } catch (e) { /* ignore */ }
 }
 
 function renderEditor() {
@@ -842,17 +961,22 @@ function renderEditor() {
     return statuses.some(s => activeFilters.includes(s));
   });
 
-  document.getElementById('editorCount').textContent = `${filteredKeys.length} / ${editorKeys.length} keys`;
+  document.getElementById('editorCount').textContent = `${filteredKeys.length} / ${editorKeys.length} chaves exibidas`;
 
-  let html = '<table><thead><tr><th style="min-width:160px">Key</th>';
+  let html = '<table><thead><tr><th style="min-width:180px">Chave (Key)</th>';
   langs.forEach(l => {
     const info = l === 'base' ? null : editorLanguages.find(lg => lg.code === l);
     let badge = '';
+    let aiBtn = '';
     if (info) {
-      const issues = (info.missingKeys || 0) + (info.placeholders || 0);
-      if (issues > 0) badge = `<span class="badge badge-red" style="margin-left:6px">${issues}</span>`;
+      const missing = info.missingKeys || 0;
+      if (missing > 0) {
+        badge = `<span class="badge badge-red" style="margin-left:6px">${missing} faltantes</span>`;
+        aiBtn = `<button class="btn btn-primary btn-sm" style="margin-left:6px;padding:2px 8px;font-size:11px" onclick="quickAiTranslateLang('${l}')" title="Traduzir idioma ${l} com IA">⚡ IA</button>`;
+      }
     }
-    html += `<th>${l}${badge}</th>`;
+    const flag = getLangFlag(l);
+    html += `<th><span class="lang-flag">${flag}</span> ${l}${badge}${aiBtn}</th>`;
   });
   html += '</tr></thead><tbody>';
 
@@ -877,7 +1001,6 @@ function renderEditor() {
   html += '</tbody></table>';
   grid.innerHTML = html;
 
-  // Auto-resize textareas
   grid.querySelectorAll('textarea').forEach(ta => autoResize(ta));
 }
 
@@ -926,7 +1049,7 @@ async function saveEditor() {
   const resxFile = sel.value;
   if (!resxFile) return;
   const langs = Object.keys(dirtyCells);
-  if (langs.length === 0) return showToast('No changes to save');
+  if (langs.length === 0) return showToast('Nenhuma alteração para salvar');
 
   let saved = 0;
   for (const lang of langs) {
@@ -937,13 +1060,13 @@ async function saveEditor() {
       });
       saved += Object.keys(dirtyCells[lang]).length;
     } catch (e) {
-      showToast(`Error saving ${lang}: ${e.message}`, true);
+      showToast(`Erro ao salvar ${lang}: ${e.message}`, true);
       return;
     }
   }
 
   dirtyCells = {};
-  showToast(`Saved ${saved} translation(s)`);
+  showToast(`Salvas ${saved} tradução(ões) com sucesso!`);
   await loadEditor();
 }
 
@@ -956,6 +1079,11 @@ function openAiConfig() {
   document.getElementById('aiModal').classList.add('open');
 }
 
+function quickAiTranslateLang(targetLang) {
+  document.getElementById('aiTargetLang').value = targetLang;
+  openAiConfig();
+}
+
 function closeAiConfig() {
   document.getElementById('aiModal').classList.remove('open');
   document.getElementById('aiProgress').style.display = 'none';
@@ -966,19 +1094,18 @@ async function aiTranslateAll() {
   const apiKey = document.getElementById('aiApiKey').value.trim();
   const targetLang = document.getElementById('aiTargetLang').value;
 
-  if (!apiKey) return showToast('Enter an API key', true);
+  if (!apiKey) return showToast('Informe a chave de API (API Key)', true);
 
   localStorage.setItem('resx-lint-ai-key', apiKey);
   localStorage.setItem('resx-lint-ai-provider', provider);
 
-  if (!editorData) return showToast('Load editor data first', true);
+  if (!editorData) return showToast('Carregue os dados do editor primeiro', true);
 
-  // Determine which languages to translate
   const langs = targetLang
     ? editorLanguages.filter(l => l.code === targetLang)
     : editorLanguages;
 
-  if (langs.length === 0) return showToast('No languages to translate', true);
+  if (langs.length === 0) return showToast('Nenhum idioma selecionado', true);
 
   document.getElementById('aiProgress').style.display = '';
   const sourceLang = 'base';
@@ -993,7 +1120,6 @@ async function aiTranslateAll() {
 
     if (toTranslate.length === 0) continue;
 
-    // Batch in chunks of 20
     const batchSize = 20;
     for (let i = 0; i < toTranslate.length; i += batchSize) {
       const batch = toTranslate.slice(i, i + batchSize);
@@ -1019,12 +1145,12 @@ async function aiTranslateAll() {
               body: JSON.stringify({ resxFile: document.getElementById('editorResxSelect').value, language: lang.code, updates })
             });
           }
-          showToast(`Translated ${Object.keys(updates).length} key(s) to ${lang.code}`);
+          showToast(`Traduzidas ${Object.keys(updates).length} chaves para ${lang.code}`);
         } else {
-          showToast(`AI error for ${lang.code}: ${result.error || 'unknown'}`, true);
+          showToast(`Erro IA (${lang.code}): ${result.error || 'desconhecido'}`, true);
         }
       } catch (e) {
-        showToast(`API error for ${lang.code}: ${e.message}`, true);
+        showToast(`Erro API (${lang.code}): ${e.message}`, true);
       }
     }
   }
@@ -1036,30 +1162,7 @@ async function aiTranslateAll() {
 
 // ====== INIT ======
 document.addEventListener('DOMContentLoaded', async () => {
-  // Pre-scan current directory
-  try {
-    const dir = '.';
-    const files = await api(`/api/project/resx-files?dir=${encodeURIComponent(dir)}`);
-    const sel = document.getElementById('resxFileSelect');
-    files.forEach(f => {
-      const opt = document.createElement('option');
-      opt.value = f.resxFile;
-      opt.textContent = f.resxFile.replace(/^.*[\\\/]/, '') || f.baseName;
-      if (f.languageFiles && f.languageFiles.length > 0)
-        opt.textContent += ` (${f.languageFiles.length} languages)`;
-      sel.appendChild(opt);
-    });
-
-    const edSel = document.getElementById('editorResxSelect');
-    files.forEach(f => {
-      const opt = document.createElement('option');
-      opt.value = f.resxFile;
-      opt.textContent = f.resxFile.replace(/^.*[\\\/]/, '') || f.baseName;
-      if (f.languageFiles && f.languageFiles.length > 0)
-        opt.textContent += ` (${f.languageFiles.length} languages)`;
-      edSel.appendChild(opt);
-    });
-  } catch (e) { /* ignore */ }
+  await scanAllProjects();
 });
 </script>
 </body>

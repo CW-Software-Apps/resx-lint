@@ -86,8 +86,11 @@ record AiTranslateResult(
 );
 
 record ProjectResxInfo(
+    string ProjectName,
+    string RelativeFolder,
     string ResxFile,
     string BaseName,
+    string[] Languages,
     string[] LanguageFiles
 );
 

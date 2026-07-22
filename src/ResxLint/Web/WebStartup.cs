@@ -67,27 +67,70 @@ class WebStartup
             return Results.Ok(result);
         });
 
-        api.MapGet("/project/resx-files", (string dir) =>
+        api.MapGet("/project/resx-files", (string? dir) =>
         {
-            if (!Directory.Exists(dir))
-                return Results.BadRequest(new { error = $"Directory not found: {dir}" });
+            if (string.IsNullOrWhiteSpace(dir))
+                return Results.BadRequest(new { error = "Directory path is required" });
 
-            var resxFiles = Directory.GetFiles(dir, "*.resx", SearchOption.AllDirectories)
-                .Where(f => !f.Contains("obj") && !f.Contains("bin"))
-                .Select(f =>
+            var inputDirs = dir.Split(new[] { ';', ',', '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            var results = new List<ProjectResxInfo>();
+
+            foreach (var inputDir in inputDirs)
+            {
+                if (!Directory.Exists(inputDir)) continue;
+
+                var allResx = Directory.GetFiles(inputDir, "*.resx", SearchOption.AllDirectories)
+                    .Where(f => !f.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}") &&
+                                !f.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}") &&
+                                !f.Contains("/obj/") && !f.Contains("/bin/"))
+                    .ToList();
+
+                var langFileRx = new System.Text.RegularExpressions.Regex(@"\.[a-z]{2}(-[A-Z]{2,4})?\.resx$", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+                var baseFiles = allResx.Where(f => !langFileRx.IsMatch(f)).ToList();
+                if (baseFiles.Count == 0)
+                {
+                    baseFiles = allResx.GroupBy(f =>
+                    {
+                        var name = Path.GetFileNameWithoutExtension(f);
+                        var idx = name.IndexOf('.');
+                        return idx > 0 ? name[..idx] : name;
+                    }).Select(g => g.First()).ToList();
+                }
+
+                foreach (var f in baseFiles)
                 {
                     var baseName = Path.GetFileNameWithoutExtension(f);
                     var dirPath = Path.GetDirectoryName(f)!;
+                    var projName = FindProjectName(dirPath, inputDir);
+
                     var langFiles = Directory.GetFiles(dirPath, $"{baseName}.*.resx")
                         .Where(lf => lf != f)
-                        .Select(lf => Path.GetFileName(lf)!)
                         .ToArray();
 
-                    return new ProjectResxInfo(f, baseName, langFiles);
-                })
-                .ToArray();
+                    var languages = new List<string> { "Default" };
+                    foreach (var lf in langFiles)
+                    {
+                        var lfName = Path.GetFileNameWithoutExtension(lf);
+                        if (lfName.StartsWith(baseName + "."))
+                        {
+                            var langCode = lfName[(baseName.Length + 1)..];
+                            languages.Add(langCode);
+                        }
+                    }
 
-            return Results.Ok(resxFiles);
+                    var relFolder = Path.GetRelativePath(inputDir, dirPath);
+                    results.Add(new ProjectResxInfo(
+                        ProjectName: projName,
+                        RelativeFolder: relFolder == "." ? "" : relFolder,
+                        ResxFile: f,
+                        BaseName: baseName,
+                        Languages: [.. languages],
+                        LanguageFiles: langFiles.Select(Path.GetFileName).ToArray()!
+                    ));
+                }
+            }
+
+            return Results.Ok(results);
         });
 
         api.MapGet("/translate/resx-data", (string resxFile) =>
@@ -210,5 +253,27 @@ class WebStartup
             catch { }
         }
         return start;
+    }
+
+    static string FindProjectName(string dirPath, string rootDir)
+    {
+        try
+        {
+            var current = new DirectoryInfo(dirPath);
+            var root = new DirectoryInfo(rootDir);
+            while (current != null)
+            {
+                var csproj = current.GetFiles("*.csproj").FirstOrDefault();
+                if (csproj != null)
+                    return Path.GetFileNameWithoutExtension(csproj.Name);
+
+                if (current.FullName.Equals(root.FullName, StringComparison.OrdinalIgnoreCase) || current.Parent == null)
+                    break;
+
+                current = current.Parent;
+            }
+        }
+        catch { }
+        return Path.GetFileName(dirPath);
     }
 }
