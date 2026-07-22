@@ -124,8 +124,17 @@ if (cmdArgs.Length == 0)
 
     // Auto-detect: find first .resx in current directory
     var cwd = Directory.GetCurrentDirectory();
-    var foundResx = Directory.GetFiles(cwd, "*.resx", SearchOption.AllDirectories)
-        .FirstOrDefault(f => !f.Contains("obj") && !f.Contains("bin"));
+    string[] allResx;
+    try
+    {
+        var opts = new EnumerationOptions { RecurseSubdirectories = true, IgnoreInaccessible = true };
+        allResx = Directory.GetFiles(cwd, "*.resx", opts);
+    }
+    catch
+    {
+        allResx = [];
+    }
+    var foundResx = allResx.FirstOrDefault(f => !f.Contains("obj") && !f.Contains("bin"));
 
     if (foundResx != null)
     {
