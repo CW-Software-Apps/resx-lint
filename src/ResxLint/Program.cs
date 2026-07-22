@@ -3,10 +3,10 @@ using ResxLint.Services;
 using ResxLint.Web;
 
 var cmdArgs = Environment.GetCommandLineArgs()[1..];
+var port = 7950;
 
 if (cmdArgs.Length > 0 && cmdArgs[0] is "--serve" or "-s")
 {
-    var port = 5123;
     var noOpen = false;
     for (int i = 1; i < cmdArgs.Length; i++)
     {
@@ -121,7 +121,7 @@ if (cmdArgs.Length == 0)
 
     if (keyPressed)
     {
-        WebStartup.Start(5123, false);
+        WebStartup.Start(port, false);
         return 0;
     }
 
@@ -149,7 +149,7 @@ if (cmdArgs.Length == 0)
         try { Console.WriteLine("No .resx files found in current directory — opening Web UI..."); } catch { }
         try
         {
-            WebStartup.Start(5123, false);
+        WebStartup.Start(port, false);
         }
         catch (Exception webEx)
         {
@@ -267,7 +267,7 @@ static void PrintHelp()
           --fail-on-warnings      Treat TRANS006/TRANS007 as fatal errors
           --quiet                 Suppress OK and INFO messages
           --serve, -s             Start web UI dashboard
-          --port <port>           Web UI port (default: 5123)
+          --port <port>           Web UI port (default: 7950)
           --no-open               Don't open browser automatically
           --check-update, -u      Check for updates on NuGet
           --help, -h              Show this help
