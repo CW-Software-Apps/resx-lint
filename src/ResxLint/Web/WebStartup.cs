@@ -176,7 +176,7 @@ class WebStartup
         });
 
         api.MapGet("/translate/providers", () =>
-            Results.Ok(TranslationService.SupportedProviders));
+            Results.Ok(TranslationService.GetSupportedProviders()));
 
         api.MapGet("/lint/auto-fix/preview", (string projectDir, string resxFile) =>
         {

@@ -567,16 +567,26 @@
     <h3 style="margin-bottom:16px;font-size:17px;font-weight:600">🤖 AI Translation Studio</h3>
     <div style="display:grid;gap:14px">
       <div>
-        <label style="font-size:12px;color:var(--ink-2);display:block;margin-bottom:4px">AI Provider</label>
-        <select class="input-field" id="aiProvider">
-          <option value="gemini">Google Gemini 2.0 Flash (Recommended)</option>
-          <option value="claude">Anthropic Claude</option>
-          <option value="openai">OpenAI GPT-4o-mini</option>
-          <option value="deepseek">DeepSeek Chat</option>
+        <label style="font-size:12px;color:var(--ink-2);display:block;margin-bottom:4px">AI Provider <span id="aiProviderStatus" style="font-size:11px;color:var(--orange)">(loading...)</span></label>
+        <select class="input-field" id="aiProvider" onchange="onAiProviderChange()">
+          <option value="">— loading providers —</option>
         </select>
       </div>
+      <div id="aiCustomFields" style="display:none;gap:12px;flex-direction:column">
+        <div>
+          <label style="font-size:12px;color:var(--ink-2);display:block;margin-bottom:4px">Custom API Endpoint</label>
+          <input class="input-field" id="aiCustomEndpoint" placeholder="https://api.example.com/v1/chat/completions" style="font-family:var(--font)">
+        </div>
+        <div>
+          <label style="font-size:12px;color:var(--ink-2);display:block;margin-bottom:4px">Model Name</label>
+          <input class="input-field" id="aiCustomModel" placeholder="e.g. gpt-4, claude-sonnet-4" style="font-family:var(--font)">
+        </div>
+      </div>
       <form id="aiKeyForm" onsubmit="event.preventDefault(); aiTranslateAll()">
-        <label style="font-size:12px;color:var(--ink-2);display:block;margin-bottom:4px">API Key</label>
+        <label style="font-size:12px;color:var(--ink-2);display:block;margin-bottom:4px">
+          API Key
+          <a id="aiDocsLink" href="#" target="_blank" style="font-size:11px;color:var(--accent);margin-left:8px;display:none">Get key →</a>
+        </label>
         <input class="input-field" id="aiApiKey" type="password" placeholder="Enter your API Key" style="font-family:var(--font)">
       </form>
       <div>
@@ -1378,12 +1388,67 @@ async function saveEditor() {
 }
 
 // ====== AI TRANSLATION ======
-function openAiConfig() {
-  const savedKey = localStorage.getItem('resx-lint-ai-key') || '';
-  const savedProvider = localStorage.getItem('resx-lint-ai-provider') || 'gemini';
-  document.getElementById('aiApiKey').value = savedKey;
-  document.getElementById('aiProvider').value = savedProvider;
-  document.getElementById('aiModal').classList.add('open');
+let cachedProviders = [];
+
+async function openAiConfig() {
+  const statusEl = document.getElementById('aiProviderStatus');
+  const sel = document.getElementById('aiProvider');
+  statusEl.textContent = '(loading...)';
+  sel.disabled = true;
+
+  try {
+    const providers = await api('/api/translate/providers');
+    cachedProviders = providers;
+    const savedProvider = localStorage.getItem('resx-lint-ai-provider') || 'openai';
+    const savedKey = localStorage.getItem('resx-lint-ai-key') || '';
+    const savedEndpoint = localStorage.getItem('resx-lint-ai-custom-endpoint') || '';
+    const savedModel = localStorage.getItem('resx-lint-ai-custom-model') || '';
+
+    sel.innerHTML = providers.map(p => {
+      const label = p.recommended ? `${p.name} — ${p.model} (Recommended)` : `${p.name} — ${p.model}`;
+      const docs = p.docsUrl ? ` [${p.docsUrl}]` : '';
+      return `<option value="${p.id}" data-docs="${p.docsUrl || ''}" data-endpoint="${p.endpoint || ''}" data-model="${p.model || ''}">${label}</option>`;
+    }).join('');
+
+    sel.value = savedProvider;
+    statusEl.textContent = `(${providers.length} providers available)`;
+    sel.disabled = false;
+
+    document.getElementById('aiApiKey').value = savedKey;
+    document.getElementById('aiCustomEndpoint').value = savedEndpoint;
+    document.getElementById('aiCustomModel').value = savedModel;
+
+    onAiProviderChange();
+    document.getElementById('aiModal').classList.add('open');
+  } catch (e) {
+    statusEl.textContent = '(failed to load)';
+    sel.innerHTML = '<option value="openai">OpenAI — gpt-4o-mini</option><option value="gemini">Google Gemini — gemini-2.0-flash</option><option value="claude">Anthropic Claude — claude-sonnet-4</option><option value="deepseek">DeepSeek — deepseek-chat</option>';
+    sel.disabled = false;
+    document.getElementById('aiApiKey').value = localStorage.getItem('resx-lint-ai-key') || '';
+    document.getElementById('aiModal').classList.add('open');
+  }
+}
+
+function onAiProviderChange() {
+  const sel = document.getElementById('aiProvider');
+  const selected = sel.options[sel.selectedIndex];
+  const isCustom = sel.value === 'custom';
+  const customFields = document.getElementById('aiCustomFields');
+  const docsLink = document.getElementById('aiDocsLink');
+
+  customFields.style.display = isCustom ? 'flex' : 'none';
+
+  if (!isCustom && selected) {
+    const docs = selected.dataset.docs;
+    if (docs) {
+      docsLink.href = docs;
+      docsLink.style.display = 'inline';
+    } else {
+      docsLink.style.display = 'none';
+    }
+  } else {
+    docsLink.style.display = 'none';
+  }
 }
 
 function quickAiTranslateLang(targetLang) {
@@ -1400,11 +1465,17 @@ async function aiTranslateAll() {
   const provider = document.getElementById('aiProvider').value;
   const apiKey = document.getElementById('aiApiKey').value.trim();
   const targetLang = document.getElementById('aiTargetLang').value;
+  const customEndpoint = document.getElementById('aiCustomEndpoint').value.trim();
+  const customModel = document.getElementById('aiCustomModel').value.trim();
 
   if (!apiKey) return showToast('Enter an API Key', true);
+  if (provider === 'custom' && !customEndpoint) return showToast('Enter a custom API endpoint', true);
+  if (provider === 'custom' && !customModel) return showToast('Enter a custom model name', true);
 
   localStorage.setItem('resx-lint-ai-key', apiKey);
   localStorage.setItem('resx-lint-ai-provider', provider);
+  localStorage.setItem('resx-lint-ai-custom-endpoint', customEndpoint);
+  localStorage.setItem('resx-lint-ai-custom-model', customModel);
 
   if (!editorData) return showToast('Load editor matrix data first', true);
 
@@ -1433,9 +1504,15 @@ async function aiTranslateAll() {
       const texts = batch.map(t => t.value);
 
       try {
+        const body = { provider, apiKey, texts, sourceLang, targetLang: lang.code };
+        if (provider === 'custom') {
+          body.customEndpoint = customEndpoint;
+          body.customModel = customModel;
+        }
+
         const result = await api('/api/translate/ai', {
           method: 'POST',
-          body: JSON.stringify({ provider, apiKey, texts, sourceLang, targetLang: lang.code })
+          body: JSON.stringify(body)
         });
 
         if (result.success && result.translations) {

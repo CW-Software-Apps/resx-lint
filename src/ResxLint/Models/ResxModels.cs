@@ -76,7 +76,18 @@ record AiTranslateRequest(
     string ApiKey,
     string[] Texts,
     string SourceLang,
-    string TargetLang
+    string TargetLang,
+    string? CustomEndpoint = null,
+    string? CustomModel = null
+);
+
+record AiProviderInfo(
+    string Id,
+    string Name,
+    string Endpoint,
+    string Model,
+    string? DocsUrl = null,
+    bool Recommended = false
 );
 
 record AiTranslateResult(

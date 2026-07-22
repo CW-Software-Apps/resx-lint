@@ -1,0 +1,90 @@
+[
+  {
+    "id": "openai",
+    "name": "OpenAI",
+    "endpoint": "https://api.openai.com/v1/chat/completions",
+    "model": "gpt-4o-mini",
+    "docsUrl": "https://platform.openai.com/api-keys",
+    "recommended": true
+  },
+  {
+    "id": "gemini",
+    "name": "Google Gemini",
+    "endpoint": "https://generativelanguage.googleapis.com/v1beta/models/{0}:generateContent?key={1}",
+    "model": "gemini-2.0-flash",
+    "docsUrl": "https://aistudio.google.com/apikey",
+    "recommended": true
+  },
+  {
+    "id": "claude",
+    "name": "Anthropic Claude",
+    "endpoint": "https://api.anthropic.com/v1/messages",
+    "model": "claude-sonnet-4-20250514",
+    "docsUrl": "https://console.anthropic.com/",
+    "recommended": true
+  },
+  {
+    "id": "deepseek",
+    "name": "DeepSeek",
+    "endpoint": "https://api.deepseek.com/chat/completions",
+    "model": "deepseek-chat",
+    "docsUrl": "https://platform.deepseek.com/api_keys",
+    "recommended": false
+  },
+  {
+    "id": "openrouter",
+    "name": "OpenRouter",
+    "endpoint": "https://openrouter.ai/api/v1/chat/completions",
+    "model": "openai/gpt-4o-mini",
+    "docsUrl": "https://openrouter.ai/keys",
+    "recommended": false
+  },
+  {
+    "id": "groq",
+    "name": "Groq",
+    "endpoint": "https://api.groq.com/openai/v1/chat/completions",
+    "model": "llama-3.3-70b-versatile",
+    "docsUrl": "https://console.groq.com/keys",
+    "recommended": false
+  },
+  {
+    "id": "together",
+    "name": "Together AI",
+    "endpoint": "https://api.together.xyz/v1/chat/completions",
+    "model": "mistralai/Mixtral-8x7B-Instruct-v0.1",
+    "docsUrl": "https://api.together.ai/settings/api-keys",
+    "recommended": false
+  },
+  {
+    "id": "mistral",
+    "name": "Mistral AI",
+    "endpoint": "https://api.mistral.ai/v1/chat/completions",
+    "model": "mistral-small-latest",
+    "docsUrl": "https://console.mistral.ai/api-keys",
+    "recommended": false
+  },
+  {
+    "id": "perplexity",
+    "name": "Perplexity",
+    "endpoint": "https://api.perplexity.ai/chat/completions",
+    "model": "sonar-pro",
+    "docsUrl": "https://www.perplexity.com/settings/api",
+    "recommended": false
+  },
+  {
+    "id": "xai",
+    "name": "xAI Grok",
+    "endpoint": "https://api.x.ai/v1/chat/completions",
+    "model": "grok-2-latest",
+    "docsUrl": "https://console.x.ai/",
+    "recommended": false
+  },
+  {
+    "id": "custom",
+    "name": "Custom (OpenAI-compatible)",
+    "endpoint": "",
+    "model": "",
+    "docsUrl": null,
+    "recommended": false
+  }
+]
