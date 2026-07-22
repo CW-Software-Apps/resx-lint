@@ -178,7 +178,7 @@ class WebStartup
         api.MapGet("/translate/providers", () =>
             Results.Ok(TranslationService.SupportedProviders));
 
-        api.MapGet("/lint/auto-fix", (string projectDir, string resxFile) =>
+        api.MapGet("/lint/auto-fix/preview", (string projectDir, string resxFile) =>
         {
             if (!Directory.Exists(projectDir))
                 return Results.BadRequest(new { error = $"Project directory not found: {projectDir}" });
@@ -187,22 +187,53 @@ class WebStartup
 
             try
             {
+                // WhatIf: true — read-only, never touches disk.
                 var whatIfService = new LintService(new LintRequest(projectDir, resxFile, WhatIf: true));
                 var whatIfResult = whatIfService.Run();
-
-                var fixService = new LintService(new LintRequest(projectDir, resxFile, WhatIf: false));
-                var fixResult = fixService.Run();
 
                 return Results.Ok(new
                 {
                     preview = whatIfResult.Issues.Where(i => i.CanAutoFix).Select(i => new
                     {
                         i.Code, i.Key, i.File, i.FixDescription
-                    }),
-                    result = fixResult
+                    })
                 });
             }
             catch (Exception ex)
+            {
+                return Results.BadRequest(new { error = ex.Message });
+            }
+        });
+
+        api.MapPost("/lint/auto-fix/apply", (string projectDir, string resxFile) =>
+        {
+            if (!Directory.Exists(projectDir))
+                return Results.BadRequest(new { error = $"Project directory not found: {projectDir}" });
+            if (!File.Exists(resxFile))
+                return Results.BadRequest(new { error = $"Resx file not found: {resxFile}" });
+
+            try
+            {
+                // WhatIf: false — actually writes the fixes to disk. Caller must have confirmed already.
+                var fixService = new LintService(new LintRequest(projectDir, resxFile, WhatIf: false));
+                var fixResult = fixService.Run();
+
+                return Results.Ok(new { result = fixResult });
+            }
+            catch (Exception ex)
+            {
+                return Results.BadRequest(new { error = ex.Message });
+            }
+        });
+
+        api.MapPost("/project/browse", async (string? initialDir) =>
+        {
+            try
+            {
+                var path = await NativeDialogService.PickFolderAsync(initialDir);
+                return Results.Ok(new { path });
+            }
+            catch (FolderPickerUnavailableException ex)
             {
                 return Results.BadRequest(new { error = ex.Message });
             }

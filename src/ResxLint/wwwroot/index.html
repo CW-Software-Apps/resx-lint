@@ -387,7 +387,7 @@
   <header>
     <div class="logo">RL</div>
     <span style="font-weight:700;font-size:16px;letter-spacing:-0.02em">resx-lint</span>
-    <span class="version-badge" id="versionBadge" style="cursor:pointer" onclick="checkUpdate()" title="Check for updates">v2.2.2</span>
+    <span class="version-badge" id="versionBadge" style="cursor:pointer" onclick="checkUpdate()" title="Check for updates">v2.2.3</span>
     <div class="tab-bar">
       <button class="nav-btn active" data-view="projects" onclick="switchView('projects')">📁 Projects</button>
       <button class="nav-btn" data-view="lint" onclick="switchView('lint')">🔍 Audit & Lint</button>
@@ -410,10 +410,8 @@
 
           <div style="display:flex;gap:12px;align-items:flex-start">
             <textarea class="input-field" id="multiProjectDirs" rows="2" placeholder="e.g. C:\Projects\MyApp; C:\Projects\Library" style="resize:vertical">.</textarea>
-            
-            <input type="file" id="folderPicker" webkitdirectory directory multiple style="display:none" onchange="handleFolderBrowse(event)">
-            
-            <button class="btn btn-secondary" onclick="triggerFolderBrowse()" style="height:48px" title="Browse folder visually">
+
+            <button class="btn btn-secondary" onclick="triggerFolderBrowse()" style="height:48px" title="Browse folder visually" id="browseBtn">
               📁 Browse...
             </button>
             <button class="btn btn-secondary" onclick="discoverProjects()" style="height:48px" title="Auto-discover .csproj projects in this folder">
@@ -598,7 +596,7 @@
   <div class="ai-config-panel" style="max-width:540px">
     <h3 style="margin-bottom:12px;font-size:17px;font-weight:600;display:flex;align-items:center;gap:8px">
       <span>📦 resx-lint Update</span>
-      <span class="badge badge-blue" id="updateModalBadge">v2.2.0</span>
+      <span class="badge badge-blue" id="updateModalBadge">v2.2.3</span>
     </h3>
     <div style="display:grid;gap:14px">
       <div id="updateModalInfo" style="font-size:13px;color:var(--ink-2)">
@@ -709,28 +707,31 @@ function selectRecentFolder(pEnc) {
 }
 
 // ====== FOLDER BROWSE ======
-function triggerFolderBrowse() {
-  document.getElementById('folderPicker').click();
-}
+async function triggerFolderBrowse() {
+  const btn = document.getElementById('browseBtn');
+  const cur = document.getElementById('multiProjectDirs').value.trim();
+  const initialDir = (!cur || cur === '.') ? '' : cur.split(/[;\n]/)[0].trim();
 
-function handleFolderBrowse(event) {
-  const files = event.target.files;
-  if (!files || files.length === 0) return;
+  btn.disabled = true;
+  btn.textContent = '⏳ Waiting for dialog...';
+  try {
+    const data = await api(`/api/project/browse${initialDir ? `?initialDir=${encodeURIComponent(initialDir)}` : ''}`, { method: 'POST' });
+    if (!data.path) return; // user cancelled the dialog, or not on Windows
 
-  const sample = files[0];
-  const relativePath = sample.webkitRelativePath || '';
-  const topFolder = relativePath.split('/')[0] || relativePath.split('\\')[0];
-
-  if (topFolder) {
     const input = document.getElementById('multiProjectDirs');
-    const cur = input.value.trim();
-    if (!cur || cur === '.') {
-      input.value = topFolder;
-    } else if (!cur.includes(topFolder)) {
-      input.value = `${cur}; ${topFolder}`;
+    const now = input.value.trim();
+    if (!now || now === '.') {
+      input.value = data.path;
+    } else if (!now.includes(data.path)) {
+      input.value = `${now}; ${data.path}`;
     }
-    showToast(`Folder selected: ${topFolder}`);
+    showToast(`Folder selected: ${data.path}`);
     scanAllProjects();
+  } catch (e) {
+    showToast(e.message, true);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '📁 Browse...';
   }
 }
 
@@ -783,7 +784,7 @@ async function checkUpdate() {
     }
   } catch (e) {
     showToast(`Update check failed: ${e.message}`, true);
-    badge.textContent = 'v2.2.0';
+    badge.textContent = 'v2.2.3';
   }
 }
 
@@ -989,7 +990,7 @@ function filterProjectExplorer() {
 
       html += `
         <div class="project-card">
-          <div style="display:flex;justify-space-between;align-items:flex-start">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start">
             <div style="font-weight:600;font-size:15px;color:var(--ink)">📄 ${item.baseName}.resx</div>
           </div>
           <div style="font-size:12px;color:var(--ink-2);font-family:var(--mono)">${folderText}</div>
@@ -1190,23 +1191,30 @@ async function previewAutoFix() {
   const dir = getProjectDir();
   const resxFile = document.getElementById('resxFileSelect').value;
   try {
-    const data = await api(`/api/lint/auto-fix?projectDir=${encodeURIComponent(dir)}&resxFile=${encodeURIComponent(resxFile)}`);
+    // Read-only: WhatIf run on the server, never writes to disk.
+    const data = await api(`/api/lint/auto-fix/preview?projectDir=${encodeURIComponent(dir)}&resxFile=${encodeURIComponent(resxFile)}`);
     const fixList = data.preview || [];
     if (fixList.length === 0) return showToast('No auto-fixable issues');
     const msg = fixList.map(f => `  • ${f.code}: ${f.fixDescription}`).join('\n');
-    if (confirm(`Fix Preview:\n${msg}\n\nApply these fixes?`)) {
-      lintResult = data.result;
-      renderLintResults(data.result);
-      showToast(`Applied ${fixList.length} fix(es)`);
-    }
+    alert(`Fix Preview (nothing has been written to disk yet):\n${msg}`);
   } catch (e) {
     showToast(e.message, true);
   }
 }
 
 async function applyAutoFix() {
-  if (confirm('Apply all auto-fixes? This will modify files on disk.')) {
-    await previewAutoFix();
+  if (!lintResult) return;
+  if (!confirm('Apply all auto-fixes? This will modify files on disk.')) return;
+
+  const dir = getProjectDir();
+  const resxFile = document.getElementById('resxFileSelect').value;
+  try {
+    const data = await api(`/api/lint/auto-fix/apply?projectDir=${encodeURIComponent(dir)}&resxFile=${encodeURIComponent(resxFile)}`, { method: 'POST' });
+    lintResult = data.result;
+    renderLintResults(data.result);
+    showToast(`Applied ${data.result.summary.autoFixesApplied} fix(es)`);
+  } catch (e) {
+    showToast(e.message, true);
   }
 }
 
@@ -1276,9 +1284,11 @@ function renderEditor() {
       const tv = k.translations[l];
       if (!tv) { html += `<td class="cell-missing"></td>`; return; }
       const cls = `cell-${tv.status}`;
-      const val = tv.value || '';
+      const originalVal = tv.value || '';
+      const pending = dirtyCells[l]?.[k.name];
+      const val = pending !== undefined ? pending : originalVal;
       const isEditable = l !== 'base';
-      const dataAttrs = `data-key="${k.name}" data-lang="${l}" data-original="${encodeURIComponent(val)}"`;
+      const dataAttrs = `data-key="${k.name}" data-lang="${l}" data-original="${encodeURIComponent(originalVal)}"`;
       if (isEditable) {
         html += `<td class="${cls}"><textarea class="cell-edit" ${dataAttrs} onchange="markDirty(this)" rows="1">${escHtml(val)}</textarea></td>`;
       } else {
