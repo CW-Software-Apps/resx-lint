@@ -525,6 +525,12 @@
         </div>
       </div>
 
+      <div id="projectErrorBanner" style="display:none;margin-bottom:16px">
+        <div class="card card-error" style="padding:12px 16px;display:flex;align-items:center;gap:8px">
+          <span id="projectErrorText" style="font-size:13px;color:var(--red)"></span>
+        </div>
+      </div>
+
       <div id="savedProjectsList"></div>
 
       <div id="projectEmpty" class="empty-state">
@@ -810,20 +816,30 @@ function saveProjects(list) {
   localStorage.setItem('resx-lint-projects', JSON.stringify(list));
 }
 
+let _scanCount = 0;
+
 function showScanProgress(msg) {
+  _scanCount++;
   const el = document.getElementById('projectScanProgress');
-  document.getElementById('scanProgressMessage').textContent = msg || 'Scanning...';
-  el.style.display = '';
+  if (el) {
+    document.getElementById('scanProgressMessage').textContent = msg || 'Scanning...';
+    el.style.display = '';
+  }
 }
 
 function hideScanProgress() {
-  document.getElementById('projectScanProgress').style.display = 'none';
+  _scanCount--;
+  if (_scanCount > 0) return;
+  _scanCount = 0;
+  const el = document.getElementById('projectScanProgress');
+  if (el) el.style.display = 'none';
 }
 
 function showProjectError(msg) {
   const el = document.getElementById('projectErrorBanner');
-  document.getElementById('projectErrorText').textContent = msg;
-  el.style.display = msg ? '' : 'none';
+  const txt = document.getElementById('projectErrorText');
+  if (txt) txt.textContent = msg;
+  if (el) el.style.display = msg ? '' : 'none';
 }
 
 // ====== ADD PROJECT POPUP ======
@@ -1240,12 +1256,18 @@ function showToast(msg, isError) {
 
 // ====== API HELPER ======
 async function api(url, opts = {}) {
-  const res = await fetch(url, { headers: { 'Content-Type': 'application/json' }, ...opts });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: res.statusText }));
-    throw new Error(err.error || res.statusText);
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 30000);
+  try {
+    const res = await fetch(url, { headers: { 'Content-Type': 'application/json' }, signal: controller.signal, ...opts });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: res.statusText }));
+      throw new Error(err.error || res.statusText);
+    }
+    return res.json();
+  } finally {
+    clearTimeout(timer);
   }
-  return res.json();
 }
 
 // ====== LINT DASHBOARD ======
