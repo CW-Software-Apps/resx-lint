@@ -522,7 +522,7 @@
   <header>
     <div class="logo">RL</div>
     <span style="font-weight:700;font-size:16px;letter-spacing:-0.02em">resx-lint</span>
-    <span class="version-badge" id="versionBadge" style="cursor:pointer" onclick="checkUpdate()" title="Check for updates">v2.2.3</span>
+    <span class="version-badge" id="versionBadge" style="cursor:pointer" onclick="checkUpdate()" title="Check for updates">v—</span>
     <div class="tab-bar">
       <button class="nav-btn active" data-view="projects" onclick="switchView('projects')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg> Projects <span class="kbd-hint">Ctrl+1</span></button>
       <button class="nav-btn" data-view="lint" onclick="switchView('lint')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg> Audit & Lint <span class="kbd-hint">Ctrl+2</span></button>
@@ -773,7 +773,7 @@
   <div class="ai-config-panel" style="max-width:540px">
     <h3 style="margin-bottom:12px;font-size:17px;font-weight:600;display:flex;align-items:center;gap:8px">
       <span><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 9.4 7.55 4.24"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="M3.29 7 12 12l8.71-5M12 22V12"/></svg> resx-lint Update</span>
-      <span class="badge badge-info" id="updateModalBadge">v2.2.3</span>
+      <span class="badge badge-info" id="updateModalBadge">v—</span>
     </h3>
     <div style="display:grid;gap:14px">
       <div id="updateModalInfo" style="font-size:13px;color:var(--ink-2)">
@@ -1234,7 +1234,7 @@ async function checkUpdate() {
     }
   } catch (e) {
     showToast(`Update check failed: ${e.message}`, true);
-    badge.textContent = 'v2.2.3';
+    badge.textContent = 'v—';
   }
 }
 
@@ -1619,7 +1619,7 @@ async function loadEditor() {
 
     const aiSel = document.getElementById('aiTargetLang');
     aiSel.innerHTML = '<option value="">— Translate missing in ALL languages —</option>' +
-      data.languages.map(l => `<option value="${l.code}">${icon('lang')} ${getLangLabel(l.code)} — ${l.code}</option>`).join('');
+      data.languages.map(l => `<option value="${l.code}">${localeToFlag(l.code)} ${l.code}</option>`).join('');
 
     renderEditor();
     document.getElementById('editorContent').style.display = '';
@@ -1960,6 +1960,7 @@ async function aiTranslateAll() {
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('initialLoading').style.display = 'none';
   renderSavedProjects();
+  checkUpdate();
 });
 </script>
 </body>
