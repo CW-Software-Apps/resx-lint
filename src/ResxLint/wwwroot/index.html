@@ -281,17 +281,21 @@
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    padding: 5px 14px;
+    padding: 6px 16px;
     border-radius: 20px;
     font-size: 13px;
+    font-weight: 500;
     cursor: pointer;
     border: 1px solid var(--border);
-    background: var(--surface-2);
+    background: color-mix(in oklch, var(--surface-2) 70%, var(--bg));
+    color: var(--ink-2);
     transition: all .15s;
     user-select: none;
   }
-  .filter-chip.active { border-color: var(--accent); background: var(--accent-soft); font-weight: 500; }
+  .filter-chip:hover { border-color: var(--ink-2); color: var(--ink); }
+  .filter-chip.active { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); font-weight: 600; }
   .filter-chip input { display: none; }
+  .filter-bar-bottom { padding: 12px 0; border-top: 1px solid var(--border); margin-top: 8px; }
 
   .recent-chip {
     display: inline-flex;
@@ -515,6 +519,8 @@
   .lang-picker-flag { font-size: 20px; width: 28px; text-align: center; }
   .lang-picker-code { font-family: var(--mono); font-size: 13px; font-weight: 600; min-width: 56px; }
   .lang-picker-name { color: var(--ink-2); font-size: 13px; }
+  .lang-flags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+  .lang-tag { font-size: 12px; padding: 2px 8px; border-radius: var(--radius-sm); background: var(--surface-2); display: inline-flex; align-items: center; gap: 4px; }
 </style>
 </head>
 <body>
@@ -531,6 +537,8 @@
     <button class="nav-btn" onclick="checkUpdate()" title="Check for updates" aria-label="Check for updates"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 9.4 7.55 4.24"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="M3.29 7 12 12l8.71-5M12 22V12"/></svg></button>
     <button class="nav-btn" onclick="toggleTheme()" title="Toggle dark/light theme" aria-label="Toggle dark/light theme"><svg class="icon" id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg></button>
     <a class="nav-btn" href="https://github.com/CW-Software-Apps/resx-lint" target="_blank" title="Documentation" aria-label="Open documentation"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg></a>
+    <button class="nav-btn" onclick="configureDefaultLang()" title="Set default base language" aria-label="Set default base language">🌐</button>
+    <button class="nav-btn" id="sfxBtn" onclick="toggleSfx()" title="Toggle sound effects" aria-label="Toggle sound effects">🔇</button>
   </header>
 
   <div class="main-area" id="mainArea">
@@ -666,6 +674,7 @@
           <span style="color:var(--ink-2);font-size:13px;margin-left:auto" id="editorCount"></span>
         </div>
         <div id="editorGrid" class="editor-grid"></div>
+        <div id="editorFilterBottom" class="filter-bar filter-bar-bottom" style="display:none"></div>
         <div style="margin-top:14px;display:flex;gap:10px;justify-content:end">
           <button class="btn btn-secondary" onclick="confirmDiscard()">Discard Changes</button>
           <button class="btn btn-primary" onclick="saveEditor()"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8"/><path d="M7 3v5h8"/></svg> Save Changes</button>
@@ -839,6 +848,59 @@ function localeToFlag(code) {
   }
   const a = region.toUpperCase().split('').map(c => String.fromCodePoint(0x1F1E6 + c.charCodeAt(0) - 65));
   return a.join('');
+}
+
+// ====== SOUND EFFECTS ======
+let _sfxEnabled = localStorage.getItem('resx-lint-sfx') !== 'off';
+function updateSfxBtn() {
+  const btn = document.getElementById('sfxBtn');
+  if (btn) btn.innerHTML = _sfxEnabled ? '🔊' : '🔇';
+}
+function toggleSfx() {
+  _sfxEnabled = !_sfxEnabled;
+  localStorage.setItem('resx-lint-sfx', _sfxEnabled ? 'on' : 'off');
+  updateSfxBtn();
+  if (_sfxEnabled) playSfx('click');
+}
+function playSfx(type) {
+  if (!_sfxEnabled) return;
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = 'sine';
+    if (type === 'success') {
+      osc.frequency.setValueAtTime(880, ctx.currentTime);
+      osc.frequency.setValueAtTime(1100, ctx.currentTime + 0.1);
+      gain.gain.setValueAtTime(0.15, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.3);
+    } else if (type === 'error') {
+      osc.frequency.setValueAtTime(330, ctx.currentTime);
+      osc.frequency.setValueAtTime(280, ctx.currentTime + 0.15);
+      gain.gain.setValueAtTime(0.15, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.4);
+    } else if (type === 'done') {
+      osc.frequency.setValueAtTime(660, ctx.currentTime);
+      osc.frequency.setValueAtTime(880, ctx.currentTime + 0.08);
+      osc.frequency.setValueAtTime(1100, ctx.currentTime + 0.16);
+      gain.gain.setValueAtTime(0.12, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.35);
+    } else {
+      osc.frequency.setValueAtTime(600, ctx.currentTime);
+      gain.gain.setValueAtTime(0.08, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.1);
+    }
+  } catch {}
 }
 
 function getDefaultLang() {
@@ -1025,8 +1087,11 @@ async function addProject() {
 
     proj.resxCount = files.length || 0;
     const allLangs = new Set();
-    files.forEach(f => (f.languages || []).forEach(l => allLangs.add(l)));
+    files.forEach(f => (f.languages || []).forEach(l => {
+      if (l !== 'Default') allLangs.add(l);
+    }));
     proj.langCount = allLangs.size;
+    proj.languages = [...allLangs].sort();
     proj.lastScanned = new Date().toISOString();
     if (iconData && iconData.iconFile) proj.icon = iconData.iconFile;
 
@@ -1124,6 +1189,8 @@ function renderSavedProjects() {
       : icon('folder');
     const encPath = encodeURIComponent(proj.path);
 
+    const langFlags = (proj.languages || []).map(l => `<span class="lang-tag" title="${l}">${localeToFlag(l)} ${l}</span>`).join(' ');
+
     html += `
       <div class="project-item" onclick="quickProjectSelect('${encPath}')">
         <div class="icon-wrap">${iconHtml}</div>
@@ -1135,6 +1202,7 @@ function renderSavedProjects() {
             <span class="badge badge-positive">${icon('globe')} ${proj.langCount || 0} langs</span>
             <span class="badge badge-neutral">${icon('clock')} ${scanned}</span>
           </div>
+          ${langFlags ? `<div class="lang-flags">${langFlags}</div>` : ''}
         </div>
         <div class="actions">
           <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation();rescanProject('${encPath}')" title="Rescan">${icon('refresh')}</button>
@@ -1396,6 +1464,7 @@ function showToast(msg, isError) {
   t.classList.add('show');
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => t.classList.remove('show'), 3500);
+  playSfx(isError ? 'error' : 'success');
 }
 
 // ====== API HELPER ======
@@ -1644,6 +1713,24 @@ function renderEditor() {
 
   const dirtyCount = Object.values(dirtyCells).reduce((a, c) => a + Object.keys(c).length, 0);
   document.getElementById('editorCount').innerHTML = `${filteredKeys.length} / ${editorKeys.length} keys displayed${dirtyCount ? ` · <span style="color:var(--warning)">${dirtyCount} unsaved</span>` : ''}`;
+
+  const filterBar = document.getElementById('editorToolbar');
+  const filterBot = document.getElementById('editorFilterBottom');
+  if (filterBar) {
+    filterBot.style.display = '';
+    filterBot.innerHTML = filterBar.innerHTML;
+    filterBot.querySelectorAll('button.filter-chip').forEach(btn => {
+      const orig = filterBar.querySelector(`button[data-filter="${btn.dataset.filter}"]`);
+      if (orig) btn.classList.toggle('active', orig.classList.contains('active'));
+      btn.onclick = () => { toggleFilter(btn); };
+    });
+    const searchSrc = filterBar.querySelector('#editorSearch');
+    const searchDst = filterBot.querySelector('#editorSearch');
+    if (searchSrc && searchDst) {
+      searchDst.oninput = () => { searchSrc.value = searchDst.value; filterEditor(); };
+      searchSrc.oninput = () => { searchDst.value = searchSrc.value; filterEditor(); };
+    }
+  }
 
   const defaultLang = getDefaultLang();
   let html = '<table><thead><tr><th style="min-width:180px">Key Name</th>';
