@@ -895,8 +895,9 @@ async function resolvePath(path) {
   return path;
 }
 
-async function removeProject(path, e) {
+async function removeProject(pathEnc, e) {
   if (e) e.stopPropagation();
+  const path = decodeURIComponent(pathEnc);
   if (!await showConfirm('Remove this project from the list?')) return;
   let list = getSavedProjects().filter(p => p.path !== path);
   saveProjects(list);
@@ -904,7 +905,8 @@ async function removeProject(path, e) {
   renderSavedProjects();
 }
 
-async function rescanProject(path) {
+async function rescanProject(pathEnc) {
+  const path = decodeURIComponent(pathEnc);
   const list = getSavedProjects();
   const proj = list.find(p => p.path === path);
   if (!proj) return;
