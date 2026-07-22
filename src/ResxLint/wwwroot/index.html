@@ -120,6 +120,66 @@
   .nav-btn:hover { color: var(--ink); background: var(--surface-2); }
   .nav-btn.active { color: #fff; background: var(--accent); font-weight: 600; }
 
+  .active-project-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 4px 10px;
+    margin-left: 8px;
+    max-width: 480px;
+    transition: border-color .15s;
+  }
+  .active-project-bar:hover {
+    border-color: var(--accent);
+  }
+  .active-project-icon {
+    width: 24px;
+    height: 24px;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--surface);
+    color: var(--accent);
+    flex-shrink: 0;
+    overflow: hidden;
+    font-size: 13px;
+    border: 1px solid var(--border);
+  }
+  .active-project-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .active-project-selects {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+  }
+  .header-project-select, .header-resx-select {
+    background: transparent;
+    border: none;
+    color: var(--ink);
+    font-size: 13px;
+    font-weight: 600;
+    outline: none;
+    cursor: pointer;
+    max-width: 180px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-family: var(--font);
+  }
+  .header-project-select option, .header-resx-select option {
+    background: var(--surface);
+    color: var(--ink);
+    font-family: var(--font);
+  }
+
   .main-area {
     overflow-y: auto;
     padding: 24px 32px;
@@ -207,11 +267,13 @@
   .editor-grid {
     overflow-x: auto;
     overflow-y: auto;
-    max-height: calc(100vh - 340px);
+    max-height: calc(100vh - 320px);
     min-height: 300px;
     border: 1px solid var(--border);
     border-radius: var(--radius-md);
     position: relative;
+    background: var(--surface);
+    box-shadow: var(--shadow-sm);
   }
   .editor-loading {
     position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
@@ -225,70 +287,112 @@
   @keyframes spin { to { transform: rotate(360deg); } }
   .editor-grid table {
     table-layout: fixed;
-    border-collapse: separate;
-    border-spacing: 0;
+    border-collapse: collapse;
+    width: 100%;
     font-size: 13px;
   }
   .editor-grid th {
     position: sticky;
     top: 0;
-    background: var(--surface);
+    background: var(--surface-2);
     color: var(--ink);
-    padding: 12px 14px;
+    padding: 10px 14px;
     text-align: left;
     font-weight: 600;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 2px solid var(--border);
+    border-right: 1px solid var(--border);
     z-index: 2;
     white-space: nowrap;
   }
   .editor-grid td {
-    padding: 8px 12px;
+    padding: 6px 10px;
     border-bottom: 1px solid var(--border);
-    vertical-align: middle;
+    border-right: 1px solid var(--border);
+    vertical-align: top;
+    background: var(--surface);
+    transition: background .15s;
   }
-  .editor-grid tr:hover td { background: oklch(0.65 0.19 210 / 0.06); }
+  .editor-grid tr:nth-child(even) td {
+    background: oklch(0 0 0 / 0.012);
+  }
+  .editor-grid tr:hover td { background: var(--accent-soft) !important; }
 
   /* Key Name column stays put while language columns scroll horizontally underneath it. */
   .editor-grid th.key-col, .editor-grid td.key-col {
     position: sticky;
     left: 0;
-    background: var(--surface);
-    box-shadow: 2px 0 5px oklch(0 0 0 / 0.08);
+    background: var(--surface) !important;
+    box-shadow: 2px 0 6px oklch(0 0 0 / 0.06);
+    border-right: 2px solid var(--border);
   }
-  .editor-grid th.key-col { z-index: 3; }
-  .editor-grid td.key-col { z-index: 1; }
-  .editor-grid tr:hover td.key-col { background: oklch(0.65 0.19 210 / 0.1); }
+  .editor-grid th.key-col { z-index: 3; background: var(--surface-2) !important; }
+  .editor-grid td.key-col { z-index: 1; font-size: 12.5px; color: var(--ink); }
+  .editor-grid tr:hover td.key-col { background: var(--surface-2) !important; }
 
-  .cell-ok { background: var(--positive-bg); }
-  .cell-missing { background: var(--critical-bg); }
-  .cell-placeholder { background: var(--warning-bg); }
-  .cell-identical { background: var(--neutral-bg); }
-  .cell-base { background: var(--info-bg); }
+  /* Status Cell Highlights - subtle, clean indicators */
+  .cell-ok { border-left: 3px solid transparent; }
+  .cell-missing { background: oklch(0.58 0.22 210 / 0.08) !important; border-left: 3px solid var(--critical); }
+  .cell-placeholder { background: oklch(0.72 0.16 210 / 0.08) !important; border-left: 3px solid var(--warning); }
+  .cell-identical { border-left: 3px solid oklch(0.55 0.025 210 / 0.4); }
+  .cell-base { background: oklch(0.62 0.12 210 / 0.03) !important; }
 
   .status-legend {
-    display: flex; flex-wrap: wrap; gap: 14px; align-items: center;
-    padding: 8px 4px 12px; font-size: 12px; color: var(--ink-2);
+    display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
+    padding: 10px 16px; margin-bottom: 14px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-md); font-size: 12px; color: var(--ink-2);
   }
-  .legend-item { display: inline-flex; align-items: center; gap: 6px; }
-  .legend-swatch { width: 12px; height: 12px; border-radius: 3px; border: 1px solid var(--border); display: inline-block; }
+  .legend-title { font-weight: 700; color: var(--ink); margin-right: 4px; display: flex; align-items: center; gap: 4px; }
+  .legend-item { display: inline-flex; align-items: center; gap: 6px; padding: 3px 8px; border-radius: 4px; background: var(--surface-2); border: 1px solid var(--border); }
+  .legend-swatch { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+  .legend-swatch.swatch-ok { background: var(--positive); }
+  .legend-swatch.swatch-dirty { background: var(--warning); }
+  .legend-swatch.swatch-missing { background: var(--critical); }
+  .legend-swatch.swatch-placeholder { background: var(--warning); }
+  .legend-swatch.swatch-identical { background: var(--neutral); }
+  .legend-swatch.swatch-base { background: var(--accent); }
+
+  .filter-segments {
+    display: flex; align-items: center; gap: 4px;
+    background: var(--surface-2); padding: 3px;
+    border-radius: var(--radius-md); border: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+  .filter-segment {
+    background: transparent; border: none; color: var(--ink-2);
+    font-size: 13px; font-weight: 500; padding: 5px 12px;
+    border-radius: var(--radius-sm); cursor: pointer; transition: all .15s;
+    display: inline-flex; align-items: center; gap: 6px; font-family: var(--font);
+  }
+  .filter-segment:hover { color: var(--ink); background: oklch(0 0 0 / 0.05); }
+  .filter-segment.active {
+    background: var(--surface); color: var(--ink); font-weight: 600;
+    box-shadow: 0 1px 3px oklch(0 0 0 / 0.1);
+  }
+  .filter-segment.active.segment-dirty { color: var(--warning); background: var(--warning-bg); }
+  .filter-segment.active.segment-critical { color: var(--critical); background: var(--critical-bg); }
+  .filter-segment.active.segment-problems { color: var(--accent); background: var(--accent-soft); }
 
   .cell-edit {
-    background: none;
+    background: transparent;
     border: 1px solid transparent;
     border-radius: 6px;
-    padding: 5px 8px;
+    padding: 6px 8px;
     color: var(--ink);
     font-size: 13px;
+    line-height: 1.45;
     width: 100%;
     min-height: 32px;
     outline: none;
-    font-family: var(--mono);
-    resize: vertical;
-    transition: border .15s, background .15s;
+    font-family: var(--font);
+    resize: none;
+    overflow: hidden;
+    transition: border-color .15s, background .15s, box-shadow .15s;
   }
-  .cell-edit:focus { border-color: var(--accent); background: var(--surface); }
+  .cell-edit:hover { border-color: var(--border); background: var(--surface-2); }
+  .cell-edit:focus { border-color: var(--accent); background: var(--surface); box-shadow: 0 0 0 2px var(--accent-soft); }
   .cell-dirty { position: relative; }
-  .cell-dirty .cell-edit { border-color: var(--warning); background: oklch(0.85 0.08 80 / 0.08); padding-right: 28px; }
+  .cell-dirty .cell-edit { border-color: var(--warning) !important; background: oklch(0.85 0.08 80 / 0.1) !important; padding-right: 28px; }
   .cell-revert {
     position: absolute; top: 6px; right: 6px; width: 20px; height: 20px;
     display: flex; align-items: center; justify-content: center;
@@ -563,6 +667,17 @@
   .lang-picker-name { color: var(--ink-2); font-size: 13px; }
   .lang-flags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
   .lang-tag { font-size: 12px; padding: 2px 8px; border-radius: var(--radius-sm); background: var(--surface-2); display: inline-flex; align-items: center; gap: 4px; }
+  .lang-tag-base { background: var(--accent-soft); border: 1px solid var(--accent); }
+  .lang-tag-base-badge {
+    font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em;
+    color: var(--accent); margin-right: 2px;
+  }
+  .resx-groups-list { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+  .resx-group-chip {
+    font-size: 11px; padding: 2px 8px; border-radius: var(--radius-sm);
+    background: var(--surface-2); color: var(--ink-2); font-family: var(--mono);
+    display: inline-flex; align-items: center; gap: 4px;
+  }
 </style>
 </head>
 <body>
@@ -571,6 +686,21 @@
     <div class="logo">RL</div>
     <span style="font-weight:700;font-size:16px;letter-spacing:-0.02em">resx-lint</span>
     <span class="version-badge" id="versionBadge" style="cursor:pointer" onclick="checkUpdate()" title="Check for updates">v—</span>
+    
+    <div class="active-project-bar" id="activeProjectBar" title="Active Project & Resx File">
+      <div class="active-project-icon" id="headerProjectIcon">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+      </div>
+      <div class="active-project-selects">
+        <select class="header-project-select" id="headerProjectSelect" onchange="onHeaderProjectChange(this.value)">
+          <option value="">— Select project —</option>
+        </select>
+        <span class="active-project-sep" id="headerSep" style="display:none;color:var(--ink-2);font-size:12px">›</span>
+        <select class="header-resx-select" id="headerResxSelect" onchange="onHeaderResxChange(this.value)" style="display:none">
+          <option value="">— Select .resx —</option>
+        </select>
+      </div>
+    </div>
     <div class="tab-bar">
       <button class="nav-btn active" data-view="projects" onclick="switchView('projects')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg> Projects <span class="kbd-hint">Ctrl+1</span></button>
       <button class="nav-btn" data-view="lint" onclick="switchView('lint')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg> Audit & Lint <span class="kbd-hint">Ctrl+2</span></button>
@@ -636,7 +766,7 @@
           </div>
           <div style="flex:1;min-width:200px">
             <label style="font-size:12px;color:var(--ink-2);display:block;margin-bottom:4px">Resource File (.resx)</label>
-            <select class="input-field" id="resxFileSelect"><option value="">— select .resx —</option></select>
+            <select class="input-field" id="resxFileSelect" onchange="onHeaderResxChange(this.value)"><option value="">— select .resx —</option></select>
           </div>
           <button class="btn btn-secondary" onclick="scanProject()">Scan</button>
           <button class="btn btn-primary" onclick="runLint()" id="runLintBtn"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg> Run Audit</button>
@@ -697,7 +827,7 @@
         <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:end">
           <div style="flex:2;min-width:220px">
             <label style="font-size:12px;color:var(--ink-2);display:block;margin-bottom:4px">Selected Resource File (.resx)</label>
-            <select class="input-field" id="editorResxSelect"><option value="">— select a .resx file —</option></select>
+            <select class="input-field" id="editorResxSelect" onchange="onHeaderResxChange(this.value)"><option value="">— select a .resx file —</option></select>
           </div>
           <button class="btn btn-primary" id="loadMatrixBtn" onclick="loadEditor()">Load Matrix</button>
           <button class="btn btn-secondary" onclick="openAiConfig()"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="14" x="4" y="6" rx="2"/><path d="M12 6V2"/><path d="M9 14h6"/><path d="M12 17v-3"/></svg> AI Batch Translate</button>
@@ -710,20 +840,25 @@
 
       <div id="editorContent" style="display:none">
         <div id="editorToolbar" class="filter-bar">
-          <input class="input-field" id="editorSearch" placeholder="Search keys or text values..." style="max-width:280px;font-family:var(--font)" oninput="filterEditor()">
-          <span style="color:var(--ink-2);font-size:13px;font-weight:500">Status Filter:</span>
-          <button class="filter-chip active" role="checkbox" aria-checked="true" data-filter="ok" onclick="toggleFilter(this)"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-10 10L5 11"/></svg> OK <span class="chip-count" data-count="ok">0</span></button>
-          <button class="filter-chip active" role="checkbox" aria-checked="true" data-filter="missing" onclick="toggleFilter(this)"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg> Missing <span class="chip-count" data-count="missing">0</span></button>
-          <button class="filter-chip active" role="checkbox" aria-checked="true" data-filter="placeholder" onclick="toggleFilter(this)"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg> Placeholders <span class="chip-count" data-count="placeholder">0</span></button>
-          <button class="filter-chip active" role="checkbox" aria-checked="true" data-filter="identical" onclick="toggleFilter(this)"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><path d="M12 12v4M12 8h.01"/></svg> Identical <span class="chip-count" data-count="identical">0</span></button>
-          <button class="btn btn-secondary btn-sm" id="clearFiltersBtn" onclick="resetEditorFilters()" style="display:none">Clear filters</button>
+          <input class="input-field" id="editorSearch" placeholder="Search keys or text values..." style="max-width:240px;font-family:var(--font)" oninput="filterEditor()">
+          <div class="filter-segments" id="filterSegments">
+            <button class="filter-segment active" data-filter="all" onclick="setFilterMode('all')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg> All <span class="chip-count" data-count="all">0</span></button>
+            <button class="filter-segment segment-dirty" data-filter="dirty" onclick="setFilterMode('dirty')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg> Unsaved <span class="chip-count" data-count="dirty">0</span></button>
+            <button class="filter-segment segment-problems" data-filter="problems" onclick="setFilterMode('problems')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg> Problems <span class="chip-count" data-count="problems">0</span></button>
+            <button class="filter-segment segment-critical" data-filter="missing" onclick="setFilterMode('missing')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg> Missing <span class="chip-count" data-count="missing">0</span></button>
+            <button class="filter-segment segment-warning" data-filter="placeholder" onclick="setFilterMode('placeholder')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg> Placeholders <span class="chip-count" data-count="placeholder">0</span></button>
+            <button class="filter-segment" data-filter="identical" onclick="setFilterMode('identical')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Identical <span class="chip-count" data-count="identical">0</span></button>
+          </div>
           <span style="color:var(--ink-2);font-size:13px;margin-left:auto" id="editorCount"></span>
         </div>
         <div class="status-legend">
-          <span class="legend-item"><span class="legend-swatch cell-ok"></span> OK — translated, looks fine</span>
-          <span class="legend-item"><span class="legend-swatch cell-missing"></span> Missing — key doesn't exist yet in that language's .resx file</span>
-          <span class="legend-item"><span class="legend-swatch cell-placeholder"></span> Placeholder — key exists but is empty or still a [TRANSLATE] stub</span>
-          <span class="legend-item"><span class="legend-swatch cell-identical"></span> Identical — same text as the base language (probably untranslated)</span>
+          <span class="legend-title"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg> Legend & Highlights:</span>
+          <span class="legend-item"><span class="legend-swatch swatch-ok"></span> <strong>OK</strong> — Translated & validated</span>
+          <span class="legend-item"><span class="legend-swatch swatch-dirty"></span> <strong>Unsaved Edit</strong> — Modified locally (not on disk yet)</span>
+          <span class="legend-item"><span class="legend-swatch swatch-missing"></span> <strong>Missing</strong> — Key missing in target .resx file</span>
+          <span class="legend-item"><span class="legend-swatch swatch-placeholder"></span> <strong>Placeholder</strong> — Empty or [TRANSLATE] stub</span>
+          <span class="legend-item"><span class="legend-swatch swatch-identical"></span> <strong>Identical</strong> — Same value as base language</span>
+          <span class="legend-item"><span class="legend-swatch swatch-base"></span> <strong>Base</strong> — Source reference column</span>
         </div>
         <div id="editorGrid" class="editor-grid"></div>
         <div id="editorFilterBottom" class="filter-bar filter-bar-bottom" style="display:none"></div>
@@ -891,6 +1026,9 @@ function icon(name) {
     lang: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/></svg>',
     download: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>',
     upload: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></svg>',
+    edit: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>',
+    list: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>',
+    copy: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>',
   };
   return I[name] || '';
 }
@@ -1321,7 +1459,14 @@ function renderSavedProjects() {
       : icon('folder');
     const encPath = encodeURIComponent(proj.path);
 
-    const langFlags = (proj.languages || []).map(l => `<span class="lang-tag" title="${l}">${localeToFlag(l)} ${l}</span>`).join(' ');
+    // The current default (base) language never shows up in proj.languages — that array is
+    // only the *translated* variants — so without this the base flag the user actually cares
+    // about (e.g. pt-BR) was silently missing from its own project's flag row.
+    const defaultLang = getDefaultLang();
+    const baseFlag = defaultLang && defaultLang !== 'Default'
+      ? `<span class="lang-tag lang-tag-base" title="${defaultLang} — your configured base/default language"><span class="lang-tag-base-badge">base</span>${localeToFlag(defaultLang)} ${defaultLang}</span>`
+      : '';
+    const langFlags = baseFlag + (proj.languages || []).map(l => `<span class="lang-tag" title="${l}">${localeToFlag(l)} ${l}</span>`).join(' ');
 
     const resxTooltip = (proj.resxGroups && proj.resxGroups.length)
       ? `${proj.resxGroups.length} .resx group(s) found (a base file + its language variants each count as one):\n` + proj.resxGroups.join('\n')
@@ -1329,6 +1474,13 @@ function renderSavedProjects() {
     const langsTooltip = (proj.languages && proj.languages.length)
       ? `${proj.languages.length} language(s) across all .resx groups:\n` + proj.languages.join(', ')
       : 'Number of distinct translation languages found — click the refresh icon to (re)scan.';
+
+    // When a folder actually contains several independent .resx groups (e.g. a mono-repo with
+    // many sub-projects), list them individually instead of hiding that behind a single "N resx"
+    // badge and a hover-only tooltip — that's exactly what was confusing.
+    const groupsList = (proj.resxGroups && proj.resxGroups.length > 1)
+      ? `<div class="resx-groups-list">${proj.resxGroups.map(g => `<span class="resx-group-chip">${icon('file')} ${escHtml(g)}</span>`).join('')}</div>`
+      : '';
 
     html += `
       <div class="project-item" onclick="quickProjectSelect('${encPath}')" title="Click to open in Audit &amp; Lint (does not run the audit automatically)">
@@ -1342,6 +1494,7 @@ function renderSavedProjects() {
             <span class="badge badge-neutral" title="Last scanned">${icon('clock')} ${scanned}</span>
           </div>
           ${langFlags ? `<div class="lang-flags">${langFlags}</div>` : ''}
+          ${groupsList}
         </div>
         <div class="actions">
           <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation();rescanProject('${encPath}')" title="Rescan">${icon('refresh')}</button>
@@ -1352,6 +1505,130 @@ function renderSavedProjects() {
   }
 
   container.innerHTML = html || '<div style="text-align:center;padding:40px;color:var(--ink-2)">No projects match your search.</div>';
+  backfillStaleProjectLanguages(list);
+  updateHeaderProjectSelector();
+}
+
+// ====== GLOBAL ACTIVE PROJECT SELECTOR ======
+let currentActiveProjectDir = '';
+let currentActiveResxFile = '';
+
+function updateHeaderProjectSelector() {
+  const list = getSavedProjects();
+  const selProj = document.getElementById('headerProjectSelect');
+  const iconWrap = document.getElementById('headerProjectIcon');
+  if (!selProj) return;
+
+  const curVal = currentActiveProjectDir || selProj.value;
+  selProj.innerHTML = '<option value="">— Select project —</option>' + list.map(p => 
+    `<option value="${escHtml(p.path)}">${escHtml(p.name)}</option>`
+  ).join('');
+
+  if (curVal && list.some(p => p.path === curVal)) {
+    selProj.value = curVal;
+    currentActiveProjectDir = curVal;
+    const proj = list.find(p => p.path === curVal);
+    if (proj && proj.icon) {
+      iconWrap.innerHTML = `<img src="/api/project/icon-file?file=${encodeURIComponent(proj.icon)}" alt="" onerror="this.parentElement.innerHTML='${icon('folder')}'">`;
+    } else {
+      iconWrap.innerHTML = icon('folder');
+    }
+  } else {
+    selProj.value = '';
+    iconWrap.innerHTML = icon('folder');
+    document.getElementById('headerResxSelect').style.display = 'none';
+    document.getElementById('headerSep').style.display = 'none';
+  }
+}
+
+async function onHeaderProjectChange(path) {
+  currentActiveProjectDir = path;
+  document.getElementById('projectDir').value = path;
+  const iconWrap = document.getElementById('headerProjectIcon');
+  const selResx = document.getElementById('headerResxSelect');
+  const sep = document.getElementById('headerSep');
+
+  if (!path) {
+    iconWrap.innerHTML = icon('folder');
+    selResx.style.display = 'none';
+    sep.style.display = 'none';
+    updateSelectOptions([]);
+    return;
+  }
+
+  const list = getSavedProjects();
+  const proj = list.find(p => p.path === path);
+  if (proj && proj.icon) {
+    iconWrap.innerHTML = `<img src="/api/project/icon-file?file=${encodeURIComponent(proj.icon)}" alt="" onerror="this.parentElement.innerHTML='${icon('folder')}'">`;
+  } else {
+    iconWrap.innerHTML = icon('folder');
+  }
+
+  try {
+    const files = await api(`/api/project/resx-files?dir=${encodeURIComponent(path)}`);
+    discoveredProjects = files;
+    updateSelectOptions(files);
+
+    if (files.length > 0) {
+      selResx.style.display = '';
+      sep.style.display = '';
+      const chosenResx = files[0].resxFile;
+      onHeaderResxChange(chosenResx);
+    } else {
+      selResx.style.display = 'none';
+      sep.style.display = 'none';
+      showToast('No .resx files found in this project', true);
+    }
+  } catch (e) {
+    showToast(e.message, true);
+  }
+}
+
+function onHeaderResxChange(resxFile) {
+  currentActiveResxFile = resxFile;
+  const selResx = document.getElementById('headerResxSelect');
+  if (selResx) selResx.value = resxFile;
+
+  const selLint = document.getElementById('resxFileSelect');
+  if (selLint) selLint.value = resxFile;
+
+  const selEditor = document.getElementById('editorResxSelect');
+  if (selEditor) selEditor.value = resxFile;
+
+  const curView = document.querySelector('.nav-btn.active')?.dataset.view;
+  if (curView === 'editor' && resxFile) {
+    loadEditor();
+  }
+}
+
+// Cards saved before this version's fixes never got `proj.languages` populated by a rescan
+// (an older bug), so they show a lang count with no flags. Instead of making the user notice
+// and click "rescan" themselves, quietly backfill it once per project.
+const _backfillAttempted = new Set();
+async function backfillStaleProjectLanguages(list) {
+  for (const proj of list) {
+    if (proj.languages !== undefined) continue;
+    if (!proj.resxCount) continue;
+    if (_backfillAttempted.has(proj.path)) continue;
+    _backfillAttempted.add(proj.path);
+
+    try {
+      const files = await api(`/api/project/resx-files?dir=${encodeURIComponent(proj.path)}`);
+      const allLangs = new Set();
+      files.forEach(f => (f.languages || []).forEach(l => { if (l !== 'Default') allLangs.add(l); }));
+
+      const current = getSavedProjects();
+      const target = current.find(p => p.path === proj.path);
+      if (!target) continue;
+      target.langCount = allLangs.size;
+      target.languages = [...allLangs].sort();
+      target.resxGroups = files.map(f => `${f.baseName}.resx (${(f.languages || []).length} lang${(f.languages || []).length === 1 ? '' : 's'})`);
+      saveProjects(current);
+      renderSavedProjects();
+    } catch {
+      // Silent — this is a background convenience pass, not a user-initiated action.
+    }
+  }
 }
 
 function filterSavedProjects() {
@@ -1359,32 +1636,32 @@ function filterSavedProjects() {
 }
 
 function quickProjectSelect(pathEnc) {
-  // Clicking a project card only navigates and preselects the .resx — it must never kick off
-  // an audit on its own. Running verification is an explicit action (the search-icon button).
   const path = decodeURIComponent(pathEnc);
+  currentActiveProjectDir = path;
   document.getElementById('projectDir').value = path;
+  updateHeaderProjectSelector();
   api(`/api/project/resx-files?dir=${encodeURIComponent(path)}`).then(files => {
     discoveredProjects = files;
     updateSelectOptions(files);
     switchView('lint');
-    if (files.length === 1) {
-      document.getElementById('resxFileSelect').value = files[0].resxFile;
+    if (files.length >= 1) {
+      onHeaderResxChange(files[0].resxFile);
     }
   }).catch(e => showToast(e.message, true));
 }
 
 function quickLint(pathEnc) {
   const path = decodeURIComponent(pathEnc);
+  currentActiveProjectDir = path;
   document.getElementById('projectDir').value = path;
+  updateHeaderProjectSelector();
   api(`/api/project/resx-files?dir=${encodeURIComponent(path)}`).then(files => {
     discoveredProjects = files;
     updateSelectOptions(files);
     switchView('lint');
-    if (files.length === 1) {
-      document.getElementById('resxFileSelect').value = files[0].resxFile;
+    if (files.length >= 1) {
+      onHeaderResxChange(files[0].resxFile);
       runLint();
-    } else if (files.length > 1) {
-      showToast(`${files.length} .resx files found — select one and run audit`);
     } else {
       showToast('No .resx files found in this project', true);
     }
@@ -1393,7 +1670,7 @@ function quickLint(pathEnc) {
 
 function quickEdit(fileUri) {
   const decoded = decodeURIComponent(fileUri);
-  document.getElementById('editorResxSelect').value = decoded;
+  onHeaderResxChange(decoded);
   switchView('editor');
   loadEditor();
 }
@@ -1401,19 +1678,40 @@ function quickEdit(fileUri) {
 function updateSelectOptions(files) {
   const selLint = document.getElementById('resxFileSelect');
   const selEditor = document.getElementById('editorResxSelect');
+  const selHeader = document.getElementById('headerResxSelect');
+  const sepHeader = document.getElementById('headerSep');
+
   selLint.innerHTML = '<option value="">\u2014 select .resx \u2014</option>';
   selEditor.innerHTML = '<option value="">\u2014 select .resx \u2014</option>';
+  if (selHeader) selHeader.innerHTML = '<option value="">\u2014 select .resx \u2014</option>';
+
   files.forEach(f => {
     const label = `${f.projectName} \u203A ${f.baseName}.resx (${(f.languages || []).length} languages)`;
+    const headerLabel = `${f.baseName}.resx (${(f.languages || []).length} langs)`;
+
     const opt1 = document.createElement('option');
     opt1.value = f.resxFile;
     opt1.textContent = label;
     selLint.appendChild(opt1);
+
     const opt2 = document.createElement('option');
     opt2.value = f.resxFile;
     opt2.textContent = label;
     selEditor.appendChild(opt2);
+
+    if (selHeader) {
+      const opt3 = document.createElement('option');
+      opt3.value = f.resxFile;
+      opt3.textContent = headerLabel;
+      selHeader.appendChild(opt3);
+    }
   });
+
+  if (selHeader && files.length > 0) {
+    selHeader.style.display = '';
+    if (sepHeader) sepHeader.style.display = '';
+    if (currentActiveResxFile) selHeader.value = currentActiveResxFile;
+  }
 }
 
 // ====== UPDATE CHECK & MODAL ======
@@ -1923,50 +2221,76 @@ async function importExcel(file) {
   }
 }
 
+let currentFilterMode = 'all';
+
+function setFilterMode(mode) {
+  currentFilterMode = mode;
+  document.querySelectorAll('.filter-segment').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.filter === mode);
+  });
+  if (editorData) renderEditor();
+}
+
 const editorVirtual = { filteredKeys: [], langs: [], defaultLang: 'Default', rowHeight: 44, buffer: 12 };
 let editorScrollRaf = null;
 
 function renderEditor() {
   const grid = document.getElementById('editorGrid');
   const langs = ['base', ...editorLanguages.map(l => l.code)];
-  // Scoped to the canonical toolbar only — the bottom bar is a visual mirror, never a second
-  // source of truth (querying both used to silently ignore chip clicks half the time).
   const filterBar = document.getElementById('editorToolbar');
-  const activeFilters = [...filterBar.querySelectorAll('.filter-chip.active')].map(c => c.dataset.filter);
-  const search = document.getElementById('editorSearch').value.toLowerCase();
+  const search = document.getElementById('editorSearch')?.value.toLowerCase() || '';
 
   const searchedKeys = editorKeys.filter(k =>
     !search || k.name.toLowerCase().includes(search) || k.baseValue.toLowerCase().includes(search));
 
-  const statusCounts = { ok: 0, missing: 0, placeholder: 0, identical: 0 };
-  searchedKeys.forEach(k => {
-    Object.values(k.translations).forEach(t => {
-      if (t.status in statusCounts) statusCounts[t.status]++;
-    });
+  const dirtyKeySet = new Set();
+  Object.values(dirtyCells).forEach(dict => {
+    Object.keys(dict).forEach(k => dirtyKeySet.add(k));
   });
-  filterBar.querySelectorAll('.chip-count').forEach(el => {
-    el.textContent = statusCounts[el.dataset.count] ?? 0;
+
+  const statusCounts = { all: searchedKeys.length, dirty: dirtyKeySet.size, missing: 0, placeholder: 0, identical: 0, problems: 0 };
+  
+  searchedKeys.forEach(k => {
+    const statuses = Object.values(k.translations).map(t => t.status);
+    let hasMissing = false, hasPlaceholder = false, hasIdentical = false;
+    statuses.forEach(s => {
+      if (s === 'missing') hasMissing = true;
+      if (s === 'placeholder') hasPlaceholder = true;
+      if (s === 'identical') hasIdentical = true;
+    });
+    if (hasMissing) statusCounts.missing++;
+    if (hasPlaceholder) statusCounts.placeholder++;
+    if (hasIdentical) statusCounts.identical++;
+    if (hasMissing || hasPlaceholder || hasIdentical) statusCounts.problems++;
+  });
+
+  document.querySelectorAll('.chip-count').forEach(el => {
+    const key = el.dataset.count;
+    if (key in statusCounts) el.textContent = statusCounts[key];
   });
 
   const filteredKeys = searchedKeys.filter(k => {
-    const statuses = Object.values(k.translations).map(t => t.status);
-    return statuses.some(s => activeFilters.includes(s));
+    if (currentFilterMode === 'dirty') return dirtyKeySet.has(k.name);
+    if (currentFilterMode === 'missing') return Object.values(k.translations).some(t => t.status === 'missing');
+    if (currentFilterMode === 'placeholder') return Object.values(k.translations).some(t => t.status === 'placeholder');
+    if (currentFilterMode === 'identical') return Object.values(k.translations).some(t => t.status === 'identical');
+    if (currentFilterMode === 'problems') return Object.values(k.translations).some(t => t.status === 'missing' || t.status === 'placeholder' || t.status === 'identical');
+    return true; // 'all'
   });
 
-  const dirtyCount = Object.values(dirtyCells).reduce((a, c) => a + Object.keys(c).length, 0);
-  document.getElementById('editorCount').innerHTML = `${filteredKeys.length} / ${editorKeys.length} keys displayed${dirtyCount ? ` · <span style="color:var(--warning)">${dirtyCount} unsaved</span>` : ''}`;
-
-  const clearBtn = document.getElementById('clearFiltersBtn');
-  if (clearBtn) clearBtn.style.display = activeFilters.length < 4 ? '' : 'none';
+  const dirtyCellTotal = Object.values(dirtyCells).reduce((a, c) => a + Object.keys(c).length, 0);
+  const unsavedInfo = dirtyCellTotal > 0
+    ? ` · <span class="badge badge-warning" style="margin-left:4px">${icon('edit')} ${dirtyCellTotal} unsaved edit${dirtyCellTotal === 1 ? '' : 's'}</span>`
+    : '';
+  document.getElementById('editorCount').innerHTML = `Showing <strong>${filteredKeys.length}</strong> of ${editorKeys.length} keys${unsavedInfo}`;
 
   const filterBot = document.getElementById('editorFilterBottom');
-  if (filterBar) {
+  if (filterBar && filterBot) {
     filterBot.style.display = '';
     filterBot.innerHTML = filterBar.innerHTML;
-    filterBot.querySelectorAll('button.filter-chip').forEach(btn => {
-      const orig = filterBar.querySelector(`button[data-filter="${btn.dataset.filter}"]`);
-      if (orig) btn.classList.toggle('active', orig.classList.contains('active'));
-      btn.onclick = () => { toggleFilter(btn); };
+    filterBot.querySelectorAll('.filter-segment').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.filter === currentFilterMode);
+      btn.onclick = () => setFilterMode(btn.dataset.filter);
     });
     const searchSrc = filterBar.querySelector('#editorSearch');
     const searchDst = filterBot.querySelector('#editorSearch');
