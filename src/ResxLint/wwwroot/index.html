@@ -779,7 +779,7 @@
 
 <!-- Update Modal Popup -->
 <div class="modal" id="updateModal">
-  <div class="ai-config-panel" style="max-width:540px">
+  <div class="modal-panel-lg" style="max-width:540px">
     <h3 style="margin-bottom:12px;font-size:17px;font-weight:600;display:flex;align-items:center;gap:8px">
       <span><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 9.4 7.55 4.24"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="M3.29 7 12 12l8.71-5M12 22V12"/></svg> resx-lint Update</span>
       <span class="badge badge-info" id="updateModalBadge">v—</span>
@@ -1366,9 +1366,10 @@ async function installUpdate() {
       startBtn.innerHTML = icon('bolt') + ' Try Again';
     } else {
       log.textContent += `\n\nUpdate process finished!`;
+      playSfx('done');
       showToast(`Updated! Please restart resx-lint to apply.`);
       infoDiv.innerHTML = `<strong style="color:var(--positive)">${icon('check')} Updated successfully!</strong><br><span style="font-size:12px">Please restart your terminal / app to run the new v${result.latestVersion || result.targetVersion || ''} binaries.</span>`;
-      badge.innerHTML = icon('check') + ` v${result.latestVersion || result.targetVersion || '2.2.0'}`;
+      badge.innerHTML = icon('check') + ` v${result.latestVersion || result.targetVersion || ''}`;
       badge.style.color = 'var(--positive)';
       startBtn.style.display = 'none';
     }
@@ -1868,6 +1869,7 @@ async function saveEditor() {
   dirtyCells = {};
   saveBtn.innerHTML = origText;
   saveBtn.disabled = false;
+  playSfx('done');
   showToast(`Saved ${saved} translation(s) successfully!`);
   await loadEditor();
 }
@@ -2040,6 +2042,7 @@ async function aiTranslateAll() {
 
   document.getElementById('aiProgress').style.display = 'none';
   closeAiConfig();
+  playSfx('done');
   await loadEditor();
 }
 
