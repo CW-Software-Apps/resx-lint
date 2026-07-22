@@ -10,7 +10,7 @@ class WebStartup
 {
     public static void Start(int preferredPort, bool noOpen)
     {
-        var port = FindAvailablePort(preferredPort);
+        var port = FindAvailablePort(preferredPort, 5);
         if (port != preferredPort)
             Console.WriteLine($"Port {preferredPort} in use — using port {port} instead.");
 
@@ -396,21 +396,25 @@ class WebStartup
         app.Run();
     }
 
-    static int FindAvailablePort(int start)
+    static int FindAvailablePort(int start, int retries = 0)
     {
-        for (int p = start; p < start + 100; p++)
+        for (int attempt = 0; attempt <= retries; attempt++)
         {
-            try
+            for (int p = start; p < start + 100; p++)
             {
-                using var sock = new System.Net.Sockets.Socket(
-                    System.Net.Sockets.AddressFamily.InterNetwork,
-                    System.Net.Sockets.SocketType.Stream,
-                    System.Net.Sockets.ProtocolType.Tcp);
-                sock.Bind(new System.Net.IPEndPoint(System.Net.IPAddress.Loopback, p));
-                sock.Close();
-                return p;
+                try
+                {
+                    using var sock = new System.Net.Sockets.Socket(
+                        System.Net.Sockets.AddressFamily.InterNetwork,
+                        System.Net.Sockets.SocketType.Stream,
+                        System.Net.Sockets.ProtocolType.Tcp);
+                    sock.Bind(new System.Net.IPEndPoint(System.Net.IPAddress.Loopback, p));
+                    sock.Close();
+                    return p;
+                }
+                catch { }
             }
-            catch { }
+            if (attempt < retries) Thread.Sleep(1000);
         }
         return start;
     }
