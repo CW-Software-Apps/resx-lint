@@ -375,6 +375,33 @@
   .empty-state h3 { font-size: 19px; font-weight: 600; }
   .empty-state p { color: var(--ink-2); max-width: 440px; line-height: 1.5; }
 
+  .project-item {
+    display: flex; align-items: center; gap: 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px 20px;
+    margin-bottom: 10px;
+    transition: border-color .15s, transform .15s, box-shadow .15s;
+    cursor: pointer;
+  }
+  .project-item:hover { border-color: var(--accent); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
+  .project-item .icon-wrap {
+    width: 44px; height: 44px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; font-size: 20px; font-weight: 700;
+    background: var(--surface-2); color: var(--accent);
+    overflow: hidden;
+  }
+  .project-item .icon-wrap img { width: 100%; height: 100%; object-fit: cover; border-radius: 12px; }
+  .project-item .info { flex: 1; min-width: 0; }
+  .project-item .info .name { font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .project-item .info .path { font-size: 12px; color: var(--ink-2); font-family: var(--mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .project-item .info .meta { display: flex; gap: 10px; margin-top: 6px; flex-wrap: wrap; }
+  .project-item .actions { display: flex; gap: 6px; flex-shrink: 0; }
+  .project-item .delete-btn { color: var(--ink-2); background: none; border: none; cursor: pointer; font-size: 16px; padding: 4px; border-radius: 6px; transition: all .15s; }
+  .project-item .delete-btn:hover { color: var(--red); background: var(--red-bg); }
+
   select.input-field { cursor: pointer; }
   option { background: var(--surface); color: var(--ink); }
 
@@ -401,57 +428,33 @@
 
     <!-- ====== PROJECTS EXPLORER VIEW ====== -->
     <div id="view-projects">
-      <div class="card" style="margin-bottom:20px">
-        <div style="display:flex;flex-direction:column;gap:12px">
-          <div style="display:flex;justify-content:space-between;align-items:center">
-            <label style="font-size:14px;font-weight:600;color:var(--ink)">Project Directories</label>
-            <span style="font-size:12px;color:var(--ink-2)">Separate multiple paths with semicolon ';' or newlines</span>
+      <div class="card" style="margin-bottom:20px;padding:16px 20px">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+          <div style="display:flex;align-items:center;gap:12px">
+            <h2 style="font-size:18px;font-weight:700">My Projects</h2>
+            <span class="badge badge-blue" id="savedProjectCount" style="padding:3px 10px;font-size:12px">0</span>
           </div>
-
-          <div style="display:flex;gap:12px;align-items:flex-start">
-            <textarea class="input-field" id="multiProjectDirs" rows="2" placeholder="e.g. C:\Projects\MyApp; C:\Projects\Library" style="resize:vertical">.</textarea>
-
-            <button class="btn btn-secondary" onclick="triggerFolderBrowse()" style="height:48px" title="Browse folder visually" id="browseBtn">
-              📁 Browse...
-            </button>
-            <button class="btn btn-secondary" onclick="discoverProjects()" style="height:48px" title="Auto-discover .csproj projects in this folder">
-              🔎 Find Projects
-            </button>
-            <button class="btn btn-primary" onclick="scanAllProjects()" style="height:48px">
-              🔍 Scan .resx
-            </button>
-          </div>
-
-          <!-- Recent Folders Bar -->
-          <div id="recentFoldersBar" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:4px">
-            <span style="font-size:12px;color:var(--ink-2);font-weight:500">Recent:</span>
-            <div id="recentFoldersList" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <input class="input-field" id="projectSearchInput" placeholder="Filter projects..." style="font-family:var(--font);width:200px;padding:8px 12px" oninput="filterSavedProjects()">
+            <button class="btn btn-primary" onclick="openAddProjectPopup()">＋ Add Project</button>
           </div>
         </div>
       </div>
 
-      <!-- Stats Summary -->
-      <div id="projectStatsBar" style="display:none;margin-bottom:20px">
-        <div style="display:flex;gap:16px;flex-wrap:wrap">
-          <span class="badge badge-blue" id="statProjectsCount" style="padding:6px 14px;font-size:13px">📦 0 Projects</span>
-          <span class="badge badge-blue" id="statResxCount" style="padding:6px 14px;font-size:13px">📄 0 Resource Sets</span>
-          <span class="badge badge-green" id="statLangsCount" style="padding:6px 14px;font-size:13px">🌐 0 Languages Discovered</span>
+      <!-- Progress -->
+      <div id="projectScanProgress" style="display:none;margin-bottom:16px">
+        <div class="card" style="padding:16px 20px;display:flex;align-items:center;gap:12px">
+          <span class="progress-ring"></span>
+          <span style="font-size:14px" id="scanProgressMessage">Scanning projects...</span>
         </div>
       </div>
 
-      <!-- Search & Filter Bar -->
-      <div id="projectSearchBox" style="display:none;margin-bottom:16px">
-        <input class="input-field" id="projectSearchInput" placeholder="Filter projects, resource files, or languages..." style="font-family:var(--font)" oninput="filterProjectExplorer()">
-      </div>
+      <div id="savedProjectsList"></div>
 
-      <div id="projectExplorerContent">
-        <div id="projectGrid" style="display:grid;grid-template-columns:repeat(auto-fill, minmax(340px, 1fr));gap:18px"></div>
-      </div>
-
-      <div id="projectExplorerEmpty" class="empty-state" style="display:none">
+      <div id="projectEmpty" class="empty-state">
         <div class="icon">📁</div>
-        <h3>No .resx files found</h3>
-        <p>Specify one or more valid project directories above or click <strong>Browse Folder...</strong> to scan your workspace.</p>
+        <h3>No projects added yet</h3>
+        <p>Click <strong>＋ Add Project</strong> above to add a project directory and scan for localizable resources.</p>
       </div>
     </div>
 
@@ -461,7 +464,7 @@
         <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:end">
           <div style="flex:2;min-width:220px">
             <label style="font-size:12px;color:var(--ink-2);display:block;margin-bottom:4px">Project Directory</label>
-            <input class="input-field" id="projectDir" placeholder="e.g. C:\Projects\MyApp" value=".">
+            <input class="input-field" id="projectDir" placeholder="e.g. C:\Projects\MyApp">
           </div>
           <div style="flex:1;min-width:200px">
             <label style="font-size:12px;color:var(--ink-2);display:block;margin-bottom:4px">Resource File (.resx)</label>
@@ -591,6 +594,23 @@
   </div>
 </div>
 
+<!-- Add Project Modal -->
+<div class="ai-config-modal" id="addProjectModal">
+  <div class="ai-config-panel" style="max-width:520px">
+    <h3 style="margin-bottom:16px;font-size:17px;font-weight:600">＋ Add Project</h3>
+    <div style="display:grid;gap:14px">
+      <div>
+        <label style="font-size:12px;color:var(--ink-2);display:block;margin-bottom:4px">Project Directory Path</label>
+        <input class="input-field" id="addProjectPath" placeholder="e.g. C:\Projects\MyApp or ..\..\other-project" style="font-family:var(--font)" autofocus>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:8px">
+        <button class="btn btn-primary" onclick="addProject()">＋ Add & Scan</button>
+        <button class="btn btn-secondary" onclick="closeAddProjectPopup()">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Update Modal Popup -->
 <div class="ai-config-modal" id="updateModal">
   <div class="ai-config-panel" style="max-width:540px">
@@ -655,108 +675,255 @@ function toggleTheme() {
 const savedTheme = localStorage.getItem('resx-lint-theme');
 if (savedTheme) document.documentElement.setAttribute('data-theme', savedTheme);
 
-// ====== RECENT FOLDERS ======
-function getRecentFolders() {
-  try {
-    return JSON.parse(localStorage.getItem('resx-lint-recent-folders') || '[]');
-  } catch { return []; }
+// ====== SAVED PROJECTS ======
+function getSavedProjects() {
+  try { return JSON.parse(localStorage.getItem('resx-lint-projects') || '[]'); }
+  catch { return []; }
 }
 
-function addRecentFolder(pathStr) {
-  if (!pathStr || pathStr === '.') return;
-  let list = getRecentFolders().filter(p => p !== pathStr);
-  list.unshift(pathStr);
-  if (list.length > 5) list = list.slice(0, 5);
-  localStorage.setItem('resx-lint-recent-folders', JSON.stringify(list));
-  renderRecentFolders();
+function saveProjects(list) {
+  localStorage.setItem('resx-lint-projects', JSON.stringify(list));
 }
 
-function removeRecentFolder(pathStr, e) {
-  if (e) e.stopPropagation();
-  let list = getRecentFolders().filter(p => p !== pathStr);
-  localStorage.setItem('resx-lint-recent-folders', JSON.stringify(list));
-  renderRecentFolders();
+function showScanProgress(msg) {
+  const el = document.getElementById('projectScanProgress');
+  document.getElementById('scanProgressMessage').textContent = msg || 'Scanning...';
+  el.style.display = '';
 }
 
-function renderRecentFolders() {
-  const container = document.getElementById('recentFoldersList');
-  const bar = document.getElementById('recentFoldersBar');
-  const list = getRecentFolders();
-  if (list.length === 0) {
-    bar.style.display = 'none';
+function hideScanProgress() {
+  document.getElementById('projectScanProgress').style.display = 'none';
+}
+
+function showProjectError(msg) {
+  const el = document.getElementById('projectErrorBanner');
+  document.getElementById('projectErrorText').textContent = msg;
+  el.style.display = msg ? '' : 'none';
+}
+
+// ====== ADD PROJECT POPUP ======
+function openAddProjectPopup() {
+  document.getElementById('addProjectPath').value = '';
+  document.getElementById('addProjectModal').classList.add('open');
+  setTimeout(() => document.getElementById('addProjectPath').focus(), 100);
+}
+
+function closeAddProjectPopup() {
+  document.getElementById('addProjectModal').classList.remove('open');
+}
+
+async function addProject() {
+  const path = document.getElementById('addProjectPath').value.trim();
+  if (!path) return showToast('Enter a project directory path', true);
+
+  let fullPath;
+  try { fullPath = await resolvePath(path); }
+  catch { return showToast('Invalid path', true); }
+
+  let list = getSavedProjects();
+  if (list.some(p => p.path === fullPath)) {
+    showToast('Project already added', true);
+    closeAddProjectPopup();
     return;
   }
-  bar.style.display = 'flex';
-  container.innerHTML = list.map(p => `
-    <span class="recent-chip" onclick="selectRecentFolder('${encodeURIComponent(p)}')">
-      📁 ${p}
-      <span onclick="removeRecentFolder('${encodeURIComponent(p)}', event)" style="opacity:0.6;margin-left:4px">✕</span>
-    </span>
-  `).join('');
-}
 
-function selectRecentFolder(pEnc) {
-  const p = decodeURIComponent(pEnc);
-  const cur = document.getElementById('multiProjectDirs').value.trim();
-  if (!cur || cur === '.') {
-    document.getElementById('multiProjectDirs').value = p;
-  } else if (!cur.includes(p)) {
-    document.getElementById('multiProjectDirs').value = `${cur}; ${p}`;
-  }
-  scanAllProjects();
-}
+  closeAddProjectPopup();
 
-// ====== FOLDER BROWSE ======
-async function triggerFolderBrowse() {
-  const btn = document.getElementById('browseBtn');
-  const cur = document.getElementById('multiProjectDirs').value.trim();
-  const initialDir = (!cur || cur === '.') ? '' : cur.split(/[;\n]/)[0].trim();
+  const proj = { path: fullPath, name: path.split(/[\\/]/).pop() || fullPath, lastScanned: null, resxCount: 0, langCount: 0, icon: null };
+  list.unshift(proj);
+  saveProjects(list);
+  renderSavedProjects();
 
-  btn.disabled = true;
-  btn.textContent = '⏳ Waiting for dialog...';
+  showScanProgress(`Scanning ${proj.name}...`);
+  showProjectError('');
   try {
-    const data = await api(`/api/project/browse${initialDir ? `?initialDir=${encodeURIComponent(initialDir)}` : ''}`, { method: 'POST' });
-    if (!data.path) return; // user cancelled the dialog, or not on Windows
+    const [files, iconData] = await Promise.all([
+      api(`/api/project/resx-files?dir=${encodeURIComponent(fullPath)}`).catch(() => []),
+      api(`/api/project/icon?dir=${encodeURIComponent(fullPath)}`).catch(() => ({}))
+    ]);
 
-    const input = document.getElementById('multiProjectDirs');
-    const now = input.value.trim();
-    if (!now || now === '.') {
-      input.value = data.path;
-    } else if (!now.includes(data.path)) {
-      input.value = `${now}; ${data.path}`;
-    }
-    showToast(`Folder selected: ${data.path}`);
-    scanAllProjects();
+    proj.resxCount = files.length || 0;
+    const allLangs = new Set();
+    files.forEach(f => (f.languages || []).forEach(l => allLangs.add(l)));
+    proj.langCount = allLangs.size;
+    proj.lastScanned = new Date().toISOString();
+    if (iconData && iconData.iconFile) proj.icon = iconData.iconFile;
+
+    // Merge discovered resx data into global state
+    discoveredProjects = files;
+    updateSelectOptions(files);
+
+    saveProjects(list);
+    renderSavedProjects();
+    showToast(`${files.length} .resx file(s) found in ${proj.name}`);
   } catch (e) {
-    showToast(e.message, true);
+    showProjectError(`${proj.name}: ${e.message}`);
   } finally {
-    btn.disabled = false;
-    btn.textContent = '📁 Browse...';
+    hideScanProgress();
   }
 }
 
-// ====== PROJECT DISCOVERY ======
-async function discoverProjects() {
-  const input = document.getElementById('multiProjectDirs').value.trim();
-  const root = input || '.';
+async function resolvePath(path) {
+  if (path === '.') return window.location.origin; // fallback
+  // Try to resolve via API - return path as-is for now
+  // The server will resolve relative paths with Path.GetFullPath
+  return path;
+}
+
+function removeProject(path, e) {
+  if (e) e.stopPropagation();
+  if (!confirm('Remove this project from the list?')) return;
+  let list = getSavedProjects().filter(p => p.path !== path);
+  saveProjects(list);
+  if (list.length === 0) discoveredProjects = [];
+  renderSavedProjects();
+}
+
+async function rescanProject(path) {
+  const list = getSavedProjects();
+  const proj = list.find(p => p.path === path);
+  if (!proj) return;
+
+  showScanProgress(`Rescanning ${proj.name}...`);
+  showProjectError('');
   try {
-    const data = await api(`/api/project/discover?root=${encodeURIComponent(root)}`);
-    if (data.error) return showToast(data.error, true);
-    if (data.totalProjects === 0) return showToast('No .csproj projects found in this folder', true);
+    const [files, iconData] = await Promise.all([
+      api(`/api/project/resx-files?dir=${encodeURIComponent(path)}`).catch(() => []),
+      api(`/api/project/icon?dir=${encodeURIComponent(path)}`).catch(() => ({}))
+    ]);
 
-    const dirs = data.projects.map(p => p.projectDir).join('; ');
-    document.getElementById('multiProjectDirs').value = dirs;
-    showToast(`Found ${data.totalProjects} project(s) — click "Scan .resx" to load resources`);
+    proj.resxCount = files.length || 0;
+    const allLangs = new Set();
+    files.forEach(f => (f.languages || []).forEach(l => allLangs.add(l)));
+    proj.langCount = allLangs.size;
+    proj.lastScanned = new Date().toISOString();
+    if (iconData && iconData.iconFile) proj.icon = iconData.iconFile;
 
-    if (data.solutions && data.solutions.length > 0) {
-      const names = data.solutions.map(s => s.solutionName).join(', ');
-      showToast(`Solutions: ${names}`);
-    }
-
-    scanAllProjects();
+    discoveredProjects = files;
+    updateSelectOptions(files);
+    saveProjects(list);
+    renderSavedProjects();
+    showToast(`Rescanned ${proj.name}: ${files.length} .resx file(s)`);
   } catch (e) {
-    showToast(e.message, true);
+    showProjectError(`${proj.name}: ${e.message}`);
+  } finally {
+    hideScanProgress();
   }
+}
+
+function renderSavedProjects() {
+  const list = getSavedProjects();
+  const container = document.getElementById('savedProjectsList');
+  const empty = document.getElementById('projectEmpty');
+  const countBadge = document.getElementById('savedProjectCount');
+
+  countBadge.textContent = list.length;
+  discoveredProjects = []; // reset global, re-populated on scan
+
+  if (list.length === 0) {
+    container.innerHTML = '';
+    empty.style.display = '';
+    return;
+  }
+  empty.style.display = 'none';
+
+  const search = (document.getElementById('projectSearchInput')?.value || '').toLowerCase();
+
+  let html = '';
+  for (const proj of list) {
+    if (search && !proj.name.toLowerCase().includes(search) && !proj.path.toLowerCase().includes(search)) continue;
+
+    const scanned = proj.lastScanned
+      ? new Date(proj.lastScanned).toLocaleDateString() + ' ' + new Date(proj.lastScanned).toLocaleTimeString()
+      : 'Never';
+    const iconHtml = proj.icon
+      ? `<img src="/api/project/icon-file?file=${encodeURIComponent(proj.icon)}" alt="" onerror="this.parentElement.textContent='📁'">`
+      : '📁';
+    const encPath = encodeURIComponent(proj.path);
+
+    html += `
+      <div class="project-item" onclick="quickProjectSelect('${encPath}')">
+        <div class="icon-wrap">${iconHtml}</div>
+        <div class="info">
+          <div class="name">${escHtml(proj.name)}</div>
+          <div class="path">${escHtml(proj.path)}</div>
+          <div class="meta">
+            <span class="badge badge-blue">📄 ${proj.resxCount || 0} resx</span>
+            <span class="badge badge-green">🌐 ${proj.langCount || 0} langs</span>
+            <span class="badge badge-gray">🕐 ${scanned}</span>
+          </div>
+        </div>
+        <div class="actions">
+          <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation();rescanProject('${encPath}')" title="Rescan">🔄</button>
+          <button class="btn btn-primary btn-sm" onclick="event.stopPropagation();quickLint('${encPath}')" title="Run audit">🔍</button>
+          <button class="delete-btn" onclick="removeProject('${encPath}', event)" title="Remove">✕</button>
+        </div>
+      </div>`;
+  }
+
+  container.innerHTML = html || '<div style="text-align:center;padding:40px;color:var(--ink-2)">No projects match your search.</div>';
+}
+
+function filterSavedProjects() {
+  renderSavedProjects();
+}
+
+function quickProjectSelect(pathEnc) {
+  const path = decodeURIComponent(pathEnc);
+  document.getElementById('projectDir').value = path;
+  // Load resx files for this project
+  api(`/api/project/resx-files?dir=${encodeURIComponent(path)}`).then(files => {
+    discoveredProjects = files;
+    updateSelectOptions(files);
+    switchView('lint');
+    if (files.length === 1) {
+      document.getElementById('resxFileSelect').value = files[0].resxFile;
+      runLint();
+    }
+  }).catch(e => showToast(e.message, true));
+}
+
+function quickLint(pathEnc) {
+  const path = decodeURIComponent(pathEnc);
+  document.getElementById('projectDir').value = path;
+  api(`/api/project/resx-files?dir=${encodeURIComponent(path)}`).then(files => {
+    discoveredProjects = files;
+    updateSelectOptions(files);
+    switchView('lint');
+    if (files.length === 1) {
+      document.getElementById('resxFileSelect').value = files[0].resxFile;
+      runLint();
+    } else if (files.length > 1) {
+      showToast(`${files.length} .resx files found — select one and run audit`);
+    } else {
+      showToast('No .resx files found in this project', true);
+    }
+  }).catch(e => showToast(e.message, true));
+}
+
+function quickEdit(fileUri) {
+  const decoded = decodeURIComponent(fileUri);
+  document.getElementById('editorResxSelect').value = decoded;
+  switchView('editor');
+  loadEditor();
+}
+
+function updateSelectOptions(files) {
+  const selLint = document.getElementById('resxFileSelect');
+  const selEditor = document.getElementById('editorResxSelect');
+  selLint.innerHTML = '<option value="">\u2014 select .resx \u2014</option>';
+  selEditor.innerHTML = '<option value="">\u2014 select .resx \u2014</option>';
+  files.forEach(f => {
+    const label = `${f.projectName} \u203A ${f.baseName}.resx (${(f.languages || []).length} languages)`;
+    const opt1 = document.createElement('option');
+    opt1.value = f.resxFile;
+    opt1.textContent = label;
+    selLint.appendChild(opt1);
+    const opt2 = document.createElement('option');
+    opt2.value = f.resxFile;
+    opt2.textContent = label;
+    selEditor.appendChild(opt2);
+  });
 }
 
 // ====== UPDATE CHECK & MODAL ======
@@ -889,166 +1056,6 @@ async function api(url, opts = {}) {
     throw new Error(err.error || res.statusText);
   }
   return res.json();
-}
-
-// ====== PROJECTS EXPLORER ======
-async function scanAllProjects() {
-  const input = document.getElementById('multiProjectDirs').value.trim();
-  if (!input) return showToast('Please enter at least one project directory', true);
-
-  if (input.includes(';')) {
-    input.split(';').forEach(p => { if (p.trim()) addRecentFolder(p.trim()); });
-  } else {
-    addRecentFolder(input);
-  }
-
-  try {
-    const files = await api(`/api/project/resx-files?dir=${encodeURIComponent(input)}`);
-    discoveredProjects = files;
-    renderProjectExplorer(files);
-    updateSelectOptions(files);
-  } catch (e) {
-    showToast(e.message, true);
-  }
-}
-
-function renderProjectExplorer(files) {
-  const grid = document.getElementById('projectGrid');
-  const empty = document.getElementById('projectExplorerEmpty');
-  const statsBar = document.getElementById('projectStatsBar');
-  const searchBox = document.getElementById('projectSearchBox');
-
-  if (!files || files.length === 0) {
-    grid.innerHTML = '';
-    empty.style.display = '';
-    statsBar.style.display = 'none';
-    searchBox.style.display = 'none';
-    return;
-  }
-  empty.style.display = 'none';
-
-  const grouped = {};
-  const allLangs = new Set();
-  files.forEach(f => {
-    const pName = f.projectName || 'Project';
-    if (!grouped[pName]) grouped[pName] = [];
-    grouped[pName].push(f);
-    (f.languages || []).forEach(l => allLangs.add(l));
-  });
-
-  const projectCount = Object.keys(grouped).length;
-  document.getElementById('statProjectsCount').textContent = `📦 ${projectCount} Project(s)`;
-  document.getElementById('statResxCount').textContent = `📄 ${files.length} Resource Set(s)`;
-  document.getElementById('statLangsCount').textContent = `🌐 ${allLangs.size} Language(s)`;
-  statsBar.style.display = '';
-  searchBox.style.display = '';
-
-  filterProjectExplorer();
-}
-
-function filterProjectExplorer() {
-  const search = (document.getElementById('projectSearchInput')?.value || '').toLowerCase();
-  const grid = document.getElementById('projectGrid');
-
-  const grouped = {};
-  discoveredProjects.forEach(f => {
-    const pName = f.projectName || 'Project';
-    if (!grouped[pName]) grouped[pName] = [];
-    grouped[pName].push(f);
-  });
-
-  let html = '';
-  for (const [projName, resxList] of Object.entries(grouped)) {
-    const filteredList = resxList.filter(item => {
-      if (!search) return true;
-      const langs = (item.languages || []).join(' ').toLowerCase();
-      return projName.toLowerCase().includes(search) ||
-        item.baseName.toLowerCase().includes(search) ||
-        item.relativeFolder.toLowerCase().includes(search) ||
-        langs.includes(search);
-    });
-
-    if (filteredList.length === 0) continue;
-
-    html += `
-      <div style="grid-column:1/-1;margin-top:14px;font-size:16px;font-weight:700;display:flex;align-items:center;gap:10px">
-        <span>📦 ${projName}</span>
-        <span class="badge badge-blue">${filteredList.length} resource set(s)</span>
-      </div>
-    `;
-
-    filteredList.forEach(item => {
-      const langs = item.languages || ['Default'];
-      const langPills = langs.map(l => `
-        <span class="badge badge-gray" style="font-size:11px">
-          <span class="lang-flag">${getLangFlag(l)}</span> ${l}
-        </span>
-      `).join('');
-
-      const escFile = encodeURIComponent(item.resxFile);
-      const folderText = item.relativeFolder ? `📁 ${item.relativeFolder}` : '📁 Project Root';
-
-      html += `
-        <div class="project-card">
-          <div style="display:flex;justify-content:space-between;align-items:flex-start">
-            <div style="font-weight:600;font-size:15px;color:var(--ink)">📄 ${item.baseName}.resx</div>
-          </div>
-          <div style="font-size:12px;color:var(--ink-2);font-family:var(--mono)">${folderText}</div>
-
-          <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px">
-            ${langPills}
-          </div>
-
-          <div style="display:flex;gap:8px;margin-top:8px">
-            <button class="btn btn-secondary btn-sm" onclick="quickLint('${escFile}')">
-              🔍 Run Audit
-            </button>
-            <button class="btn btn-primary btn-sm" onclick="quickEdit('${escFile}')">
-              🌐 Matrix & AI
-            </button>
-          </div>
-        </div>
-      `;
-    });
-  }
-
-  grid.innerHTML = html || '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--ink-2)">No project resources matching your search.</div>';
-}
-
-function updateSelectOptions(files) {
-  const selLint = document.getElementById('resxFileSelect');
-  const selEditor = document.getElementById('editorResxSelect');
-
-  selLint.innerHTML = '<option value="">— select .resx —</option>';
-  selEditor.innerHTML = '<option value="">— select .resx —</option>';
-
-  files.forEach(f => {
-    const label = `${f.projectName} › ${f.baseName}.resx (${(f.languages || []).length} languages)`;
-
-    const opt1 = document.createElement('option');
-    opt1.value = f.resxFile;
-    opt1.textContent = label;
-    selLint.appendChild(opt1);
-
-    const opt2 = document.createElement('option');
-    opt2.value = f.resxFile;
-    opt2.textContent = label;
-    selEditor.appendChild(opt2);
-  });
-}
-
-function quickLint(fileUri) {
-  const decoded = decodeURIComponent(fileUri);
-  document.getElementById('resxFileSelect').value = decoded;
-  switchView('lint');
-  runLint();
-}
-
-function quickEdit(fileUri) {
-  const decoded = decodeURIComponent(fileUri);
-  document.getElementById('editorResxSelect').value = decoded;
-  switchView('editor');
-  loadEditor();
 }
 
 // ====== LINT DASHBOARD ======
@@ -1461,9 +1468,8 @@ async function aiTranslateAll() {
 }
 
 // ====== INIT ======
-document.addEventListener('DOMContentLoaded', async () => {
-  renderRecentFolders();
-  await scanAllProjects();
+document.addEventListener('DOMContentLoaded', () => {
+  renderSavedProjects();
 });
 </script>
 </body>

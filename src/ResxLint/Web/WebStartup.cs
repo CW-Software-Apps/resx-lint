@@ -226,17 +226,51 @@ class WebStartup
             }
         });
 
-        api.MapPost("/project/browse", async (string? initialDir) =>
+        api.MapGet("/project/icon", (string? dir) =>
         {
-            try
+            if (string.IsNullOrWhiteSpace(dir))
+                return Results.BadRequest(new { error = "Directory path is required" });
+
+            dir = Path.GetFullPath(dir);
+            if (!Directory.Exists(dir))
+                return Results.BadRequest(new { error = $"Directory not found: {dir}" });
+
+            var iconPatterns = new[] { "icon.*", "logo.*", "appicon.*", "favicon.*" };
+            var extensions = new[] { ".ico", ".png", ".svg", ".jpg", ".jpeg" };
+
+            foreach (var pattern in iconPatterns)
             {
-                var path = await NativeDialogService.PickFolderAsync(initialDir);
-                return Results.Ok(new { path });
+                var files = Directory.GetFiles(dir, pattern).Where(f =>
+                {
+                    var ext = Path.GetExtension(f).ToLowerInvariant();
+                    return extensions.Contains(ext);
+                }).ToArray();
+
+                if (files.Length > 0)
+                    return Results.Ok(new { iconFile = files[0] });
             }
-            catch (FolderPickerUnavailableException ex)
+
+            var anyIcon = Directory.GetFiles(dir, "*.ico").FirstOrDefault();
+            if (anyIcon != null)
+                return Results.Ok(new { iconFile = anyIcon });
+
+            return Results.Ok(new { iconFile = (string?)null });
+        });
+
+        api.MapGet("/project/icon-file", (string? file) =>
+        {
+            if (string.IsNullOrWhiteSpace(file) || !File.Exists(file))
+                return Results.NotFound();
+            var ext = Path.GetExtension(file).ToLowerInvariant();
+            var contentType = ext switch
             {
-                return Results.BadRequest(new { error = ex.Message });
-            }
+                ".ico" => "image/x-icon",
+                ".png" => "image/png",
+                ".svg" => "image/svg+xml",
+                ".jpg" or ".jpeg" => "image/jpeg",
+                _ => "application/octet-stream"
+            };
+            return Results.File(file, contentType);
         });
 
         api.MapGet("/project/discover", (string? root) =>
