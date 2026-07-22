@@ -224,10 +224,10 @@
   }
   @keyframes spin { to { transform: rotate(360deg); } }
   .editor-grid table {
-    width: 100%;
-    border-collapse: collapse;
+    table-layout: fixed;
+    border-collapse: separate;
+    border-spacing: 0;
     font-size: 13px;
-    min-width: 600px;
   }
   .editor-grid th {
     position: sticky;
@@ -247,6 +247,17 @@
     vertical-align: middle;
   }
   .editor-grid tr:hover td { background: oklch(0.65 0.19 210 / 0.06); }
+
+  /* Key Name column stays put while language columns scroll horizontally underneath it. */
+  .editor-grid th.key-col, .editor-grid td.key-col {
+    position: sticky;
+    left: 0;
+    background: var(--surface);
+    box-shadow: 2px 0 5px oklch(0 0 0 / 0.08);
+  }
+  .editor-grid th.key-col { z-index: 3; }
+  .editor-grid td.key-col { z-index: 1; }
+  .editor-grid tr:hover td.key-col { background: oklch(0.65 0.19 210 / 0.1); }
 
   .cell-ok { background: var(--positive-bg); }
   .cell-missing { background: var(--critical-bg); }
@@ -676,6 +687,9 @@
           </div>
           <button class="btn btn-primary" id="loadMatrixBtn" onclick="loadEditor()">Load Matrix</button>
           <button class="btn btn-secondary" onclick="openAiConfig()"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="14" x="4" y="6" rx="2"/><path d="M12 6V2"/><path d="M9 14h6"/><path d="M12 17v-3"/></svg> AI Batch Translate</button>
+          <button class="btn btn-secondary" id="exportExcelBtn" onclick="exportExcel()" disabled title="Export the loaded matrix to Excel"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg> Export Excel</button>
+          <button class="btn btn-secondary" id="importExcelBtn" onclick="document.getElementById('importExcelInput').click()" disabled title="Import translations from an Excel file"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></svg> Import Excel</button>
+          <input type="file" id="importExcelInput" accept=".xlsx" style="display:none" onchange="importExcel(this.files[0])">
           <button class="btn btn-secondary" onclick="configureDefaultLang()" title="Set default base language">⚙ Default Lang</button>
         </div>
       </div>
@@ -853,6 +867,8 @@ function icon(name) {
     bot: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="14" x="4" y="6" rx="2"/><path d="M12 6V2"/><path d="M9 14h6"/><path d="M12 17v-3"/></svg>',
     trash: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>',
     lang: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/></svg>',
+    download: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>',
+    upload: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></svg>',
   };
   return I[name] || '';
 }
@@ -1780,15 +1796,90 @@ async function loadEditor() {
       data.languages.map(l => `<option value="${l.code}">${localeToFlag(l.code)} ${l.code}</option>`).join('');
 
     document.getElementById('editorContent').style.display = '';
+    document.getElementById('exportExcelBtn').disabled = false;
+    document.getElementById('importExcelBtn').disabled = false;
     // Let the browser paint the now-visible (empty) grid before the potentially heavy render pass.
     await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
     renderEditor();
   } catch (e) {
     showToast(e.message, true);
     document.getElementById('editorEmpty').style.display = '';
+    document.getElementById('exportExcelBtn').disabled = true;
+    document.getElementById('importExcelBtn').disabled = true;
   } finally {
     btn.disabled = false;
     btn.innerHTML = btnOrig;
+  }
+}
+
+async function exportExcel() {
+  if (!editorData) return;
+  const resxFile = document.getElementById('editorResxSelect').value;
+  const btn = document.getElementById('exportExcelBtn');
+  const orig = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = `<span class="spinner" style="border-top-color:currentColor;width:14px;height:14px;display:inline-block;vertical-align:-2px;margin-right:6px"></span>Exporting…`;
+  try {
+    const res = await fetch(`/api/translate/export?resxFile=${encodeURIComponent(resxFile)}`);
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: res.statusText }));
+      throw new Error(err.error || res.statusText);
+    }
+    const blob = await res.blob();
+    const disposition = res.headers.get('content-disposition') || '';
+    const match = disposition.match(/filename="?([^";]+)"?/);
+    const fileName = match ? match[1] : (editorData.baseFile || 'translations').replace(/\.resx$/i, '') + '.xlsx';
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    showToast('Exported to Excel');
+    playSfx('save');
+  } catch (e) {
+    showToast(e.message, true);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = orig;
+  }
+}
+
+async function importExcel(file) {
+  const input = document.getElementById('importExcelInput');
+  if (!file || !editorData) { input.value = ''; return; }
+  const resxFile = document.getElementById('editorResxSelect').value;
+  const btn = document.getElementById('importExcelBtn');
+  const orig = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = `<span class="spinner" style="border-top-color:currentColor;width:14px;height:14px;display:inline-block;vertical-align:-2px;margin-right:6px"></span>Importing…`;
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+    const res = await fetch(`/api/translate/import?resxFile=${encodeURIComponent(resxFile)}`, { method: 'POST', body: formData });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: res.statusText }));
+      throw new Error(err.error || res.statusText);
+    }
+    const summary = await res.json();
+    if (!summary.keysUpdated) {
+      showToast('No matching language columns found to import', true);
+    } else {
+      showToast(`Imported ${summary.keysUpdated} value(s) across ${summary.languagesUpdated.length} language(s)`);
+      playSfx('save');
+    }
+    if (summary.skippedColumns && summary.skippedColumns.length) {
+      showToast(`Skipped unrecognized column(s): ${summary.skippedColumns.join(', ')}`, true);
+    }
+    await loadEditor();
+  } catch (e) {
+    showToast(e.message, true);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = orig;
+    input.value = '';
   }
 }
 
@@ -1833,7 +1924,8 @@ function renderEditor() {
   editorVirtual.langs = langs;
   editorVirtual.defaultLang = getDefaultLang();
 
-  let headerHtml = '<thead><tr><th style="min-width:180px">Key Name</th>';
+  let colHtml = '<colgroup><col style="width:220px">';
+  let headerHtml = '<thead><tr><th class="key-col">Key Name</th>';
   langs.forEach(l => {
     const isBase = l === 'base';
     const langCode = isBase ? editorVirtual.defaultLang : l;
@@ -1848,13 +1940,16 @@ function renderEditor() {
       }
     }
     const flag = localeToFlag(langCode);
+    colHtml += '<col style="width:300px">';
     headerHtml += `<th><span class="lang-flag" title="${langCode}">${flag}</span> ${langCode}${isBase ? ' (base)' : ''}${badge}${aiBtn}</th>`;
   });
+  colHtml += '</colgroup>';
   headerHtml += '</tr></thead>';
 
   if (!grid.querySelector('table')) {
-    grid.innerHTML = `<table>${headerHtml}<tbody id="editorTbody"></tbody></table>`;
+    grid.innerHTML = `<table>${colHtml}${headerHtml}<tbody id="editorTbody"></tbody></table>`;
   } else {
+    grid.querySelector('colgroup').outerHTML = colHtml;
     grid.querySelector('thead').outerHTML = headerHtml;
   }
 
@@ -1905,7 +2000,7 @@ function renderVisibleEditorRows() {
 
   for (let i = startIdx; i < endIdx; i++) {
     const k = filteredKeys[i];
-    html += `<tr><td style="font-family:var(--mono);font-weight:500;white-space:nowrap">${k.name}</td>`;
+    html += `<tr><td class="key-col" style="font-family:var(--mono);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${k.name}">${k.name}</td>`;
     langs.forEach(l => {
       const tv = k.translations[l];
       if (!tv) { html += `<td class="cell-missing"></td>`; return; }

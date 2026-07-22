@@ -173,6 +173,48 @@ class WebStartup
             }
         });
 
+        api.MapGet("/translate/export", (string resxFile) =>
+        {
+            if (!File.Exists(resxFile))
+                return Results.BadRequest(new { error = $"File not found: {resxFile}" });
+
+            try
+            {
+                var bytes = TranslationExportService.ExportToExcel(resxFile);
+                var fileName = Path.GetFileNameWithoutExtension(resxFile) + ".xlsx";
+                return Results.File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+            }
+            catch (Exception ex)
+            {
+                return Results.BadRequest(new { error = ex.Message });
+            }
+        });
+
+        api.MapPost("/translate/import", async (HttpRequest request) =>
+        {
+            var resxFile = request.Query["resxFile"].ToString();
+            if (string.IsNullOrWhiteSpace(resxFile) || !File.Exists(resxFile))
+                return Results.BadRequest(new { error = $"File not found: {resxFile}" });
+            if (!request.HasFormContentType)
+                return Results.BadRequest(new { error = "Expected a multipart/form-data upload" });
+
+            var form = await request.ReadFormAsync();
+            var file = form.Files.GetFile("file");
+            if (file == null || file.Length == 0)
+                return Results.BadRequest(new { error = "No file uploaded" });
+
+            try
+            {
+                using var stream = file.OpenReadStream();
+                var summary = TranslationExportService.ImportFromExcel(resxFile, stream);
+                return Results.Ok(summary);
+            }
+            catch (Exception ex)
+            {
+                return Results.BadRequest(new { error = ex.Message });
+            }
+        });
+
         api.MapPost("/translate/ai", async (AiTranslateRequest req) =>
         {
             var result = await TranslationService.TranslateAsync(req);
