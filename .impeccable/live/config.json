@@ -1,0 +1,6 @@
+{
+  "files": ["src/ResxLint/wwwroot/index.html"],
+  "insertBefore": "</body>",
+  "commentSyntax": "html",
+  "cspChecked": true
+}

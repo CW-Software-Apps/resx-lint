@@ -62,4 +62,13 @@ Everything lives under `src/ResxLint/`:
 - All filesystem scans (`EnumerateFiles` in `LintService`) explicitly skip `obj/` and `bin/` directories — replicate this when adding new file-scanning logic.
 - `.resx` XML is read via both regex (fast duplicate-detection pass) and `XDocument` (structured passes) — regex is intentionally used only where line-level match positions are needed for MSBuild-style error output (`GetLineNumber`).
 - Any change to which XAML/C# syntax patterns are recognized as translation-key usages happens in the regexes at the top of `Step4_XamlReferences` / `Step5_CSharpReferences` in `LintService.cs`.
+## Design Context
+
+This project uses `/impeccable` (the Impeccable design skill) for all UI/UX work. Design decisions live in two root files:
+
+- **`PRODUCT.md`** — register (`product`), platform (`web`), two-audience strategy (CLI devs + web UI translators), brand personality, anti-references, design principles
+- **`DESIGN.md`** — cyan-teal accent (OKLCH), dark-default theme, Inter + JetBrains Mono, radius/shadow/motion tokens
+
+Always read both files before making UI changes. `/impeccable live` is configured for in-browser iteration on `wwwroot/index.html`.
+
 - The MSBuild integration pattern that downstream consumers use (calling `resx-lint` as a `BeforeTargets="BeforeBuild"` `Exec` task, expecting exit code `1` to trigger a rebuild) is documented in `README.md` — this repo's own build does not exercise that integration, so changes to exit-code semantics should be cross-checked against the README examples.

@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>resx-lint — Intelligent RESX Localization & Translation Studio</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌐</text></svg>">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2308a2a8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='10'/><path d='M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z'/></svg>">
 <script src="/js/signalr.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -15,46 +15,54 @@
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
-    --bg: #0b0d14;
-    --surface: #141722;
-    --surface-2: #1e2230;
-    --border: #292d3e;
-    --ink: #e2e8f0;
-    --ink-2: #94a3b8;
-    --accent: #6366f1;
-    --accent-hover: #818cf8;
-    --green: #10b981;
-    --green-bg: rgba(16,185,129,0.14);
-    --red: #f43f5e;
-    --red-bg: rgba(244,63,94,0.14);
-    --orange: #f59e0b;
-    --orange-bg: rgba(245,158,11,0.14);
-    --gray: #64748b;
-    --gray-bg: rgba(100,116,139,0.14);
-    --blue: #3b82f6;
-    --blue-bg: rgba(59,130,246,0.14);
+    --bg: oklch(0.14 0.02 260);
+    --surface: oklch(0.18 0.025 260);
+    --surface-2: oklch(0.22 0.03 260);
+    --border: oklch(0.27 0.035 260);
+    --ink: oklch(0.91 0.015 260);
+    --ink-2: oklch(0.64 0.03 260);
+    --accent: oklch(0.65 0.19 210);
+    --accent-hover: oklch(0.72 0.19 210);
+    --accent-soft: oklch(0.65 0.19 210 / 0.15);
+    --positive: oklch(0.60 0.17 210);
+    --positive-bg: oklch(0.60 0.17 210 / 0.14);
+    --critical: oklch(0.58 0.22 210);
+    --critical-bg: oklch(0.58 0.22 210 / 0.14);
+    --warning: oklch(0.72 0.16 210);
+    --warning-bg: oklch(0.72 0.16 210 / 0.14);
+    --neutral: oklch(0.55 0.025 210);
+    --neutral-bg: oklch(0.55 0.025 210 / 0.14);
+    --info: oklch(0.62 0.12 210);
+    --info-bg: oklch(0.62 0.12 210 / 0.14);
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 14px;
+    --shadow-sm: 0 1px 3px oklch(0 0 0 / 0.08);
+    --shadow-md: 0 4px 12px oklch(0 0 0 / 0.1);
+    --shadow-lg: 0 12px 32px oklch(0 0 0 / 0.18);
     --font: 'Inter', system-ui, sans-serif;
     --mono: 'JetBrains Mono', monospace;
   }
   [data-theme="light"] {
-    --bg: #f1f5f9;
-    --surface: #ffffff;
-    --surface-2: #e2e8f0;
-    --border: #cbd5e1;
-    --ink: #0f172a;
-    --ink-2: #475569;
-    --accent: #4f46e5;
-    --accent-hover: #4338ca;
-    --green: #059669;
-    --green-bg: rgba(16,185,129,0.14);
-    --red: #e11d48;
-    --red-bg: rgba(225,29,72,0.14);
-    --orange: #d97706;
-    --orange-bg: rgba(217,119,6,0.14);
-    --gray: #64748b;
-    --gray-bg: rgba(100,116,139,0.14);
-    --blue: #2563eb;
-    --blue-bg: rgba(37,99,235,0.14);
+    --bg: oklch(0.95 0.008 260);
+    --surface: oklch(0.99 0.005 260);
+    --surface-2: oklch(0.89 0.01 260);
+    --border: oklch(0.82 0.015 260);
+    --ink: oklch(0.18 0.02 260);
+    --ink-2: oklch(0.48 0.025 260);
+    --accent: oklch(0.52 0.19 210);
+    --accent-hover: oklch(0.46 0.19 210);
+    --accent-soft: oklch(0.52 0.19 210 / 0.12);
+    --positive: oklch(0.50 0.17 210);
+    --positive-bg: oklch(0.50 0.17 210 / 0.12);
+    --critical: oklch(0.50 0.22 210);
+    --critical-bg: oklch(0.50 0.22 210 / 0.12);
+    --warning: oklch(0.62 0.18 210);
+    --warning-bg: oklch(0.62 0.18 210 / 0.12);
+    --neutral: oklch(0.55 0.025 210);
+    --neutral-bg: oklch(0.55 0.025 260 / 0.12);
+    --info: oklch(0.50 0.14 210);
+    --info-bg: oklch(0.50 0.14 210 / 0.12);
   }
 
   html, body { height: 100%; }
@@ -83,8 +91,8 @@
 
   .logo {
     width: 36px; height: 36px;
-    border-radius: 10px;
-    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    border-radius: var(--radius-md);
+    background: linear-gradient(135deg, oklch(0.65 0.19 210), oklch(0.55 0.19 210));
     display: flex;
     align-items: center;
     justify-content: center;
@@ -92,7 +100,7 @@
     font-size: 15px;
     color: #fff;
     flex-shrink: 0;
-    box-shadow: 0 4px 12px rgba(99,102,241,0.3);
+    box-shadow: 0 4px 12px oklch(0.65 0.19 210 / 0.3);
   }
 
   .nav-btn {
@@ -102,7 +110,7 @@
     font-size: 14px;
     font-weight: 500;
     padding: 8px 16px;
-    border-radius: 8px;
+    border-radius: var(--radius-sm);
     cursor: pointer;
     transition: all .15s;
     display: flex;
@@ -120,15 +128,15 @@
   .card {
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: 14px;
+    border-radius: var(--radius-lg);
     padding: 20px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+    box-shadow: var(--shadow-md);
   }
 
   .input-field {
     background: var(--surface-2);
     border: 1px solid var(--border);
-    border-radius: 8px;
+    border-radius: var(--radius-sm);
     padding: 10px 14px;
     color: var(--ink);
     font-size: 14px;
@@ -137,14 +145,14 @@
     transition: border .15s, box-shadow .15s;
     font-family: var(--mono);
   }
-  .input-field:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(99,102,241,0.15); }
+  .input-field:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
 
   .btn {
     display: inline-flex;
     align-items: center;
     gap: 6px;
     padding: 9px 18px;
-    border-radius: 8px;
+    border-radius: var(--radius-sm);
     font-size: 14px;
     font-weight: 500;
     border: none;
@@ -157,8 +165,8 @@
   .btn-primary:hover { background: var(--accent-hover); transform: translateY(-1px); }
   .btn-secondary { background: var(--surface-2); color: var(--ink); border: 1px solid var(--border); }
   .btn-secondary:hover { background: var(--border); }
-  .btn-danger { background: var(--red-bg); color: var(--red); }
-  .btn-danger:hover { background: rgba(244,63,94,0.2); }
+  .btn-danger { background: var(--critical-bg); color: var(--critical); }
+  .btn-danger:hover { background: var(--critical); color: #fff; }
   .btn-sm { padding: 5px 12px; font-size: 13px; }
   .btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
@@ -171,25 +179,25 @@
     font-size: 12px;
     font-weight: 600;
   }
-  .badge-red { background: var(--red-bg); color: var(--red); }
-  .badge-green { background: var(--green-bg); color: var(--green); }
-  .badge-orange { background: var(--orange-bg); color: var(--orange); }
-  .badge-gray { background: var(--gray-bg); color: var(--gray); }
-  .badge-blue { background: var(--blue-bg); color: var(--blue); }
+  .badge-critical { background: var(--critical-bg); color: var(--critical); }
+  .badge-positive { background: var(--positive-bg); color: var(--positive); }
+  .badge-warning { background: var(--warning-bg); color: var(--warning); }
+  .badge-neutral { background: var(--neutral-bg); color: var(--neutral); }
+  .badge-info { background: var(--info-bg); color: var(--info); }
 
   .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; }
 
   .issue-item {
     display: flex; align-items: flex-start; gap: 10px;
     padding: 12px 16px;
-    border-radius: 10px;
+    border-radius: var(--radius-md);
     border: 1px solid var(--border);
     margin-bottom: 8px;
     font-size: 14px;
   }
-  .issue-item.fatal { border-left: 4px solid var(--red); background: var(--red-bg); }
-  .issue-item.warning { border-left: 4px solid var(--orange); background: var(--orange-bg); }
-  .issue-item.info { border-left: 4px solid var(--blue); background: var(--blue-bg); }
+  .issue-item.fatal { border-color: var(--critical); background: var(--critical-bg); }
+  .issue-item.warning { border-color: var(--warning); background: var(--warning-bg); }
+  .issue-item.info { border-color: var(--info); background: var(--info-bg); }
 
   .issue-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
   .issue-body { flex: 1; min-width: 0; }
@@ -199,7 +207,7 @@
   .editor-grid {
     overflow-x: auto;
     border: 1px solid var(--border);
-    border-radius: 12px;
+    border-radius: var(--radius-md);
   }
   .editor-grid table {
     width: 100%;
@@ -224,13 +232,13 @@
     border-bottom: 1px solid var(--border);
     vertical-align: middle;
   }
-  .editor-grid tr:hover td { background: rgba(99,102,241,0.04); }
+  .editor-grid tr:hover td { background: oklch(0.65 0.19 210 / 0.06); }
 
-  .cell-ok { background: var(--green-bg); }
-  .cell-missing { background: var(--red-bg); }
-  .cell-placeholder { background: var(--orange-bg); }
-  .cell-identical { background: var(--gray-bg); }
-  .cell-base { background: var(--blue-bg); }
+  .cell-ok { background: var(--positive-bg); }
+  .cell-missing { background: var(--critical-bg); }
+  .cell-placeholder { background: var(--warning-bg); }
+  .cell-identical { background: var(--neutral-bg); }
+  .cell-base { background: var(--info-bg); }
 
   .cell-edit {
     background: none;
@@ -247,6 +255,16 @@
     transition: border .15s, background .15s;
   }
   .cell-edit:focus { border-color: var(--accent); background: var(--surface); }
+  .cell-dirty { position: relative; }
+  .cell-dirty .cell-edit { border-color: var(--warning); background: oklch(0.85 0.08 80 / 0.08); padding-right: 28px; }
+  .cell-revert {
+    position: absolute; top: 6px; right: 6px; width: 20px; height: 20px;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 4px;
+    color: var(--ink-2); cursor: pointer; padding: 0; font-size: 11px;
+    opacity: 0; transition: opacity .12s;
+  }
+  td:hover .cell-revert { opacity: 1; }
 
   .filter-bar {
     display: flex;
@@ -254,10 +272,10 @@
     gap: 12px;
     align-items: center;
     padding: 14px 18px;
+    margin-bottom: 16px;
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: 12px;
-    margin-bottom: 16px;
+    border-radius: var(--radius-md);
   }
   .filter-chip {
     display: inline-flex;
@@ -272,7 +290,7 @@
     transition: all .15s;
     user-select: none;
   }
-  .filter-chip.active { border-color: var(--accent); background: rgba(99,102,241,0.15); font-weight: 500; }
+  .filter-chip.active { border-color: var(--accent); background: var(--accent-soft); font-weight: 500; }
   .filter-chip input { display: none; }
 
   .recent-chip {
@@ -294,14 +312,14 @@
   .project-card {
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: 14px;
+    border-radius: var(--radius-lg);
     padding: 20px;
     display: flex;
     flex-direction: column;
     gap: 14px;
     transition: border-color .15s, transform .15s, box-shadow .15s;
   }
-  .project-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.1); }
+  .project-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: var(--shadow-lg); }
 
   .step-progress { display: flex; gap: 4px; margin-bottom: 12px; }
   .step-dot {
@@ -309,8 +327,14 @@
     background: var(--border); transition: background .3s;
   }
   .step-dot.active { background: var(--accent); }
-  .step-dot.done { background: var(--green); }
-  .step-dot.error { background: var(--red); }
+  .icon { width: 1em; height: 1em; display: inline-block; vertical-align: -0.125em; flex-shrink: 0; }
+  .icon-lg { width: 1.25em; height: 1.25em; }
+  .icon-xl { width: 2em; height: 2em; }
+  .icon-wrap .icon-lg { width: 24px; height: 24px; }
+  button .icon { pointer-events: none; }
+
+  .step-dot.done { background: var(--positive); }
+  .step-dot.error { background: var(--critical); }
 
   @media (max-width: 768px) {
     .main-area { padding: 16px; }
@@ -318,12 +342,64 @@
     .filter-bar { flex-direction: column; align-items: stretch; }
   }
 
+  @media (prefers-reduced-motion: reduce) {
+    .progress-ring { animation: none; }
+    .btn-primary:hover { transform: none; }
+    .project-card:hover { transform: none; }
+    .project-item:hover { transform: none; }
+    .toast { transition: none; }
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  .btn:focus-visible, .nav-btn:focus-visible, .input-field:focus-visible,
+  .recent-chip:focus-visible, .delete-btn:focus-visible, .project-item:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
   .tab-bar { display: flex; gap: 6px; margin-left: auto; }
   .version-badge { font-size: 11px; color: var(--ink-2); font-family: var(--mono); }
+  .kbd-hint { font-size: 10px; color: var(--ink-3); font-family: var(--mono); margin-left: 4px; opacity: 0.7; }
+  @media (prefers-reduced-motion: reduce) { .kbd-hint { opacity: 0.5; } }
+  .shortcuts-bar {
+    position: fixed; bottom: 10px; right: 16px;
+    font-size: 11px; color: var(--ink-3); font-family: var(--mono);
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 6px 12px;
+    opacity: 0.7; z-index: 40; user-select: none;
+    backdrop-filter: blur(6px);
+    transition: opacity .15s;
+  }
+  .shortcuts-bar:hover { opacity: 1; }
+
+  .modal-overlay {
+    position: fixed; inset: 0; z-index: 60;
+    background: oklch(0 0 0 / 0.65);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(6px);
+  }
+  .modal-overlay.open { display: flex; }
+  .modal-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 26px;
+    width: 90%;
+    max-width: 420px;
+    box-shadow: 0 16px 40px oklch(0 0 0 / 0.25);
+    text-align: center;
+  }
+  .alert-msg { font-size: 14px; color: var(--ink-1); line-height: 1.6; margin-bottom: 20px; }
+  .alert-actions { display: flex; gap: 10px; justify-content: center; }
 
   .ai-config-modal {
     position: fixed; inset: 0; z-index: 50;
-    background: rgba(0,0,0,0.65);
+    background: oklch(0 0 0 / 0.65);
     display: none;
     align-items: center;
     justify-content: center;
@@ -333,11 +409,11 @@
   .ai-config-panel {
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: 18px;
+    border-radius: var(--radius-lg);
     padding: 26px;
     width: 90%;
     max-width: 480px;
-    box-shadow: 0 16px 40px rgba(0,0,0,0.25);
+    box-shadow: 0 16px 40px oklch(0 0 0 / 0.25);
   }
 
   .toast {
@@ -346,14 +422,14 @@
     right: 24px;
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: 12px;
+    border-radius: var(--radius-md);
     padding: 14px 22px;
     font-size: 14px;
     z-index: 100;
-    box-shadow: 0 10px 36px rgba(0,0,0,0.25);
+    box-shadow: 0 10px 36px oklch(0 0 0 / 0.25);
     transform: translateY(120px);
     opacity: 0;
-    transition: all .3s;
+    transition: transform .3s ease-out, opacity .3s ease-out;
   }
   .toast.show { transform: translateY(0); opacity: 1; }
 
@@ -379,15 +455,15 @@
     display: flex; align-items: center; gap: 16px;
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: 14px;
+    border-radius: var(--radius-lg);
     padding: 16px 20px;
     margin-bottom: 10px;
     transition: border-color .15s, transform .15s, box-shadow .15s;
     cursor: pointer;
   }
-  .project-item:hover { border-color: var(--accent); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
+  .project-item:hover { border-color: var(--accent); transform: translateY(-1px); box-shadow: var(--shadow-md); }
   .project-item .icon-wrap {
-    width: 44px; height: 44px; border-radius: 12px;
+    width: 44px; height: 44px; border-radius: var(--radius-md);
     display: flex; align-items: center; justify-content: center;
     flex-shrink: 0; font-size: 20px; font-weight: 700;
     background: var(--surface-2); color: var(--accent);
@@ -400,7 +476,7 @@
   .project-item .info .meta { display: flex; gap: 10px; margin-top: 6px; flex-wrap: wrap; }
   .project-item .actions { display: flex; gap: 6px; flex-shrink: 0; }
   .project-item .delete-btn { color: var(--ink-2); background: none; border: none; cursor: pointer; font-size: 16px; padding: 4px; border-radius: 6px; transition: all .15s; }
-  .project-item .delete-btn:hover { color: var(--red); background: var(--red-bg); }
+  .project-item .delete-btn:hover { color: var(--critical); background: var(--critical-bg); }
 
   select.input-field { cursor: pointer; }
   option { background: var(--surface); color: var(--ink); }
@@ -416,12 +492,12 @@
     <span style="font-weight:700;font-size:16px;letter-spacing:-0.02em">resx-lint</span>
     <span class="version-badge" id="versionBadge" style="cursor:pointer" onclick="checkUpdate()" title="Check for updates">v2.2.3</span>
     <div class="tab-bar">
-      <button class="nav-btn active" data-view="projects" onclick="switchView('projects')">📁 Projects</button>
-      <button class="nav-btn" data-view="lint" onclick="switchView('lint')">🔍 Audit & Lint</button>
-      <button class="nav-btn" data-view="editor" onclick="switchView('editor')">🌐 Translation Matrix & AI</button>
+      <button class="nav-btn active" data-view="projects" onclick="switchView('projects')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg> Projects <span class="kbd-hint">Ctrl+1</span></button>
+      <button class="nav-btn" data-view="lint" onclick="switchView('lint')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg> Audit & Lint <span class="kbd-hint">Ctrl+2</span></button>
+      <button class="nav-btn" data-view="editor" onclick="switchView('editor')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg> Translation Matrix & AI <span class="kbd-hint">Ctrl+3</span></button>
     </div>
-    <button class="nav-btn" onclick="checkUpdate()" title="Check for updates">📦</button>
-    <button class="nav-btn" onclick="toggleTheme()" title="Toggle dark/light theme">🌓</button>
+    <button class="nav-btn" onclick="checkUpdate()" title="Check for updates"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 9.4 7.55 4.24"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="M3.29 7 12 12l8.71-5M12 22V12"/></svg></button>
+    <button class="nav-btn" onclick="toggleTheme()" title="Toggle dark/light theme"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg></button>
   </header>
 
   <div class="main-area" id="mainArea">
@@ -432,7 +508,7 @@
         <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
           <div style="display:flex;align-items:center;gap:12px">
             <h2 style="font-size:18px;font-weight:700">My Projects</h2>
-            <span class="badge badge-blue" id="savedProjectCount" style="padding:3px 10px;font-size:12px">0</span>
+            <span class="badge badge-info" id="savedProjectCount" style="padding:3px 10px;font-size:12px">0</span>
           </div>
           <div style="display:flex;gap:8px;align-items:center">
             <input class="input-field" id="projectSearchInput" placeholder="Filter projects..." style="font-family:var(--font);width:200px;padding:8px 12px" oninput="filterSavedProjects()">
@@ -452,7 +528,7 @@
       <div id="savedProjectsList"></div>
 
       <div id="projectEmpty" class="empty-state">
-        <div class="icon">📁</div>
+        <div class="icon"><svg class="icon icon-xl" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></div>
         <h3>No projects added yet</h3>
         <p>Click <strong>＋ Add Project</strong> above to add a project directory and scan for localizable resources.</p>
       </div>
@@ -471,7 +547,7 @@
             <select class="input-field" id="resxFileSelect"><option value="">— select .resx —</option></select>
           </div>
           <button class="btn btn-secondary" onclick="scanProject()">Scan</button>
-          <button class="btn btn-primary" onclick="runLint()" id="runLintBtn">🔍 Run Audit</button>
+          <button class="btn btn-primary" onclick="runLint()" id="runLintBtn"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg> Run Audit</button>
         </div>
       </div>
 
@@ -505,7 +581,7 @@
 
         <div id="autoFixBar" style="display:none;margin-bottom:16px">
           <div class="card" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-            <span style="font-size:14px">🔧 <strong>Auto-fixable issues detected!</strong></span>
+            <span style="font-size:14px"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg> <strong>Auto-fixable issues detected!</strong></span>
             <button class="btn btn-primary btn-sm" onclick="previewAutoFix()">Preview Fixes</button>
             <button class="btn btn-danger btn-sm" onclick="applyAutoFix()">Apply All Fixes</button>
           </div>
@@ -516,7 +592,7 @@
       </div>
 
       <div id="lintEmpty" class="empty-state">
-        <div class="icon">🔍</div>
+        <div class="icon"><svg class="icon icon-xl" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></div>
         <h3>Ready to Audit</h3>
         <p>Select a project and resource file, then click <strong>Run Audit</strong> to validate translations against C#/XAML usage.</p>
       </div>
@@ -531,7 +607,7 @@
             <select class="input-field" id="editorResxSelect"><option value="">— select a .resx file —</option></select>
           </div>
           <button class="btn btn-primary" onclick="loadEditor()">Load Matrix</button>
-          <button class="btn btn-secondary" onclick="openAiConfig()">🤖 AI Batch Translate</button>
+          <button class="btn btn-secondary" onclick="openAiConfig()"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="14" x="4" y="6" rx="2"/><path d="M12 6V2"/><path d="M9 14h6"/><path d="M12 17v-3"/></svg> AI Batch Translate</button>
         </div>
       </div>
 
@@ -539,21 +615,21 @@
         <div id="editorToolbar" class="filter-bar">
           <input class="input-field" id="editorSearch" placeholder="Search keys or text values..." style="max-width:280px;font-family:var(--font)" oninput="filterEditor()">
           <span style="color:var(--ink-2);font-size:13px;font-weight:500">Status Filter:</span>
-          <label class="filter-chip active" data-filter="ok" onclick="toggleFilter(this)"><input type="checkbox" checked> ✅ OK</label>
-          <label class="filter-chip active" data-filter="missing" onclick="toggleFilter(this)"><input type="checkbox" checked> ❌ Missing</label>
-          <label class="filter-chip active" data-filter="placeholder" onclick="toggleFilter(this)"><input type="checkbox" checked> 🟠 Placeholders</label>
-          <label class="filter-chip active" data-filter="identical" onclick="toggleFilter(this)"><input type="checkbox" checked> ⚪ Identical</label>
+          <label class="filter-chip active" data-filter="ok" onclick="toggleFilter(this)"><input type="checkbox" checked> <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-10 10L5 11"/></svg> OK</label>
+          <label class="filter-chip active" data-filter="missing" onclick="toggleFilter(this)"><input type="checkbox" checked> <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg> Missing</label>
+          <label class="filter-chip active" data-filter="placeholder" onclick="toggleFilter(this)"><input type="checkbox" checked> <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg> Placeholders</label>
+          <label class="filter-chip active" data-filter="identical" onclick="toggleFilter(this)"><input type="checkbox" checked> <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><path d="M12 12v4M12 8h.01"/></svg> Identical</label>
           <span style="color:var(--ink-2);font-size:13px;margin-left:auto" id="editorCount"></span>
         </div>
         <div id="editorGrid" class="editor-grid"></div>
         <div style="margin-top:14px;display:flex;gap:10px;justify-content:end">
           <button class="btn btn-secondary" onclick="loadEditor()">Discard Changes</button>
-          <button class="btn btn-primary" onclick="saveEditor()">💾 Save Changes</button>
+          <button class="btn btn-primary" onclick="saveEditor()"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8"/><path d="M7 3v5h8"/></svg> Save Changes</button>
         </div>
       </div>
 
       <div id="editorEmpty" class="empty-state">
-        <div class="icon">🌐</div>
+        <div class="icon"><svg class="icon icon-xl" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div>
         <h3>Visual Translation Matrix</h3>
         <p>Load a .resx file to view, edit, and translate all language columns side by side.</p>
       </div>
@@ -561,13 +637,24 @@
   </div>
 </div>
 
+<!-- Alert/Confirm Modal -->
+<div class="modal-overlay" id="alertModal">
+  <div class="modal-panel alert-panel">
+    <div class="alert-msg"></div>
+    <div class="alert-actions">
+      <button class="btn btn-primary alert-ok">OK</button>
+      <button class="btn btn-secondary alert-cancel" style="display:var(--alert-cancel-display,none)">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <!-- AI Config Modal -->
 <div class="ai-config-modal" id="aiModal">
   <div class="ai-config-panel">
-    <h3 style="margin-bottom:16px;font-size:17px;font-weight:600">🤖 AI Translation Studio</h3>
+    <h3 style="margin-bottom:16px;font-size:17px;font-weight:600"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="14" x="4" y="6" rx="2"/><path d="M12 6V2"/><path d="M9 14h6"/><path d="M12 17v-3"/></svg> AI Translation Studio</h3>
     <div style="display:grid;gap:14px">
       <div>
-        <label style="font-size:12px;color:var(--ink-2);display:block;margin-bottom:4px">AI Provider <span id="aiProviderStatus" style="font-size:11px;color:var(--orange)">(loading...)</span></label>
+        <label style="font-size:12px;color:var(--ink-2);display:block;margin-bottom:4px">AI Provider <span id="aiProviderStatus" style="font-size:11px;color:var(--warning)">(loading...)</span></label>
         <select class="input-field" id="aiProvider" onchange="onAiProviderChange()">
           <option value="">— loading providers —</option>
         </select>
@@ -588,13 +675,16 @@
           <a id="aiDocsLink" href="#" target="_blank" style="font-size:11px;color:var(--accent);margin-left:8px;display:none">Get key →</a>
         </label>
         <input class="input-field" id="aiApiKey" type="password" placeholder="Enter your API Key" style="font-family:var(--font)">
+        <label style="font-size:12px;color:var(--ink-2);margin-top:6px;display:flex;align-items:center;gap:6px;cursor:pointer">
+          <input type="checkbox" id="aiRememberKey" style="accent-color:var(--accent)"> Remember key (persists across sessions)
+        </label>
       </form>
       <div>
         <label style="font-size:12px;color:var(--ink-2);display:block;margin-bottom:4px">Target Language</label>
         <select class="input-field" id="aiTargetLang"><option value="">— Translate missing in ALL languages —</option></select>
       </div>
       <div style="display:flex;gap:10px;margin-top:8px">
-        <button class="btn btn-primary" onclick="aiTranslateAll()">⚡ Translate with AI</button>
+        <button class="btn btn-primary" onclick="aiTranslateAll()"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg> Translate with AI</button>
         <button class="btn btn-secondary" onclick="closeAiConfig()">Cancel</button>
       </div>
       <div id="aiProgress" style="display:none;font-size:13px;color:var(--ink-2);text-align:center;padding:8px">
@@ -625,8 +715,8 @@
 <div class="ai-config-modal" id="updateModal">
   <div class="ai-config-panel" style="max-width:540px">
     <h3 style="margin-bottom:12px;font-size:17px;font-weight:600;display:flex;align-items:center;gap:8px">
-      <span>📦 resx-lint Update</span>
-      <span class="badge badge-blue" id="updateModalBadge">v2.2.3</span>
+      <span><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 9.4 7.55 4.24"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="M3.29 7 12 12l8.71-5M12 22V12"/></svg> resx-lint Update</span>
+      <span class="badge badge-info" id="updateModalBadge">v2.2.3</span>
     </h3>
     <div style="display:grid;gap:14px">
       <div id="updateModalInfo" style="font-size:13px;color:var(--ink-2)">
@@ -634,10 +724,10 @@
       </div>
       <div>
         <label style="font-size:12px;color:var(--ink-2);display:block;margin-bottom:4px">Update Output (dotnet tool update --global ResxLint)</label>
-        <pre class="input-field" id="updateModalLog" style="height:140px;overflow-y:auto;white-space:pre-wrap;font-size:12px;color:var(--green)">Click 'Install Update' to start.</pre>
+        <pre class="input-field" id="updateModalLog" style="height:140px;overflow-y:auto;white-space:pre-wrap;font-size:12px;color:var(--positive)">Click 'Install Update' to start.</pre>
       </div>
       <div style="display:flex;gap:10px;margin-top:4px">
-        <button class="btn btn-primary" id="updateModalStartBtn" onclick="installUpdate()">⚡ Install Update</button>
+        <button class="btn btn-primary" id="updateModalStartBtn" onclick="installUpdate()"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg> Install Update</button>
         <button class="btn btn-secondary" onclick="closeUpdateModal()">Close</button>
       </div>
     </div>
@@ -646,6 +736,7 @@
 
 <!-- Toast -->
 <div class="toast" id="toast"></div>
+<div class="shortcuts-bar">Ctrl+1–3 Views · Ctrl+Enter Audit · Ctrl+S Save · Ctrl+F Search · Esc Close</div>
 
 <script>
 // ====== STATE ======
@@ -657,21 +748,45 @@ let editorLanguages = [];
 let dirtyCells = {};
 let updateCheckResult = null;
 
-// ====== FLAG HELPER ======
-function getLangFlag(code) {
-  if (!code || code === 'Default' || code === 'base') return '🌐';
+// ====== ICON SYSTEM ======
+function icon(name) {
+  const I = {
+    folder: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>',
+    search: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>',
+    globe: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>',
+    package: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 9.4 7.55 4.24"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="M3.29 7 12 12l8.71-5M12 22V12"/></svg>',
+    sun: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>',
+    moon: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>',
+    x: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>',
+    refresh: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M21 21v-5h-5"/></svg>',
+    clock: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>',
+    file: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><path d="M14 2v6h6"/></svg>',
+    bolt: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>',
+    save: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8"/><path d="M7 3v5h8"/></svg>',
+    check: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-10 10L5 11"/></svg>',
+    alert: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>',
+    info: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>',
+    plus: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>',
+    bot: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="14" x="4" y="6" rx="2"/><path d="M12 6V2"/><path d="M9 14h6"/><path d="M12 17v-3"/></svg>',
+    trash: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>',
+    lang: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/></svg>',
+  };
+  return I[name] || '';
+}
+function getLangLabel(code) {
+  if (!code || code === 'Default' || code === 'base') return 'base';
   const c = code.toLowerCase();
-  if (c.includes('en')) return '🇺🇸';
-  if (c.includes('es')) return '🇪🇸';
-  if (c.includes('pt')) return '🇧🇷';
-  if (c.includes('de')) return '🇩🇪';
-  if (c.includes('fr')) return '🇫🇷';
-  if (c.includes('it')) return '🇮🇹';
-  if (c.includes('ja')) return '🇯🇵';
-  if (c.includes('zh')) return '🇨🇳';
-  if (c.includes('ru')) return '🇷🇺';
-  if (c.includes('ko')) return '🇰🇷';
-  return '🏳️';
+  if (c.includes('en')) return 'EN';
+  if (c.includes('es')) return 'ES';
+  if (c.includes('pt')) return 'PT';
+  if (c.includes('de')) return 'DE';
+  if (c.includes('fr')) return 'FR';
+  if (c.includes('it')) return 'IT';
+  if (c.includes('ja')) return 'JA';
+  if (c.includes('zh')) return 'ZH';
+  if (c.includes('ru')) return 'RU';
+  if (c.includes('ko')) return 'KO';
+  return code.split('-')[0]?.toUpperCase() || '—';
 }
 
 // ====== THEME ======
@@ -780,9 +895,9 @@ async function resolvePath(path) {
   return path;
 }
 
-function removeProject(path, e) {
+async function removeProject(path, e) {
   if (e) e.stopPropagation();
-  if (!confirm('Remove this project from the list?')) return;
+  if (!await showConfirm('Remove this project from the list?')) return;
   let list = getSavedProjects().filter(p => p.path !== path);
   saveProjects(list);
   if (list.length === 0) discoveredProjects = [];
@@ -847,8 +962,8 @@ function renderSavedProjects() {
       ? new Date(proj.lastScanned).toLocaleDateString() + ' ' + new Date(proj.lastScanned).toLocaleTimeString()
       : 'Never';
     const iconHtml = proj.icon
-      ? `<img src="/api/project/icon-file?file=${encodeURIComponent(proj.icon)}" alt="" onerror="this.parentElement.textContent='📁'">`
-      : '📁';
+      ? `<img src="/api/project/icon-file?file=${encodeURIComponent(proj.icon)}" alt="" onerror="this.parentElement.innerHTML='${icon('folder')}'">`
+      : icon('folder');
     const encPath = encodeURIComponent(proj.path);
 
     html += `
@@ -858,15 +973,15 @@ function renderSavedProjects() {
           <div class="name">${escHtml(proj.name)}</div>
           <div class="path">${escHtml(proj.path)}</div>
           <div class="meta">
-            <span class="badge badge-blue">📄 ${proj.resxCount || 0} resx</span>
-            <span class="badge badge-green">🌐 ${proj.langCount || 0} langs</span>
-            <span class="badge badge-gray">🕐 ${scanned}</span>
+            <span class="badge badge-info">${icon('file')} ${proj.resxCount || 0} resx</span>
+            <span class="badge badge-positive">${icon('globe')} ${proj.langCount || 0} langs</span>
+            <span class="badge badge-neutral">${icon('clock')} ${scanned}</span>
           </div>
         </div>
         <div class="actions">
-          <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation();rescanProject('${encPath}')" title="Rescan">🔄</button>
-          <button class="btn btn-primary btn-sm" onclick="event.stopPropagation();quickLint('${encPath}')" title="Run audit">🔍</button>
-          <button class="delete-btn" onclick="removeProject('${encPath}', event)" title="Remove">✕</button>
+          <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation();rescanProject('${encPath}')" title="Rescan">${icon('refresh')}</button>
+          <button class="btn btn-primary btn-sm" onclick="event.stopPropagation();quickLint('${encPath}')" title="Run audit">${icon('search')}</button>
+          <button class="delete-btn" onclick="removeProject('${encPath}', event)" title="Remove">${icon('trash')}</button>
         </div>
       </div>`;
   }
@@ -952,12 +1067,12 @@ async function checkUpdate() {
     openUpdateModal(info);
 
     if (info.isUpdateAvailable) {
-      badge.textContent = `📦 ${info.latestVersion} available!`;
+      badge.innerHTML = icon('package') + ` ${info.latestVersion} available!`;
       badge.style.color = 'var(--accent)';
     } else {
-      badge.textContent = `✓ v${info.currentVersion}`;
-      badge.style.color = 'var(--green)';
-      setTimeout(() => { badge.textContent = `v${info.currentVersion}`; badge.style.color = ''; }, 4000);
+      badge.innerHTML = icon('check') + ` v${info.currentVersion}`;
+      badge.style.color = 'var(--positive)';
+      setTimeout(() => { badge.innerHTML = `v${info.currentVersion}`; badge.style.color = ''; }, 4000);
     }
   } catch (e) {
     showToast(`Update check failed: ${e.message}`, true);
@@ -978,10 +1093,10 @@ function openUpdateModal(info) {
     infoDiv.innerHTML = `New version <strong style="color:var(--accent)">v${info.latestVersion}</strong> available on NuGet! Installed version: <code>v${info.currentVersion}</code>.`;
     startBtn.style.display = '';
     startBtn.disabled = false;
-    startBtn.textContent = '⚡ Install Update';
+    startBtn.innerHTML = icon('bolt') + ' Install Update';
     log.textContent = "Click 'Install Update' to run 'dotnet tool update --global ResxLint'.";
   } else {
-    infoDiv.innerHTML = `You are running the latest version (<strong style="color:var(--green)">v${info.currentVersion}</strong>).`;
+    infoDiv.innerHTML = `You are running the latest version (<strong style="color:var(--positive)">v${info.currentVersion}</strong>).`;
     startBtn.style.display = 'none';
     log.textContent = "Your resx-lint installation is up to date.";
   }
@@ -998,7 +1113,7 @@ async function installUpdate() {
   const badge = document.getElementById('versionBadge');
 
   startBtn.disabled = true;
-  startBtn.textContent = '⏳ Installing...';
+  startBtn.innerHTML = icon('refresh') + ' Installing...';
   log.textContent = "Executing: dotnet tool update --global ResxLint...\nPlease wait.";
 
   try {
@@ -1007,11 +1122,11 @@ async function installUpdate() {
 
     if (result.error || result.success === false) {
       const isFileLock = (result.commandOutput || '').includes('Access to the path') || (result.commandOutput || '').includes('denied');
-      log.textContent += `\n\n❌ Error: ${result.error || 'Update failed'}`;
+      log.innerHTML += `<br><br>${icon('x')} Error: ${escHtml(result.error || 'Update failed')}`;
       
       if (isFileLock) {
-        infoDiv.innerHTML = `<div style="color:var(--orange);font-size:13px;line-height:1.5">
-          ⚠️ <strong>File in Use (Executable Locked)</strong><br>
+        infoDiv.innerHTML = `<div style="color:var(--warning);font-size:13px;line-height:1.5">
+          ${icon('alert')} <strong>File in Use (Executable Locked)</strong><br>
           Windows locks binary files while <code>resx-lint</code> is actively running.<br><br>
           <strong>Steps to complete update:</strong><br>
           1. Stop this running instance (press <code>Ctrl+C</code> in terminal).<br>
@@ -1022,20 +1137,20 @@ async function installUpdate() {
       
       showToast(`Update failed: ${result.error}`, true);
       startBtn.disabled = false;
-      startBtn.textContent = '⚡ Try Again';
+      startBtn.innerHTML = icon('bolt') + ' Try Again';
     } else {
-      log.textContent += `\n\n✅ Update process finished!`;
+      log.textContent += `\n\nUpdate process finished!`;
       showToast(`Updated! Please restart resx-lint to apply.`);
-      infoDiv.innerHTML = `<strong style="color:var(--green)">✅ Updated successfully!</strong><br><span style="font-size:12px">Please restart your terminal / app to run the new v${result.latestVersion || result.targetVersion || ''} binaries.</span>`;
-      badge.textContent = `✓ v${result.latestVersion || result.targetVersion || '2.2.0'}`;
-      badge.style.color = 'var(--green)';
+      infoDiv.innerHTML = `<strong style="color:var(--positive)">${icon('check')} Updated successfully!</strong><br><span style="font-size:12px">Please restart your terminal / app to run the new v${result.latestVersion || result.targetVersion || ''} binaries.</span>`;
+      badge.innerHTML = icon('check') + ` v${result.latestVersion || result.targetVersion || '2.2.0'}`;
+      badge.style.color = 'var(--positive)';
       startBtn.style.display = 'none';
     }
   } catch (e) {
-    log.textContent += `\n\n❌ Connection/API error: ${e.message}`;
+    log.innerHTML += `<br><br>${icon('x')} Connection/API error: ${escHtml(e.message)}`;
     showToast(`Error installing: ${e.message}`, true);
     startBtn.disabled = false;
-    startBtn.textContent = '⚡ Try Again';
+    startBtn.innerHTML = icon('bolt') + ' Try Again';
   }
 }
 
@@ -1047,12 +1162,75 @@ function switchView(name) {
   document.querySelectorAll('.nav-btn[data-view]').forEach(b => b.classList.toggle('active', b.dataset.view === name));
 }
 
+// ====== CUSTOM MODAL ======
+function showAlert(msg) {
+  return new Promise(resolve => {
+    const el = document.getElementById('alertModal');
+    el.querySelector('.alert-msg').innerHTML = msg.replace(/\n/g, '<br>');
+    el.classList.add('open');
+    el.querySelector('.alert-ok').onclick = () => {
+      el.classList.remove('open');
+      resolve();
+    };
+    el.querySelector('.alert-ok').focus();
+  });
+}
+function showConfirm(msg) {
+  return new Promise(resolve => {
+    const el = document.getElementById('alertModal');
+    el.querySelector('.alert-msg').innerHTML = msg.replace(/\n/g, '<br>');
+    el.classList.add('open');
+    el.style.setProperty('--alert-cancel-display', 'inline-flex');
+    el.querySelector('.alert-ok').onclick = () => { el.classList.remove('open'); resolve(true); };
+    el.querySelector('.alert-cancel').onclick = () => { el.classList.remove('open'); resolve(false); };
+  });
+}
+document.addEventListener('keydown', e => {
+  const tag = document.activeElement?.tagName || '';
+  const isInput = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
+
+  if (e.key === 'Escape') {
+    const alertEl = document.getElementById('alertModal');
+    if (alertEl.classList.contains('open')) { alertEl.classList.remove('open'); return; }
+    const aiModal = document.getElementById('aiModal');
+    if (aiModal.classList.contains('open')) { aiModal.classList.remove('open'); return; }
+    const updateModal = document.getElementById('updateModal');
+    if (updateModal.classList.contains('open')) { updateModal.classList.remove('open'); return; }
+    const addModal = document.getElementById('addProjectModal');
+    if (addModal?.classList.contains('open')) { addModal.classList.remove('open'); return; }
+    return;
+  }
+
+  if ((e.ctrlKey || e.metaKey) && !isInput) {
+    switch (e.key) {
+      case '1': e.preventDefault(); switchView('projects'); break;
+      case '2': e.preventDefault(); switchView('lint'); break;
+      case '3': e.preventDefault(); switchView('editor'); break;
+      case 'Enter': e.preventDefault(); runLint(); break;
+      case 's':
+        e.preventDefault();
+        if (document.getElementById('view-editor').style.display !== 'none') saveEditor();
+        break;
+    }
+  }
+
+  if ((e.ctrlKey || e.metaKey) && e.key === 'f' && isInput) return;
+  if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+    const view = document.querySelector('[data-view].active')?.dataset.view;
+    if (view === 'projects') {
+      e.preventDefault(); document.getElementById('projectSearchInput')?.focus();
+    } else if (view === 'editor') {
+      e.preventDefault(); document.getElementById('editorSearch')?.focus();
+    }
+  }
+});
+
 // ====== TOAST ======
 let toastTimer;
 function showToast(msg, isError) {
   const t = document.getElementById('toast');
   t.textContent = msg;
-  t.style.borderLeft = isError ? '4px solid var(--red)' : '4px solid var(--green)';
+  t.style.borderLeft = isError ? '4px solid var(--critical)' : '4px solid var(--positive)';
   t.classList.add('show');
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => t.classList.remove('show'), 3500);
@@ -1160,12 +1338,12 @@ async function runLint() {
 function renderLintResults(r) {
   const cards = document.getElementById('summaryCards');
   const items = [
-    { label: 'Total Keys', value: r.totalKeys, cls: 'badge-blue' },
-    { label: 'Languages', value: r.languageCount, cls: 'badge-blue' },
-    { label: 'Fatal Errors', value: r.summary.fatalErrors, cls: r.summary.fatalErrors > 0 ? 'badge-red' : 'badge-gray' },
-    { label: 'Warnings', value: r.summary.warnings, cls: r.summary.warnings > 0 ? 'badge-orange' : 'badge-gray' },
-    { label: 'Auto-fixes', value: r.summary.autoFixesApplied, cls: r.summary.autoFixesApplied > 0 ? 'badge-green' : 'badge-gray' },
-    { label: 'Missing', value: r.summary.missingTranslations, cls: r.summary.missingTranslations > 0 ? 'badge-red' : 'badge-gray' },
+    { label: 'Total Keys', value: r.totalKeys, cls: 'badge-info' },
+    { label: 'Languages', value: r.languageCount, cls: 'badge-info' },
+    { label: 'Fatal Errors', value: r.summary.fatalErrors, cls: r.summary.fatalErrors > 0 ? 'badge-critical' : 'badge-neutral' },
+    { label: 'Warnings', value: r.summary.warnings, cls: r.summary.warnings > 0 ? 'badge-warning' : 'badge-neutral' },
+    { label: 'Auto-fixes', value: r.summary.autoFixesApplied, cls: r.summary.autoFixesApplied > 0 ? 'badge-positive' : 'badge-neutral' },
+    { label: 'Missing', value: r.summary.missingTranslations, cls: r.summary.missingTranslations > 0 ? 'badge-critical' : 'badge-neutral' },
   ];
   cards.innerHTML = items.map(i => `
     <div class="card" style="text-align:center;padding:16px">
@@ -1180,16 +1358,16 @@ function renderLintResults(r) {
 
   const list = document.getElementById('issueList');
   if (r.issues.length === 0) {
-    list.innerHTML = '<div class="card" style="text-align:center;padding:24px;color:var(--green)">✅ No translation issues found!</div>';
+    list.innerHTML = '<div class="card" style="text-align:center;padding:24px;color:var(--positive)">' + icon('check') + ' No translation issues found!</div>';
   } else {
     list.innerHTML = r.issues.map(i => {
       const sev = i.severity;
-      const icon = sev === 'fatal' ? '✖' : sev === 'warning' ? '⚠' : 'ℹ';
+      const sevIcon = sev === 'fatal' ? icon('x') : sev === 'warning' ? icon('alert') : icon('info');
       const sim = i.similarKeys && i.similarKeys.length > 0
         ? `<div style="font-size:12px;color:var(--ink-2);margin-top:2px">Similar: ${i.similarKeys.join(', ')}</div>`
         : '';
       return `<div class="issue-item ${sev}">
-        <span class="issue-icon">${icon}</span>
+        <span class="issue-icon">${sevIcon}</span>
         <div class="issue-body">
           <div><span class="issue-code">${i.code}</span> ${i.message}</div>
           <div class="issue-file">${i.file}${i.line > 0 ? `:${i.line}` : ''}</div>
@@ -1213,7 +1391,7 @@ async function previewAutoFix() {
     const fixList = data.preview || [];
     if (fixList.length === 0) return showToast('No auto-fixable issues');
     const msg = fixList.map(f => `  • ${f.code}: ${f.fixDescription}`).join('\n');
-    alert(`Fix Preview (nothing has been written to disk yet):\n${msg}`);
+    showAlert(`Fix Preview — nothing has been written to disk yet.<br><br>${msg.replace(/\n/g, '<br>')}`);
   } catch (e) {
     showToast(e.message, true);
   }
@@ -1221,7 +1399,7 @@ async function previewAutoFix() {
 
 async function applyAutoFix() {
   if (!lintResult) return;
-  if (!confirm('Apply all auto-fixes? This will modify files on disk.')) return;
+  if (!await showConfirm('Apply all auto-fixes? This will modify files on disk.')) return;
 
   const dir = getProjectDir();
   const resxFile = document.getElementById('resxFileSelect').value;
@@ -1253,7 +1431,7 @@ async function loadEditor() {
 
     const aiSel = document.getElementById('aiTargetLang');
     aiSel.innerHTML = '<option value="">— Translate missing in ALL languages —</option>' +
-      data.languages.map(l => `<option value="${l.code}">${getLangFlag(l.code)} ${l.code}</option>`).join('');
+      data.languages.map(l => `<option value="${l.code}">${icon('lang')} ${getLangLabel(l.code)} — ${l.code}</option>`).join('');
 
     renderEditor();
     document.getElementById('editorContent').style.display = '';
@@ -1276,7 +1454,8 @@ function renderEditor() {
     return statuses.some(s => activeFilters.includes(s));
   });
 
-  document.getElementById('editorCount').textContent = `${filteredKeys.length} / ${editorKeys.length} keys displayed`;
+  const dirtyCount = Object.values(dirtyCells).reduce((a, c) => a + Object.keys(c).length, 0);
+  document.getElementById('editorCount').innerHTML = `${filteredKeys.length} / ${editorKeys.length} keys displayed${dirtyCount ? ` · <span style="color:var(--warning)">${dirtyCount} unsaved</span>` : ''}`;
 
   let html = '<table><thead><tr><th style="min-width:180px">Key Name</th>';
   langs.forEach(l => {
@@ -1286,11 +1465,11 @@ function renderEditor() {
     if (info) {
       const missing = info.missingKeys || 0;
       if (missing > 0) {
-        badge = `<span class="badge badge-red" style="margin-left:6px">${missing} missing</span>`;
-        aiBtn = `<button class="btn btn-primary btn-sm" style="margin-left:6px;padding:2px 8px;font-size:11px" onclick="quickAiTranslateLang('${l}')" title="Translate ${l} with AI">⚡ AI</button>`;
+        badge = `<span class="badge badge-critical" style="margin-left:6px">${missing} missing</span>`;
+        aiBtn = `<button class="btn btn-primary btn-sm" style="margin-left:6px;padding:2px 8px;font-size:11px" onclick="quickAiTranslateLang('${l}')" title="Translate ${l} with AI">${icon('bolt')} AI</button>`;
       }
     }
-    const flag = getLangFlag(l);
+    const flag = getLangLabel(l);
     html += `<th><span class="lang-flag">${flag}</span> ${l}${badge}${aiBtn}</th>`;
   });
   html += '</tr></thead><tbody>';
@@ -1307,7 +1486,13 @@ function renderEditor() {
       const isEditable = l !== 'base';
       const dataAttrs = `data-key="${k.name}" data-lang="${l}" data-original="${encodeURIComponent(originalVal)}"`;
       if (isEditable) {
-        html += `<td class="${cls}"><textarea class="cell-edit" ${dataAttrs} onchange="markDirty(this)" rows="1">${escHtml(val)}</textarea></td>`;
+        const isDirty = pending !== undefined;
+        html += `<td class="${cls}${isDirty ? ' cell-dirty' : ''}">`;
+        html += `<textarea class="cell-edit" ${dataAttrs} onchange="markDirty(this)" rows="1">${escHtml(val)}</textarea>`;
+        if (isDirty) {
+          html += `<button class="cell-revert" onclick="revertCell('${k.name}','${l}')" title="Revert to original">${icon('x')}</button>`;
+        }
+        html += `</td>`;
       } else {
         html += `<td class="${cls}" style="opacity:0.7;font-size:12px">${escHtml(val) || '—'}</td>`;
       }
@@ -1350,6 +1535,14 @@ function markDirty(el) {
   }
 }
 
+function revertCell(key, lang) {
+  if (dirtyCells[lang]) {
+    delete dirtyCells[lang][key];
+    if (Object.keys(dirtyCells[lang]).length === 0) delete dirtyCells[lang];
+  }
+  renderEditor();
+}
+
 function toggleFilter(el) {
   el.classList.toggle('active');
   const cb = el.querySelector('input');
@@ -1368,6 +1561,11 @@ async function saveEditor() {
   const langs = Object.keys(dirtyCells);
   if (langs.length === 0) return showToast('No changes to save');
 
+  const saveBtn = document.querySelector('#view-editor .btn-primary');
+  const origText = saveBtn.innerHTML;
+  saveBtn.innerHTML = icon('refresh') + ' Saving...';
+  saveBtn.disabled = true;
+
   let saved = 0;
   for (const lang of langs) {
     try {
@@ -1377,12 +1575,16 @@ async function saveEditor() {
       });
       saved += Object.keys(dirtyCells[lang]).length;
     } catch (e) {
+      saveBtn.innerHTML = origText;
+      saveBtn.disabled = false;
       showToast(`Error saving ${lang}: ${e.message}`, true);
       return;
     }
   }
 
   dirtyCells = {};
+  saveBtn.innerHTML = origText;
+  saveBtn.disabled = false;
   showToast(`Saved ${saved} translation(s) successfully!`);
   await loadEditor();
 }
@@ -1399,10 +1601,13 @@ async function openAiConfig() {
   try {
     const providers = await api('/api/translate/providers');
     cachedProviders = providers;
-    const savedProvider = localStorage.getItem('resx-lint-ai-provider') || 'openai';
-    const savedKey = localStorage.getItem('resx-lint-ai-key') || '';
-    const savedEndpoint = localStorage.getItem('resx-lint-ai-custom-endpoint') || '';
-    const savedModel = localStorage.getItem('resx-lint-ai-custom-model') || '';
+    const sessKey = sessionStorage.getItem('resx-lint-ai-key');
+    const remembered = !!localStorage.getItem('resx-lint-ai-remember');
+    const savedKey = remembered ? (localStorage.getItem('resx-lint-ai-key') || sessKey || '') : (sessKey || '');
+    const savedProvider = (remembered ? localStorage : sessionStorage).getItem('resx-lint-ai-provider') || 'openai';
+    const savedEndpoint = (remembered ? localStorage : sessionStorage).getItem('resx-lint-ai-custom-endpoint') || '';
+    const savedModel = (remembered ? localStorage : sessionStorage).getItem('resx-lint-ai-custom-model') || '';
+    document.getElementById('aiRememberKey').checked = remembered;
 
     sel.innerHTML = providers.map(p => {
       const label = p.recommended ? `${p.name} — ${p.model} (Recommended)` : `${p.name} — ${p.model}`;
@@ -1472,7 +1677,18 @@ async function aiTranslateAll() {
   if (provider === 'custom' && !customEndpoint) return showToast('Enter a custom API endpoint', true);
   if (provider === 'custom' && !customModel) return showToast('Enter a custom model name', true);
 
-  localStorage.setItem('resx-lint-ai-key', apiKey);
+  const remember = document.getElementById('aiRememberKey').checked;
+  sessionStorage.setItem('resx-lint-ai-key', apiKey);
+  sessionStorage.setItem('resx-lint-ai-provider', provider);
+  sessionStorage.setItem('resx-lint-ai-custom-endpoint', customEndpoint);
+  sessionStorage.setItem('resx-lint-ai-custom-model', customModel);
+  if (remember) {
+    localStorage.setItem('resx-lint-ai-key', apiKey);
+    localStorage.setItem('resx-lint-ai-remember', '1');
+  } else {
+    localStorage.removeItem('resx-lint-ai-key');
+    localStorage.removeItem('resx-lint-ai-remember');
+  }
   localStorage.setItem('resx-lint-ai-provider', provider);
   localStorage.setItem('resx-lint-ai-custom-endpoint', customEndpoint);
   localStorage.setItem('resx-lint-ai-custom-model', customModel);
