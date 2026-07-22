@@ -75,16 +75,30 @@ class WebStartup
             var inputDirs = dir.Split(new[] { ';', ',', '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
             var results = new List<ProjectResxInfo>();
 
+            var enumOptions = new EnumerationOptions
+            {
+                RecurseSubdirectories = true,
+                IgnoreInaccessible = true
+            };
+
             foreach (var rawDir in inputDirs)
             {
                 var inputDir = Path.GetFullPath(rawDir);
                 if (!Directory.Exists(inputDir)) continue;
 
-                var allResx = Directory.GetFiles(inputDir, "*.resx", SearchOption.AllDirectories)
-                    .Where(f => !f.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}") &&
-                                !f.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}") &&
-                                !f.Contains("/obj/") && !f.Contains("/bin/"))
-                    .ToList();
+                List<string> allResx;
+                try
+                {
+                    allResx = Directory.GetFiles(inputDir, "*.resx", enumOptions)
+                        .Where(f => !f.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}") &&
+                                    !f.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}") &&
+                                    !f.Contains("/obj/") && !f.Contains("/bin/"))
+                        .ToList();
+                }
+                catch (UnauthorizedAccessException)
+                {
+                    continue;
+                }
 
                 var groups = allResx.GroupBy(f =>
                 {
@@ -286,10 +300,19 @@ class WebStartup
             {
                 var projects = new List<object>();
 
-                var csprojFiles = Directory.GetFiles(root, "*.csproj", SearchOption.AllDirectories)
-                    .Where(f => !f.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}") &&
-                                !f.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}") &&
-                                !f.Contains("/obj/") && !f.Contains("/bin/"));
+                List<string> csprojFiles;
+                try
+                {
+                    csprojFiles = Directory.GetFiles(root, "*.csproj", new EnumerationOptions { RecurseSubdirectories = true, IgnoreInaccessible = true })
+                        .Where(f => !f.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}") &&
+                                    !f.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}") &&
+                                    !f.Contains("/obj/") && !f.Contains("/bin/"))
+                        .ToList();
+                }
+                catch
+                {
+                    csprojFiles = [];
+                }
 
                 foreach (var csproj in csprojFiles)
                 {
@@ -297,11 +320,19 @@ class WebStartup
                     var projName = Path.GetFileNameWithoutExtension(csproj);
                     var relPath = Path.GetRelativePath(root, projDir);
 
-                    var resxFiles = Directory.GetFiles(projDir, "*.resx", SearchOption.AllDirectories)
-                        .Where(f => !f.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}") &&
-                                    !f.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}") &&
-                                    !f.Contains("/obj/") && !f.Contains("/bin/"))
-                        .Count();
+                    int resxFiles;
+                    try
+                    {
+                        resxFiles = Directory.GetFiles(projDir, "*.resx", new EnumerationOptions { RecurseSubdirectories = true, IgnoreInaccessible = true })
+                            .Where(f => !f.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}") &&
+                                        !f.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}") &&
+                                        !f.Contains("/obj/") && !f.Contains("/bin/"))
+                            .Count();
+                    }
+                    catch
+                    {
+                        resxFiles = 0;
+                    }
 
                     projects.Add(new
                     {
