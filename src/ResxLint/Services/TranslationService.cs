@@ -8,7 +8,7 @@ namespace ResxLint.Services;
 class TranslationService
 {
     const string RemoteProvidersUrl = "https://raw.githubusercontent.com/CW-Software-Apps/resx-lint/master/providers.json";
-    static readonly TimeSpan CacheDuration = TimeSpan.FromHours(24);
+    static readonly TimeSpan CacheDuration = TimeSpan.FromHours(1);
 
     static AiProviderInfo[]? _cachedProviders;
     static DateTime _lastFetch = DateTime.MinValue;
@@ -16,13 +16,13 @@ class TranslationService
 
     static readonly AiProviderInfo[] _embeddedProviders =
     [
-        new("openai",     "OpenAI",            "https://api.openai.com/v1/chat/completions",              "gpt-4o-mini",       "https://platform.openai.com/api-keys", true),
-        new("gemini",     "Google Gemini",     "https://generativelanguage.googleapis.com/v1beta/models/{0}:generateContent?key={1}", "gemini-2.0-flash", "https://aistudio.google.com/apikey", true),
-        new("claude",     "Anthropic Claude",  "https://api.anthropic.com/v1/messages",                    "claude-sonnet-4-20250514", "https://console.anthropic.com/", true),
+        new("openai",     "OpenAI",            "https://api.openai.com/v1/chat/completions",              "gpt-4.1-mini",       "https://platform.openai.com/api-keys", true),
+        new("gemini",     "Google Gemini",     "https://generativelanguage.googleapis.com/v1beta/models/{0}:generateContent?key={1}", "gemini-2.5-flash", "https://aistudio.google.com/apikey", true),
+        new("claude",     "Anthropic Claude",  "https://api.anthropic.com/v1/messages",                    "claude-sonnet-4-6-20250217", "https://console.anthropic.com/", true),
         new("deepseek",   "DeepSeek",          "https://api.deepseek.com/chat/completions",                "deepseek-chat",     "https://platform.deepseek.com/api_keys"),
-        new("openrouter", "OpenRouter",        "https://openrouter.ai/api/v1/chat/completions",            "openai/gpt-4o-mini", "https://openrouter.ai/keys"),
+        new("openrouter", "OpenRouter",        "https://openrouter.ai/api/v1/chat/completions",            "openai/gpt-4.1-mini", "https://openrouter.ai/keys"),
         new("groq",       "Groq",              "https://api.groq.com/openai/v1/chat/completions",          "llama-3.3-70b-versatile", "https://console.groq.com/keys"),
-        new("together",   "Together AI",       "https://api.together.xyz/v1/chat/completions",             "mistralai/Mixtral-8x7B-Instruct-v0.1", "https://api.together.ai/settings/api-keys"),
+        new("together",   "Together AI",       "https://api.together.xyz/v1/chat/completions",             "meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo", "https://api.together.ai/settings/api-keys"),
         new("mistral",    "Mistral AI",        "https://api.mistral.ai/v1/chat/completions",               "mistral-small-latest", "https://console.mistral.ai/api-keys"),
         new("perplexity", "Perplexity",        "https://api.perplexity.ai/chat/completions",               "sonar-pro",         "https://www.perplexity.com/settings/api"),
         new("xai",        "xAI Grok",          "https://api.x.ai/v1/chat/completions",                     "grok-2-latest",     "https://console.x.ai/"),

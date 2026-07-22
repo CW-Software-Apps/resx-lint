@@ -3,7 +3,7 @@
     "id": "openai",
     "name": "OpenAI",
     "endpoint": "https://api.openai.com/v1/chat/completions",
-    "model": "gpt-4o-mini",
+    "model": "gpt-4.1-mini",
     "docsUrl": "https://platform.openai.com/api-keys",
     "recommended": true
   },
@@ -11,7 +11,7 @@
     "id": "gemini",
     "name": "Google Gemini",
     "endpoint": "https://generativelanguage.googleapis.com/v1beta/models/{0}:generateContent?key={1}",
-    "model": "gemini-2.0-flash",
+    "model": "gemini-2.5-flash",
     "docsUrl": "https://aistudio.google.com/apikey",
     "recommended": true
   },
@@ -19,7 +19,7 @@
     "id": "claude",
     "name": "Anthropic Claude",
     "endpoint": "https://api.anthropic.com/v1/messages",
-    "model": "claude-sonnet-4-20250514",
+    "model": "claude-sonnet-4-6-20250217",
     "docsUrl": "https://console.anthropic.com/",
     "recommended": true
   },
@@ -35,7 +35,7 @@
     "id": "openrouter",
     "name": "OpenRouter",
     "endpoint": "https://openrouter.ai/api/v1/chat/completions",
-    "model": "openai/gpt-4o-mini",
+    "model": "openai/gpt-4.1-mini",
     "docsUrl": "https://openrouter.ai/keys",
     "recommended": false
   },
@@ -51,7 +51,7 @@
     "id": "together",
     "name": "Together AI",
     "endpoint": "https://api.together.xyz/v1/chat/completions",
-    "model": "mistralai/Mixtral-8x7B-Instruct-v0.1",
+    "model": "meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo",
     "docsUrl": "https://api.together.ai/settings/api-keys",
     "recommended": false
   },
