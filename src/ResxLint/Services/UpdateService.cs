@@ -97,13 +97,20 @@ class UpdateService
 
             if (proc.ExitCode != 0)
             {
+                var errMessage = $"Command failed with exit code {proc.ExitCode}";
+                if (fullOutput.Contains("Access to the path", StringComparison.OrdinalIgnoreCase) ||
+                    fullOutput.Contains("denied", StringComparison.OrdinalIgnoreCase))
+                {
+                    errMessage = "File lock detected: resx-lint is currently running. Close the running terminal process (Ctrl+C) and run 'dotnet tool update --global ResxLint'.";
+                }
+
                 return new InstallResult
                 {
                     Success = false,
                     CurrentVersion = CurrentVersion,
                     TargetVersion = info.LatestVersion ?? "",
                     CommandOutput = fullOutput.Trim(),
-                    Error = $"Falha ao executar 'dotnet tool update' (código {proc.ExitCode})"
+                    Error = errMessage
                 };
             }
 

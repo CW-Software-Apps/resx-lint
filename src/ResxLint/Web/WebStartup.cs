@@ -85,44 +85,50 @@ class WebStartup
                                 !f.Contains("/obj/") && !f.Contains("/bin/"))
                     .ToList();
 
-                var langFileRx = new System.Text.RegularExpressions.Regex(@"\.[a-z]{2}(-[A-Z]{2,4})?\.resx$", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
-                var baseFiles = allResx.Where(f => !langFileRx.IsMatch(f)).ToList();
-                if (baseFiles.Count == 0)
+                var groups = allResx.GroupBy(f =>
                 {
-                    baseFiles = allResx.GroupBy(f =>
-                    {
-                        var name = Path.GetFileNameWithoutExtension(f);
-                        var idx = name.IndexOf('.');
-                        return idx > 0 ? name[..idx] : name;
-                    }).Select(g => g.First()).ToList();
-                }
-
-                foreach (var f in baseFiles)
-                {
-                    var baseName = Path.GetFileNameWithoutExtension(f);
                     var dirPath = Path.GetDirectoryName(f)!;
-                    var projName = FindProjectName(dirPath, inputDir);
+                    var fileName = Path.GetFileNameWithoutExtension(f);
+                    var parts = fileName.Split('.');
+                    var baseName = parts.Length > 1 && IsCultureCode(parts.Last())
+                        ? string.Join('.', parts.Take(parts.Length - 1))
+                        : fileName;
+                    return Path.Combine(dirPath, baseName);
+                });
 
-                    var langFiles = Directory.GetFiles(dirPath, $"{baseName}.*.resx")
-                        .Where(lf => lf != f)
-                        .ToArray();
+                foreach (var group in groups)
+                {
+                    var items = group.ToList();
+                    var dirPath = Path.GetDirectoryName(items.First())!;
+                    var baseName = Path.GetFileName(group.Key);
+
+                    var baseFile = items.FirstOrDefault(f => Path.GetFileNameWithoutExtension(f).Equals(baseName, StringComparison.OrdinalIgnoreCase))
+                                   ?? items.First();
+
+                    var langFiles = items.Where(f => !f.Equals(baseFile, StringComparison.OrdinalIgnoreCase)).ToArray();
 
                     var languages = new List<string> { "Default" };
                     foreach (var lf in langFiles)
                     {
                         var lfName = Path.GetFileNameWithoutExtension(lf);
-                        if (lfName.StartsWith(baseName + "."))
+                        if (lfName.StartsWith(baseName + ".", StringComparison.OrdinalIgnoreCase))
                         {
                             var langCode = lfName[(baseName.Length + 1)..];
                             languages.Add(langCode);
                         }
+                        else
+                        {
+                            languages.Add(lfName);
+                        }
                     }
 
+                    var projName = FindProjectName(dirPath, inputDir);
                     var relFolder = Path.GetRelativePath(inputDir, dirPath);
+
                     results.Add(new ProjectResxInfo(
                         ProjectName: projName,
                         RelativeFolder: relFolder == "." ? "" : relFolder,
-                        ResxFile: f,
+                        ResxFile: baseFile,
                         BaseName: baseName,
                         Languages: [.. languages],
                         LanguageFiles: langFiles.Select(Path.GetFileName).ToArray()!
@@ -273,5 +279,19 @@ class WebStartup
         }
         catch { }
         return Path.GetFileName(dirPath);
+    }
+
+    static bool IsCultureCode(string code)
+    {
+        if (string.IsNullOrWhiteSpace(code)) return false;
+        try
+        {
+            var ci = System.Globalization.CultureInfo.GetCultureInfo(code);
+            return ci != null;
+        }
+        catch
+        {
+            return false;
+        }
     }
 }
