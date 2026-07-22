@@ -71,19 +71,58 @@ class UpdateService
         }
     }
 
-    public static async Task<InstallResult> InstallAsync()
+    /// <param name="restartArgs">
+    /// Args to relaunch resx-lint with after the update, e.g. "--serve --port 7950" so a
+    /// Web UI-triggered update comes back up as the Web UI instead of dropping into the bare
+    /// CLI prompt (which is what "resx-lint" with no args does). Null/empty for plain CLI restart.
+    /// </param>
+    public static async Task<InstallResult> InstallAsync(string? restartArgs = null)
     {
         try
         {
             var info = await CheckAsync();
             var currentPid = Environment.ProcessId;
+            var restartCommand = string.IsNullOrWhiteSpace(restartArgs) ? "resx-lint" : $"resx-lint {restartArgs}";
 
+            // The update/restart happens in a visible console window on purpose — a previous
+            // version piped everything to `nul` and hid the window, so any failure (dotnet
+            // update erroring, "resx-lint" not resolving on PATH, etc.) was completely silent:
+            // the window just vanished and nothing came back up, with zero diagnostic trail.
             var scriptPath = Path.Combine(Path.GetTempPath(), $"update_resxlint_{Guid.NewGuid():N}.bat");
             var scriptContent = $@"@echo off
+title resx-lint updater
+echo ============================================
+echo   resx-lint auto-update
+echo ============================================
+echo.
+echo Waiting for resx-lint to close (PID {currentPid})...
 timeout /t 2 /nobreak > nul
 taskkill /F /PID {currentPid} > nul 2>&1
-dotnet tool update --global ResxLint > nul 2>&1
-start "" resx-lint
+echo.
+echo Updating to the latest version...
+echo.
+dotnet tool update --global ResxLint
+if %errorlevel% neq 0 (
+    echo.
+    echo ============================================
+    echo   Update command failed ^(exit code %errorlevel%^).
+    echo   resx-lint will still try to restart with whatever version is installed.
+    echo ============================================
+    timeout /t 5
+)
+echo.
+echo Restarting: {restartCommand}
+start """" {restartCommand}
+if %errorlevel% neq 0 (
+    echo.
+    echo Could not launch 'resx-lint' automatically — it may not be on PATH.
+    echo Open a new terminal and run 'resx-lint' manually.
+    echo.
+    pause
+    goto :cleanup
+)
+timeout /t 1 /nobreak > nul
+:cleanup
 (goto) 2>nul & del ""%~f0""
 ";
 
@@ -91,9 +130,8 @@ start "" resx-lint
 
             var psi = new ProcessStartInfo("cmd.exe", $"/c \"{scriptPath}\"")
             {
-                CreateNoWindow = true,
-                UseShellExecute = false,
-                WindowStyle = ProcessWindowStyle.Hidden
+                UseShellExecute = true,
+                WindowStyle = ProcessWindowStyle.Normal
             };
 
             Process.Start(psi);
@@ -103,7 +141,7 @@ start "" resx-lint
                 Success = true,
                 CurrentVersion = CurrentVersion,
                 TargetVersion = info.LatestVersion ?? "",
-                CommandOutput = $"[Auto-Kill Updater Initiated]\nTarget Process PID: {currentPid}\n\n1. Stopping current resx-lint process (releasing file lock)...\n2. Executing 'dotnet tool update --global ResxLint'...\n3. Automatically restarting resx-lint in 3 seconds!"
+                CommandOutput = $"[Auto-Kill Updater Initiated]\nTarget Process PID: {currentPid}\n\n1. Stopping current resx-lint process (releasing file lock)...\n2. Executing 'dotnet tool update --global ResxLint'...\n3. Restarting resx-lint automatically.\n\nA console window will open showing progress — if the restart fails for any reason, it stays open with the error instead of vanishing."
             };
         }
         catch (Exception ex)

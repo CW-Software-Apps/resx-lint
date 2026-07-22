@@ -83,7 +83,7 @@ class WebStartup
                 List<string> allResx;
                 try
                 {
-                    allResx = EnumerateFilesPruned(inputDir, "*.resx");
+                    allResx = DirectoryScan.EnumerateFilesPruned(inputDir, "*.resx");
                 }
                 catch (UnauthorizedAccessException)
                 {
@@ -335,7 +335,7 @@ class WebStartup
                 List<string> csprojFiles;
                 try
                 {
-                    csprojFiles = EnumerateFilesPruned(root, "*.csproj");
+                    csprojFiles = DirectoryScan.EnumerateFilesPruned(root, "*.csproj");
                 }
                 catch
                 {
@@ -351,7 +351,7 @@ class WebStartup
                     int resxFiles;
                     try
                     {
-                        resxFiles = EnumerateFilesPruned(projDir, "*.resx").Count;
+                        resxFiles = DirectoryScan.EnumerateFilesPruned(projDir, "*.resx").Count;
                     }
                     catch
                     {
@@ -395,7 +395,10 @@ class WebStartup
 
         api.MapPost("/update/install", async () =>
         {
-            var result = await UpdateService.InstallAsync();
+            // Restart back into the Web UI on the same port — an update triggered from here
+            // used to relaunch bare "resx-lint", which drops into the CLI prompt instead of
+            // coming back up as the Web UI the user was actually looking at.
+            var result = await UpdateService.InstallAsync($"--serve --port {port}");
             return Results.Ok(result);
         });
 
@@ -479,38 +482,4 @@ class WebStartup
         }
     }
 
-    static readonly string[] PrunedDirNames = ["bin", "obj", "node_modules", ".git", ".vs", "packages"];
-
-    /// <summary>
-    /// Recursively finds files by extension while skipping build/vcs/dependency folders entirely
-    /// (instead of walking into them and filtering afterward), which is what made scans on large
-    /// repos hang. Falls back to skipping directories it can't access.
-    /// </summary>
-    static List<string> EnumerateFilesPruned(string root, string searchPattern)
-    {
-        var results = new List<string>();
-        var stack = new Stack<string>();
-        stack.Push(root);
-
-        while (stack.Count > 0)
-        {
-            var dir = stack.Pop();
-
-            try
-            {
-                results.AddRange(Directory.EnumerateFiles(dir, searchPattern, SearchOption.TopDirectoryOnly));
-
-                foreach (var sub in Directory.EnumerateDirectories(dir))
-                {
-                    var name = Path.GetFileName(sub);
-                    if (PrunedDirNames.Contains(name, StringComparer.OrdinalIgnoreCase)) continue;
-                    stack.Push(sub);
-                }
-            }
-            catch (UnauthorizedAccessException) { }
-            catch (DirectoryNotFoundException) { }
-        }
-
-        return results;
-    }
 }

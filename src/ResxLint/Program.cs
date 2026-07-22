@@ -5,6 +5,9 @@ using ResxLint.Web;
 var cmdArgs = Environment.GetCommandLineArgs()[1..];
 var port = 7950;
 
+try
+{
+
 if (cmdArgs.Length > 0 && cmdArgs[0] is "--serve" or "-s")
 {
     var noOpen = false;
@@ -87,15 +90,31 @@ if (cmdArgs.Length == 0)
 {
     Console.Title = $"resx-lint v{UpdateService.CurrentVersion}";
     Console.ForegroundColor = ConsoleColor.Cyan;
-    Console.Write($"resx-lint v{UpdateService.CurrentVersion} — Press ");
+    Console.WriteLine($"resx-lint v{UpdateService.CurrentVersion}");
+    Console.ResetColor();
+    Console.Write("  [");
     Console.ForegroundColor = ConsoleColor.White;
     Console.Write("W");
-    Console.ForegroundColor = ConsoleColor.Cyan;
-    Console.Write(" to open Web UI, or wait 3s for CLI check...");
+    Console.ResetColor();
+    Console.Write("] Web UI    [");
+    Console.ForegroundColor = ConsoleColor.White;
+    Console.Write("L");
+    Console.ResetColor();
+    Console.Write("] Lint here now    [");
+    Console.ForegroundColor = ConsoleColor.White;
+    Console.Write("H");
+    Console.ResetColor();
+    Console.Write("] Help    [");
+    Console.ForegroundColor = ConsoleColor.White;
+    Console.Write("Q");
+    Console.ResetColor();
+    Console.WriteLine("] Quit");
+    Console.ForegroundColor = ConsoleColor.DarkGray;
+    Console.Write("  Auto-detecting a .resx in this folder in 3s... ");
     Console.ResetColor();
 
     var start = Environment.TickCount;
-    var keyPressed = false;
+    var pressedKey = '\0';
     try
     {
         while (Environment.TickCount - start < 3000)
@@ -103,9 +122,9 @@ if (cmdArgs.Length == 0)
             if (Console.KeyAvailable)
             {
                 var key = Console.ReadKey(true);
-                if (key.KeyChar is 'w' or 'W')
+                if (key.KeyChar is 'w' or 'W' or 'l' or 'L' or 'h' or 'H' or 'q' or 'Q')
                 {
-                    keyPressed = true;
+                    pressedKey = char.ToUpperInvariant(key.KeyChar);
                     break;
                 }
             }
@@ -114,35 +133,47 @@ if (cmdArgs.Length == 0)
     }
     catch
     {
-        // Console not available (e.g. launched from script) — proceed directly
+        // Console not available (e.g. launched from script) — proceed directly to auto-detect
     }
 
     try { Console.WriteLine(); } catch { }
 
-    if (keyPressed)
+    switch (pressedKey)
     {
-        WebStartup.Start(port, false);
-        return 0;
+        case 'W':
+            WebStartup.Start(port, false);
+            return 0;
+        case 'Q':
+            return 0;
+        case 'H':
+            PrintHelp();
+            return 0;
+        // 'L' or timeout: fall through to auto-detect below.
     }
 
-    // Auto-detect: find first .resx in current directory
+    // Auto-detect: find the first .resx under the current directory (pruning bin/obj/node_modules/.git
+    // and skipping anything we can't read — Windows profile folders are full of restricted junctions).
     var cwd = Directory.GetCurrentDirectory();
-    string[] allResx;
+    List<string> allResx;
     try
     {
-        var opts = new EnumerationOptions { RecurseSubdirectories = true, IgnoreInaccessible = true };
-        allResx = Directory.GetFiles(cwd, "*.resx", opts);
+        allResx = DirectoryScan.EnumerateFilesPruned(cwd, "*.resx");
     }
     catch
     {
         allResx = [];
     }
-    var foundResx = allResx.FirstOrDefault(f => !f.Contains("obj") && !f.Contains("bin"));
+    var foundResx = allResx.FirstOrDefault();
 
     if (foundResx != null)
     {
+        // Never lint the whole cwd tree blindly — walk up from the .resx to the nearest
+        // .csproj (the actual project root). This is what crashed before: cwd was the user's
+        // home directory, so the lint step recursively scanned the entire profile.
+        var projectDir = ResolveProjectDir(foundResx, cwd);
         try { Console.WriteLine($"Auto-detected: {foundResx.Replace(cwd, "").TrimStart('\\', '/')}"); } catch { }
-        cmdArgs = ["--project-dir", cwd, "--resx-file", foundResx];
+        try { Console.WriteLine($"Project dir:   {projectDir}"); } catch { }
+        cmdArgs = ["--project-dir", projectDir, "--resx-file", foundResx];
     }
     else
     {
@@ -197,6 +228,44 @@ Console.ForegroundColor = ConsoleColor.Green;
 Console.WriteLine($"resx-lint completed with no errors. {result.TotalKeys} keys OK.");
 Console.ResetColor();
 return 0;
+
+}
+catch (Exception ex)
+{
+    // Never let an unhandled exception dump a raw stack trace on a regular user — print
+    // something actionable and exit cleanly instead of crashing the console.
+    try
+    {
+        Console.ForegroundColor = ConsoleColor.Red;
+        Console.Error.WriteLine($"resx-lint crashed: {ex.Message}");
+        Console.ResetColor();
+        Console.Error.WriteLine("This has been caught so your terminal isn't left in a broken state.");
+        Console.Error.WriteLine("If this keeps happening, run 'resx-lint --help' or report it at:");
+        Console.Error.WriteLine("  https://github.com/CW-Software-Apps/resx-lint/issues");
+    }
+    catch { }
+    return 3;
+}
+
+static string ResolveProjectDir(string resxFile, string fallbackCwd)
+{
+    // Walk up from the .resx file looking for the nearest .csproj — that's the real project
+    // root. Falling back to a blindly-passed cwd (e.g. the user's home directory) is how a
+    // lint run ends up recursively scanning the entire profile.
+    try
+    {
+        var dir = new DirectoryInfo(Path.GetDirectoryName(Path.GetFullPath(resxFile))!);
+        var root = new DirectoryInfo(fallbackCwd);
+        while (dir != null)
+        {
+            if (dir.GetFiles("*.csproj").Length > 0) return dir.FullName;
+            if (dir.FullName.Equals(root.FullName, StringComparison.OrdinalIgnoreCase)) break;
+            dir = dir.Parent;
+        }
+    }
+    catch { }
+    return Path.GetDirectoryName(Path.GetFullPath(resxFile))!;
+}
 
 static void PrintResult(LintResult result, bool quiet)
 {
@@ -256,7 +325,7 @@ static void PrintHelp()
         resx-lint — .resx localization key validator
 
         USAGE:
-          resx-lint                          Interactive: press W for Web UI, or waits 3s for CLI check
+          resx-lint                          Interactive: [W]eb UI, [L]int here, [H]elp, [Q]uit — auto-detects after 3s
           resx-lint --project-dir <dir> --resx-file <path> [options]
           resx-lint --serve [--port <port>] [--no-open]
 

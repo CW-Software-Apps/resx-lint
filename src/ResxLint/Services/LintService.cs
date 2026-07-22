@@ -419,9 +419,7 @@ class LintService
     }
 
     static IEnumerable<string> EnumerateFiles(string root, string pattern)
-        => Directory.EnumerateFiles(root, pattern, SearchOption.AllDirectories)
-                    .Where(f => !f.Contains(Path.DirectorySeparatorChar + "obj" + Path.DirectorySeparatorChar)
-                             && !f.Contains(Path.DirectorySeparatorChar + "bin" + Path.DirectorySeparatorChar));
+        => DirectoryScan.EnumerateFilesPruned(root, pattern);
 
     static int GetLineNumber(string content, int charIndex)
         => content[..Math.Min(charIndex, content.Length)].Count(c => c == '\n') + 1;

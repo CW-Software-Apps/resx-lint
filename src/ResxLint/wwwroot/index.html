@@ -265,6 +265,13 @@
   .cell-identical { background: var(--neutral-bg); }
   .cell-base { background: var(--info-bg); }
 
+  .status-legend {
+    display: flex; flex-wrap: wrap; gap: 14px; align-items: center;
+    padding: 8px 4px 12px; font-size: 12px; color: var(--ink-2);
+  }
+  .legend-item { display: inline-flex; align-items: center; gap: 6px; }
+  .legend-swatch { width: 12px; height: 12px; border-radius: 3px; border: 1px solid var(--border); display: inline-block; }
+
   .cell-edit {
     background: none;
     border: 1px solid transparent;
@@ -320,6 +327,13 @@
   .filter-chip:hover { border-color: var(--ink-2); color: var(--ink); }
   .filter-chip.active { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); font-weight: 600; }
   .filter-chip input { display: none; }
+  .chip-count {
+    font-family: var(--mono); font-size: 11px; font-weight: 600;
+    background: oklch(0 0 0 / 0.08); color: inherit; border-radius: 10px;
+    padding: 1px 6px; min-width: 18px; text-align: center; line-height: 1.5;
+  }
+  .filter-chip.active .chip-count { background: oklch(1 0 0 / 0.35); }
+  .filter-chip:not(.active) { opacity: 0.6; }
   .filter-bar-bottom { padding: 12px 0; border-top: 1px solid var(--border); margin-top: 8px; }
 
   .recent-chip {
@@ -698,15 +712,23 @@
         <div id="editorToolbar" class="filter-bar">
           <input class="input-field" id="editorSearch" placeholder="Search keys or text values..." style="max-width:280px;font-family:var(--font)" oninput="filterEditor()">
           <span style="color:var(--ink-2);font-size:13px;font-weight:500">Status Filter:</span>
-          <button class="filter-chip active" role="checkbox" aria-checked="true" data-filter="ok" onclick="toggleFilter(this)"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-10 10L5 11"/></svg> OK</button>
-          <button class="filter-chip active" role="checkbox" aria-checked="true" data-filter="missing" onclick="toggleFilter(this)"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg> Missing</button>
-          <button class="filter-chip active" role="checkbox" aria-checked="true" data-filter="placeholder" onclick="toggleFilter(this)"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg> Placeholders</button>
-          <button class="filter-chip active" role="checkbox" aria-checked="true" data-filter="identical" onclick="toggleFilter(this)"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><path d="M12 12v4M12 8h.01"/></svg> Identical</button>
+          <button class="filter-chip active" role="checkbox" aria-checked="true" data-filter="ok" onclick="toggleFilter(this)"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-10 10L5 11"/></svg> OK <span class="chip-count" data-count="ok">0</span></button>
+          <button class="filter-chip active" role="checkbox" aria-checked="true" data-filter="missing" onclick="toggleFilter(this)"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg> Missing <span class="chip-count" data-count="missing">0</span></button>
+          <button class="filter-chip active" role="checkbox" aria-checked="true" data-filter="placeholder" onclick="toggleFilter(this)"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg> Placeholders <span class="chip-count" data-count="placeholder">0</span></button>
+          <button class="filter-chip active" role="checkbox" aria-checked="true" data-filter="identical" onclick="toggleFilter(this)"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><path d="M12 12v4M12 8h.01"/></svg> Identical <span class="chip-count" data-count="identical">0</span></button>
+          <button class="btn btn-secondary btn-sm" id="clearFiltersBtn" onclick="resetEditorFilters()" style="display:none">Clear filters</button>
           <span style="color:var(--ink-2);font-size:13px;margin-left:auto" id="editorCount"></span>
+        </div>
+        <div class="status-legend">
+          <span class="legend-item"><span class="legend-swatch cell-ok"></span> OK — translated, looks fine</span>
+          <span class="legend-item"><span class="legend-swatch cell-missing"></span> Missing — key doesn't exist yet in that language's .resx file</span>
+          <span class="legend-item"><span class="legend-swatch cell-placeholder"></span> Placeholder — key exists but is empty or still a [TRANSLATE] stub</span>
+          <span class="legend-item"><span class="legend-swatch cell-identical"></span> Identical — same text as the base language (probably untranslated)</span>
         </div>
         <div id="editorGrid" class="editor-grid"></div>
         <div id="editorFilterBottom" class="filter-bar filter-bar-bottom" style="display:none"></div>
-        <div style="margin-top:14px;display:flex;gap:10px;justify-content:end">
+        <div style="margin-top:14px;display:flex;gap:10px;align-items:center;justify-content:end">
+          <span id="editorSaveStatus" style="color:var(--ink-2);font-size:12px">Edits stay in your browser until you click <strong>Save Changes</strong> — nothing is written to disk before that.</span>
           <button class="btn btn-secondary" onclick="confirmDiscard()">Discard Changes</button>
           <button class="btn btn-primary" onclick="saveEditor()"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8"/><path d="M7 3v5h8"/></svg> Save Changes</button>
         </div>
@@ -1053,7 +1075,10 @@ function configureDefaultLang() {
     let items = knownLangs;
     if (editorLanguages && editorLanguages.length) {
       const loaded = editorLanguages.map(l => l.code);
-      items = knownLangs.filter(l => loaded.includes(l.code));
+      // editorLanguages only lists the *translated* variants for the loaded resx — the base
+      // language itself (the current default) is never in that list, so without this it got
+      // silently filtered out of its own picker the moment a matrix had been loaded.
+      items = knownLangs.filter(l => loaded.includes(l.code) || l.code === current);
       if (items.length === 0) items = knownLangs;
     }
     if (q) items = items.filter(l => l.code.toLowerCase().includes(q) || l.name.toLowerCase().includes(q));
@@ -1067,10 +1092,13 @@ function configureDefaultLang() {
     if (items.length === 0) list.innerHTML = '<div style="padding:16px;text-align:center;color:var(--ink-2)">No languages match your search</div>';
   }
 
-  search.value = current === 'Default' ? '' : current;
+  // Leave the search box empty — pre-filling it with the current selection used to double as a
+  // filter query, which combined with the bug above made the currently-active language vanish
+  // from its own picker on open.
+  search.value = '';
   search.oninput = () => renderLangPicker(search.value);
   overlay.classList.add('open');
-  renderLangPicker(search.value);
+  renderLangPicker('');
   setTimeout(() => search.focus(), 100);
 }
 
@@ -1191,6 +1219,7 @@ async function addProject() {
     }));
     proj.langCount = allLangs.size;
     proj.languages = [...allLangs].sort();
+    proj.resxGroups = files.map(f => `${f.baseName}.resx (${(f.languages || []).length} lang${(f.languages || []).length === 1 ? '' : 's'})`);
     proj.lastScanned = new Date().toISOString();
     if (iconData && iconData.iconFile) proj.icon = iconData.iconFile;
 
@@ -1241,8 +1270,12 @@ async function rescanProject(pathEnc) {
 
     proj.resxCount = files.length || 0;
     const allLangs = new Set();
-    files.forEach(f => (f.languages || []).forEach(l => allLangs.add(l)));
+    files.forEach(f => (f.languages || []).forEach(l => {
+      if (l !== 'Default') allLangs.add(l);
+    }));
     proj.langCount = allLangs.size;
+    proj.languages = [...allLangs].sort();
+    proj.resxGroups = files.map(f => `${f.baseName}.resx (${(f.languages || []).length} lang${(f.languages || []).length === 1 ? '' : 's'})`);
     proj.lastScanned = new Date().toISOString();
     if (iconData && iconData.iconFile) proj.icon = iconData.iconFile;
 
@@ -1290,16 +1323,23 @@ function renderSavedProjects() {
 
     const langFlags = (proj.languages || []).map(l => `<span class="lang-tag" title="${l}">${localeToFlag(l)} ${l}</span>`).join(' ');
 
+    const resxTooltip = (proj.resxGroups && proj.resxGroups.length)
+      ? `${proj.resxGroups.length} .resx group(s) found (a base file + its language variants each count as one):\n` + proj.resxGroups.join('\n')
+      : 'Number of distinct .resx base files found (each may have several language variants) — click the refresh icon to (re)scan.';
+    const langsTooltip = (proj.languages && proj.languages.length)
+      ? `${proj.languages.length} language(s) across all .resx groups:\n` + proj.languages.join(', ')
+      : 'Number of distinct translation languages found — click the refresh icon to (re)scan.';
+
     html += `
-      <div class="project-item" onclick="quickProjectSelect('${encPath}')">
+      <div class="project-item" onclick="quickProjectSelect('${encPath}')" title="Click to open in Audit &amp; Lint (does not run the audit automatically)">
         <div class="icon-wrap">${iconHtml}</div>
         <div class="info">
           <div class="name">${escHtml(proj.name)}</div>
           <div class="path">${escHtml(proj.path)}</div>
           <div class="meta">
-            <span class="badge badge-info">${icon('file')} ${proj.resxCount || 0} resx</span>
-            <span class="badge badge-positive">${icon('globe')} ${proj.langCount || 0} langs</span>
-            <span class="badge badge-neutral">${icon('clock')} ${scanned}</span>
+            <span class="badge badge-info" title="${escHtml(resxTooltip)}">${icon('file')} ${proj.resxCount || 0} resx</span>
+            <span class="badge badge-positive" title="${escHtml(langsTooltip)}">${icon('globe')} ${proj.langCount || 0} langs</span>
+            <span class="badge badge-neutral" title="Last scanned">${icon('clock')} ${scanned}</span>
           </div>
           ${langFlags ? `<div class="lang-flags">${langFlags}</div>` : ''}
         </div>
@@ -1319,16 +1359,16 @@ function filterSavedProjects() {
 }
 
 function quickProjectSelect(pathEnc) {
+  // Clicking a project card only navigates and preselects the .resx — it must never kick off
+  // an audit on its own. Running verification is an explicit action (the search-icon button).
   const path = decodeURIComponent(pathEnc);
   document.getElementById('projectDir').value = path;
-  // Load resx files for this project
   api(`/api/project/resx-files?dir=${encodeURIComponent(path)}`).then(files => {
     discoveredProjects = files;
     updateSelectOptions(files);
     switchView('lint');
     if (files.length === 1) {
       document.getElementById('resxFileSelect').value = files[0].resxFile;
-      runLint();
     }
   }).catch(e => showToast(e.message, true));
 }
@@ -1889,12 +1929,26 @@ let editorScrollRaf = null;
 function renderEditor() {
   const grid = document.getElementById('editorGrid');
   const langs = ['base', ...editorLanguages.map(l => l.code)];
-  const activeFilters = [...document.querySelectorAll('.filter-chip.active')].map(c => c.dataset.filter);
+  // Scoped to the canonical toolbar only — the bottom bar is a visual mirror, never a second
+  // source of truth (querying both used to silently ignore chip clicks half the time).
+  const filterBar = document.getElementById('editorToolbar');
+  const activeFilters = [...filterBar.querySelectorAll('.filter-chip.active')].map(c => c.dataset.filter);
   const search = document.getElementById('editorSearch').value.toLowerCase();
 
-  const filteredKeys = editorKeys.filter(k => {
-    if (search && !k.name.toLowerCase().includes(search) && !k.baseValue.toLowerCase().includes(search))
-      return false;
+  const searchedKeys = editorKeys.filter(k =>
+    !search || k.name.toLowerCase().includes(search) || k.baseValue.toLowerCase().includes(search));
+
+  const statusCounts = { ok: 0, missing: 0, placeholder: 0, identical: 0 };
+  searchedKeys.forEach(k => {
+    Object.values(k.translations).forEach(t => {
+      if (t.status in statusCounts) statusCounts[t.status]++;
+    });
+  });
+  filterBar.querySelectorAll('.chip-count').forEach(el => {
+    el.textContent = statusCounts[el.dataset.count] ?? 0;
+  });
+
+  const filteredKeys = searchedKeys.filter(k => {
     const statuses = Object.values(k.translations).map(t => t.status);
     return statuses.some(s => activeFilters.includes(s));
   });
@@ -1902,7 +1956,9 @@ function renderEditor() {
   const dirtyCount = Object.values(dirtyCells).reduce((a, c) => a + Object.keys(c).length, 0);
   document.getElementById('editorCount').innerHTML = `${filteredKeys.length} / ${editorKeys.length} keys displayed${dirtyCount ? ` · <span style="color:var(--warning)">${dirtyCount} unsaved</span>` : ''}`;
 
-  const filterBar = document.getElementById('editorToolbar');
+  const clearBtn = document.getElementById('clearFiltersBtn');
+  if (clearBtn) clearBtn.style.display = activeFilters.length < 4 ? '' : 'none';
+
   const filterBot = document.getElementById('editorFilterBottom');
   if (filterBar) {
     filterBot.style.display = '';
@@ -1982,7 +2038,10 @@ function renderVisibleEditorRows() {
   const colCount = langs.length + 1;
 
   if (total === 0) {
-    tbody.innerHTML = `<tr><td colspan="${colCount}" style="text-align:center;padding:40px;color:var(--ink-2)">No keys match the current filters.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="${colCount}" style="text-align:center;padding:48px 20px;color:var(--ink-2)">
+      <div style="font-size:14px;margin-bottom:8px">No keys match the current search / status filters.</div>
+      <button class="btn btn-secondary btn-sm" onclick="resetEditorFilters()">Reset filters</button>
+    </td></tr>`;
     return;
   }
 
@@ -2064,6 +2123,8 @@ function markDirty(el) {
   } else {
     dirtyCells[lang][key] = val;
   }
+  const status = document.getElementById('editorSaveStatus');
+  if (status) status.innerHTML = 'Edits stay in your browser until you click <strong>Save Changes</strong> — nothing is written to disk before that.';
 }
 
 function revertCell(key, lang) {
@@ -2075,8 +2136,24 @@ function revertCell(key, lang) {
 }
 
 function toggleFilter(el) {
-  const active = el.classList.toggle('active');
-  el.setAttribute('aria-checked', active);
+  // Both the top toolbar and its bottom mirror can trigger this — always mutate the top
+  // (canonical) chip so there's a single source of truth for which statuses are active.
+  const filterBar = document.getElementById('editorToolbar');
+  const canonical = filterBar.querySelector(`button[data-filter="${el.dataset.filter}"]`) || el;
+  const active = canonical.classList.toggle('active');
+  canonical.setAttribute('aria-checked', active);
+  if (editorData) renderEditor();
+}
+
+function resetEditorFilters() {
+  document.getElementById('editorToolbar').querySelectorAll('.filter-chip').forEach(btn => {
+    btn.classList.add('active');
+    btn.setAttribute('aria-checked', 'true');
+  });
+  const searchTop = document.getElementById('editorToolbar').querySelector('#editorSearch');
+  const searchBot = document.getElementById('editorFilterBottom').querySelector('#editorSearch');
+  if (searchTop) searchTop.value = '';
+  if (searchBot) searchBot.value = '';
   if (editorData) renderEditor();
 }
 
@@ -2120,6 +2197,8 @@ async function saveEditor() {
   saveBtn.disabled = false;
   playSfx('done');
   showToast(`Saved ${saved} translation(s) successfully!`);
+  const status = document.getElementById('editorSaveStatus');
+  if (status) status.innerHTML = `${icon('check')} Saved ${saved} translation(s) to disk at ${new Date().toLocaleTimeString()}.`;
   await loadEditor();
 }
 
