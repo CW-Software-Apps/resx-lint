@@ -504,6 +504,17 @@
 
   .section-title { font-size: 16px; font-weight: 600; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
   .lang-flag { font-size: 14px; }
+  .lang-picker-item {
+    display: flex; align-items: center; gap: 10px; width: 100%;
+    padding: 10px 12px; background: none; border: none; border-radius: var(--radius-sm);
+    color: var(--ink); font-size: 14px; font-family: var(--font);
+    cursor: pointer; text-align: left; transition: background .15s;
+  }
+  .lang-picker-item:hover, .lang-picker-item:focus-visible { background: var(--surface-2); }
+  .lang-picker-item.active { background: var(--accent-soft); }
+  .lang-picker-flag { font-size: 20px; width: 28px; text-align: center; }
+  .lang-picker-code { font-family: var(--mono); font-size: 13px; font-weight: 600; min-width: 56px; }
+  .lang-picker-name { color: var(--ink-2); font-size: 13px; }
 </style>
 </head>
 <body>
@@ -670,6 +681,19 @@
   </div>
 </div>
 
+<!-- Lang Picker Modal -->
+<div class="modal" id="langPickerOverlay" role="dialog" aria-modal="true" aria-label="Select default language">
+  <div class="modal-panel-lg" style="max-width:400px">
+    <h3 style="margin-bottom:12px;font-size:17px;font-weight:600">🌐 Default Base Language</h3>
+    <p style="font-size:13px;color:var(--ink-2);margin-bottom:12px">Select your project's base language. This column will be shown as the source reference in the editor.</p>
+    <input class="input-field" id="langPickerSearch" placeholder="Search language..." style="font-family:var(--font);margin-bottom:10px;width:100%">
+    <div id="langPickerList" style="max-height:300px;overflow-y:auto"></div>
+    <div style="display:flex;gap:10px;margin-top:12px">
+      <button class="btn btn-secondary" onclick="document.getElementById('langPickerOverlay').classList.remove('open')">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <!-- Alert/Confirm Modal -->
 <div class="modal-overlay" id="alertModal" role="dialog" aria-modal="true" aria-label="Alert">
   <div class="modal-panel alert-panel">
@@ -826,11 +850,74 @@ function setDefaultLang(code) {
 }
 
 function configureDefaultLang() {
+  const overlay = document.getElementById('langPickerOverlay');
+  const list = document.getElementById('langPickerList');
+  const search = document.getElementById('langPickerSearch');
   const current = getDefaultLang();
-  const code = prompt('Enter your default/base language code (e.g., pt-BR, en-US, es):', current === 'Default' ? 'pt-BR' : current);
-  if (code === null) return;
-  if (!code.trim()) { setDefaultLang(''); showToast('Default language reset to Default'); }
-  else { setDefaultLang(code.trim()); showToast(`Default language set to ${code.trim()}`); }
+
+  const knownLangs = [
+    { code: 'pt-BR', name: 'Portuguese (Brazil)', flag: '🇧🇷' },
+    { code: 'pt', name: 'Portuguese', flag: '🇵🇹' },
+    { code: 'en', name: 'English', flag: '🇬🇧' },
+    { code: 'en-US', name: 'English (US)', flag: '🇺🇸' },
+    { code: 'es', name: 'Spanish', flag: '🇪🇸' },
+    { code: 'fr', name: 'French', flag: '🇫🇷' },
+    { code: 'de', name: 'German', flag: '🇩🇪' },
+    { code: 'it', name: 'Italian', flag: '🇮🇹' },
+    { code: 'ja', name: 'Japanese', flag: '🇯🇵' },
+    { code: 'ko', name: 'Korean', flag: '🇰🇷' },
+    { code: 'zh-CN', name: 'Chinese (Simplified)', flag: '🇨🇳' },
+    { code: 'zh-TW', name: 'Chinese (Traditional)', flag: '🇹🇼' },
+    { code: 'ru', name: 'Russian', flag: '🇷🇺' },
+    { code: 'ar', name: 'Arabic', flag: '🇸🇦' },
+    { code: 'nl', name: 'Dutch', flag: '🇳🇱' },
+    { code: 'pl', name: 'Polish', flag: '🇵🇱' },
+    { code: 'sv', name: 'Swedish', flag: '🇸🇪' },
+    { code: 'da', name: 'Danish', flag: '🇩🇰' },
+    { code: 'fi', name: 'Finnish', flag: '🇫🇮' },
+    { code: 'nb', name: 'Norwegian', flag: '🇳🇴' },
+    { code: 'th', name: 'Thai', flag: '🇹🇭' },
+    { code: 'vi', name: 'Vietnamese', flag: '🇻🇳' },
+    { code: 'tr', name: 'Turkish', flag: '🇹🇷' },
+    { code: 'cs', name: 'Czech', flag: '🇨🇿' },
+    { code: 'hu', name: 'Hungarian', flag: '🇭🇺' },
+    { code: 'ro', name: 'Romanian', flag: '🇷🇴' },
+    { code: 'uk', name: 'Ukrainian', flag: '🇺🇦' },
+    { code: 'el', name: 'Greek', flag: '🇬🇷' },
+    { code: 'he', name: 'Hebrew', flag: '🇮🇱' },
+    { code: 'hi', name: 'Hindi', flag: '🇮🇳' },
+  ];
+
+  function renderLangPicker(filter) {
+    const q = (filter || '').toLowerCase();
+    let items = knownLangs;
+    if (editorLanguages && editorLanguages.length) {
+      const loaded = editorLanguages.map(l => l.code);
+      items = knownLangs.filter(l => loaded.includes(l.code));
+      if (items.length === 0) items = knownLangs;
+    }
+    if (q) items = items.filter(l => l.code.toLowerCase().includes(q) || l.name.toLowerCase().includes(q));
+    list.innerHTML = items.map(l => `
+      <button class="lang-picker-item${l.code === current ? ' active' : ''}" onclick="pickDefaultLang('${l.code}')">
+        <span class="lang-picker-flag">${l.flag}</span>
+        <span class="lang-picker-code">${l.code}</span>
+        <span class="lang-picker-name">${l.name}</span>
+      </button>
+    `).join('');
+    if (items.length === 0) list.innerHTML = '<div style="padding:16px;text-align:center;color:var(--ink-2)">No languages match your search</div>';
+  }
+
+  search.value = current === 'Default' ? '' : current;
+  search.oninput = () => renderLangPicker(search.value);
+  overlay.classList.add('open');
+  renderLangPicker(search.value);
+  setTimeout(() => search.focus(), 100);
+}
+
+function pickDefaultLang(code) {
+  setDefaultLang(code);
+  document.getElementById('langPickerOverlay').classList.remove('open');
+  showToast(`Default language set to ${code}`);
   const editing = document.getElementById('editorGrid')?.innerHTML;
   if (editing && editing.length > 0) renderEditor();
 }
@@ -1269,6 +1356,8 @@ document.addEventListener('keydown', e => {
     if (updateModal.classList.contains('open')) { updateModal.classList.remove('open'); return; }
     const addModal = document.getElementById('addProjectModal');
     if (addModal?.classList.contains('open')) { addModal.classList.remove('open'); return; }
+    const langPicker = document.getElementById('langPickerOverlay');
+    if (langPicker?.classList.contains('open')) { langPicker.classList.remove('open'); return; }
     return;
   }
 
