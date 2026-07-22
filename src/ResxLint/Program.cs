@@ -24,6 +24,34 @@ if (cmdArgs.Length > 0 && cmdArgs[0] is "--serve" or "-s")
     return 0;
 }
 
+if (cmdArgs.Length > 0 && cmdArgs[0] is "--check-update" or "-u")
+{
+    var info = UpdateService.CheckAsync().GetAwaiter().GetResult();
+    if (info.Error != null)
+    {
+        Console.ForegroundColor = ConsoleColor.Red;
+        Console.WriteLine($"Update check failed: {info.Error}");
+        Console.ResetColor();
+        return 1;
+    }
+    Console.WriteLine($"Current version: {info.CurrentVersion}");
+    Console.WriteLine($"Latest version:  {info.LatestVersion}");
+    if (info.IsUpdateAvailable)
+    {
+        Console.ForegroundColor = ConsoleColor.Cyan;
+        Console.WriteLine($"Update available! Download: {info.DownloadUrl}");
+        Console.WriteLine("Run: dotnet tool update --global ResxLint");
+        Console.ResetColor();
+    }
+    else
+    {
+        Console.ForegroundColor = ConsoleColor.Green;
+        Console.WriteLine("You're up to date.");
+        Console.ResetColor();
+    }
+    return 0;
+}
+
 if (cmdArgs.Length > 0 && (cmdArgs[0] is "--help" or "-h"))
 {
     PrintHelp();
@@ -190,6 +218,7 @@ static void PrintHelp()
           --serve, -s             Start web UI dashboard
           --port <port>           Web UI port (default: 5123)
           --no-open               Don't open browser automatically
+          --check-update, -u      Check for updates on NuGet
           --help, -h              Show this help
 
         EXIT CODES:
@@ -199,9 +228,10 @@ static void PrintHelp()
           3  Fatal errors (TRANS001, TRANS004)
 
         EXAMPLES:
+          resx-lint                          Interactive mode (press W for web, or auto-CLI)
           resx-lint --project-dir . --resx-file Resources\AppResources.resx
           resx-lint --serve
-          resx-lint --serve --port 8080 --no-open
+          resx-lint --check-update
         """);
 }
 

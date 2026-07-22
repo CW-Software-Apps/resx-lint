@@ -154,6 +154,12 @@ class WebStartup
             }
         });
 
+        api.MapGet("/update/check", async () =>
+        {
+            var info = await UpdateService.CheckAsync();
+            return Results.Ok(info);
+        });
+
         app.MapHub<LintHub>("/hubs/lint");
 
         if (!noOpen)

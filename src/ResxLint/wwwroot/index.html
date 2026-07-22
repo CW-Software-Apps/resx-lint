@@ -360,12 +360,13 @@
   <header>
     <div class="logo">RL</div>
     <span style="font-weight:600;font-size:15px">resx-lint</span>
-    <span class="version-badge">v2.0</span>
+    <span class="version-badge" id="versionBadge" style="cursor:pointer" onclick="checkUpdate()" title="Click to check for updates">v2.0</span>
     <div class="tab-bar">
       <button class="nav-btn active" data-view="lint" onclick="switchView('lint')">Lint Dashboard</button>
       <button class="nav-btn" data-view="editor" onclick="switchView('editor')">Translation Editor</button>
     </div>
-    <button class="nav-btn" onclick="toggleTheme()" title="Toggle theme" style="margin-left:auto">🌓</button>
+    <button class="nav-btn" onclick="checkUpdate()" title="Check for updates">📦</button>
+    <button class="nav-btn" onclick="toggleTheme()" title="Toggle theme">🌓</button>
   </header>
 
   <div class="main-area" id="mainArea">
@@ -527,6 +528,33 @@ function toggleTheme() {
 }
 const savedTheme = localStorage.getItem('resx-lint-theme');
 if (savedTheme) document.documentElement.setAttribute('data-theme', savedTheme);
+
+// ====== UPDATE CHECK ======
+async function checkUpdate() {
+  const badge = document.getElementById('versionBadge');
+  badge.textContent = 'Checking...';
+  try {
+    const info = await api('/api/update/check');
+    if (info.error) {
+      showToast(`Update check failed: ${info.error}`, true);
+      badge.textContent = `v${info.currentVersion}`;
+      return;
+    }
+    if (info.isUpdateAvailable) {
+      badge.textContent = `📦 ${info.latestVersion} available!`;
+      badge.style.color = 'var(--accent)';
+      showToast(`Update ${info.latestVersion} available! Run: dotnet tool update --global ResxLint`);
+    } else {
+      badge.textContent = `✓ ${info.currentVersion}`;
+      badge.style.color = 'var(--green)';
+      showToast(`resx-lint ${info.currentVersion} is up to date`);
+      setTimeout(() => { badge.textContent = `v${info.currentVersion}`; badge.style.color = ''; }, 3000);
+    }
+  } catch (e) {
+    showToast(`Update check failed: ${e.message}`, true);
+    badge.textContent = 'v2.0';
+  }
+}
 
 // ====== NAVIGATION ======
 function switchView(name) {
