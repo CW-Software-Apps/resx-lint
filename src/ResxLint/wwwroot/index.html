@@ -640,6 +640,7 @@
           </div>
           <button class="btn btn-primary" onclick="loadEditor()">Load Matrix</button>
           <button class="btn btn-secondary" onclick="openAiConfig()"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="14" x="4" y="6" rx="2"/><path d="M12 6V2"/><path d="M9 14h6"/><path d="M12 17v-3"/></svg> AI Batch Translate</button>
+          <button class="btn btn-secondary" onclick="configureDefaultLang()" title="Set default base language">⚙ Default Lang</button>
         </div>
       </div>
 
@@ -805,20 +806,33 @@ function icon(name) {
   };
   return I[name] || '';
 }
-function getLangLabel(code) {
-  if (!code || code === 'Default' || code === 'base') return 'base';
-  const c = code.toLowerCase();
-  if (c.includes('en')) return 'EN';
-  if (c.includes('es')) return 'ES';
-  if (c.includes('pt')) return 'PT';
-  if (c.includes('de')) return 'DE';
-  if (c.includes('fr')) return 'FR';
-  if (c.includes('it')) return 'IT';
-  if (c.includes('ja')) return 'JA';
-  if (c.includes('zh')) return 'ZH';
-  if (c.includes('ru')) return 'RU';
-  if (c.includes('ko')) return 'KO';
-  return code.split('-')[0]?.toUpperCase() || '—';
+function localeToFlag(code) {
+  if (!code || code === 'Default') return '🌐';
+  const region = code.split('-')[1];
+  if (!region) {
+    const map = { en: '🇬🇧', es: '🇪🇸', pt: '🇧🇷', de: '🇩🇪', fr: '🇫🇷', it: '🇮🇹', ja: '🇯🇵', 'zh-CN': '🇨🇳', 'zh-TW': '🇹🇼', ru: '🇷🇺', ko: '🇰🇷', ar: '🇸🇦', nl: '🇳🇱', pl: '🇵🇱', sv: '🇸🇪', da: '🇩🇰', fi: '🇫🇮', nb: '🇳🇴', th: '🇹🇭', vi: '🇻🇳', tr: '🇹🇷', cs: '🇨🇿', hu: '🇭🇺', ro: '🇷🇴', uk: '🇺🇦', el: '🇬🇷', he: '🇮🇱', hi: '🇮🇳' };
+    return map[code.toLowerCase()] || '🌐';
+  }
+  const a = region.toUpperCase().split('').map(c => String.fromCodePoint(0x1F1E6 + c.charCodeAt(0) - 65));
+  return a.join('');
+}
+
+function getDefaultLang() {
+  return localStorage.getItem('resx-lint-default-lang') || 'Default';
+}
+
+function setDefaultLang(code) {
+  localStorage.setItem('resx-lint-default-lang', code || 'Default');
+}
+
+function configureDefaultLang() {
+  const current = getDefaultLang();
+  const code = prompt('Enter your default/base language code (e.g., pt-BR, en-US, es):', current === 'Default' ? 'pt-BR' : current);
+  if (code === null) return;
+  if (!code.trim()) { setDefaultLang(''); showToast('Default language reset to Default'); }
+  else { setDefaultLang(code.trim()); showToast(`Default language set to ${code.trim()}`); }
+  const editing = document.getElementById('editorGrid')?.innerHTML;
+  if (editing && editing.length > 0) renderEditor();
 }
 
 // ====== THEME ======
@@ -1542,9 +1556,12 @@ function renderEditor() {
   const dirtyCount = Object.values(dirtyCells).reduce((a, c) => a + Object.keys(c).length, 0);
   document.getElementById('editorCount').innerHTML = `${filteredKeys.length} / ${editorKeys.length} keys displayed${dirtyCount ? ` · <span style="color:var(--warning)">${dirtyCount} unsaved</span>` : ''}`;
 
+  const defaultLang = getDefaultLang();
   let html = '<table><thead><tr><th style="min-width:180px">Key Name</th>';
   langs.forEach(l => {
-    const info = l === 'base' ? null : editorLanguages.find(lg => lg.code === l);
+    const isBase = l === 'base';
+    const langCode = isBase ? defaultLang : l;
+    const info = isBase ? null : editorLanguages.find(lg => lg.code === l);
     let badge = '';
     let aiBtn = '';
     if (info) {
@@ -1554,8 +1571,8 @@ function renderEditor() {
         aiBtn = `<button class="btn btn-primary btn-sm" style="margin-left:6px;padding:2px 8px;font-size:11px" onclick="quickAiTranslateLang('${l}')" title="Translate ${l} with AI">${icon('bolt')} AI</button>`;
       }
     }
-    const flag = getLangLabel(l);
-    html += `<th><span class="lang-flag">${flag}</span> ${l}${badge}${aiBtn}</th>`;
+    const flag = localeToFlag(langCode);
+    html += `<th><span class="lang-flag" title="${langCode}">${flag}</span> ${langCode}${isBase ? ' (base)' : ''}${badge}${aiBtn}</th>`;
   });
   html += '</tr></thead><tbody>';
 
