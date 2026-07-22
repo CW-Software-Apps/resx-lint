@@ -8,8 +8,12 @@ namespace ResxLint.Web;
 
 class WebStartup
 {
-    public static void Start(int port, bool noOpen)
+    public static void Start(int preferredPort, bool noOpen)
     {
+        var port = FindAvailablePort(preferredPort);
+        if (port != preferredPort)
+            Console.WriteLine($"Port {preferredPort} in use — using port {port} instead.");
+
         var builder = WebApplication.CreateBuilder(new WebApplicationOptions
         {
             WebRootPath = Path.Combine(AppContext.BaseDirectory, "wwwroot")
@@ -187,5 +191,24 @@ class WebStartup
 
         Console.WriteLine($"resx-lint Web UI running at http://localhost:{port}");
         app.Run();
+    }
+
+    static int FindAvailablePort(int start)
+    {
+        for (int p = start; p < start + 100; p++)
+        {
+            try
+            {
+                using var sock = new System.Net.Sockets.Socket(
+                    System.Net.Sockets.AddressFamily.InterNetwork,
+                    System.Net.Sockets.SocketType.Stream,
+                    System.Net.Sockets.ProtocolType.Tcp);
+                sock.Bind(new System.Net.IPEndPoint(System.Net.IPAddress.Loopback, p));
+                sock.Close();
+                return p;
+            }
+            catch { }
+        }
+        return start;
     }
 }
