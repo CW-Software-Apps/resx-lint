@@ -396,15 +396,15 @@
   .alert-msg { font-size: 14px; color: var(--ink-1); line-height: 1.6; margin-bottom: 20px; }
   .alert-actions { display: flex; gap: 10px; justify-content: center; }
 
-  .ai-config-modal {
+  .modal {
     position: fixed; inset: 0; z-index: 50;
     background: oklch(0 0 0 / 0.65);
     display: none;
     align-items: center;
     justify-content: center;
   }
-  .ai-config-modal.open { display: flex; }
-  .ai-config-panel {
+  .modal.open { display: flex; }
+  .modal-panel-lg {
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
@@ -430,6 +430,29 @@
     transition: transform .3s ease-out, opacity .3s ease-out;
   }
   .toast.show { transform: translateY(0); opacity: 1; }
+
+  .flex-row { display: flex; align-items: center; gap: 12px; }
+  .flex-between { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .flex-gap { display: flex; gap: 10px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .mb-6 { margin-bottom: 6px; }
+  .mb-10 { margin-bottom: 10px; }
+  .mb-12 { margin-bottom: 12px; }
+  .mb-16 { margin-bottom: 16px; }
+  .mb-20 { margin-bottom: 20px; }
+  .p-16 { padding: 16px; }
+  .p-20 { padding: 20px; }
+  .text-center { text-align: center; }
+  .flex-1 { flex: 1; }
+  .shrink-0 { flex-shrink: 0; }
+  .gap-8 { gap: 8px; }
+  .gap-10 { gap: 10px; }
+  .gap-12 { gap: 12px; }
+  .fw-700 { font-weight: 700; }
+  .fs-14 { font-size: 14px; }
+  .fs-18 { font-size: 18px; }
+  .fs-24 { font-size: 24px; }
+  .c-ink-2 { color: var(--ink-2); }
 
   .progress-ring {
     display: inline-block;
@@ -495,17 +518,21 @@
       <button class="nav-btn" data-view="editor" onclick="switchView('editor')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg> Translation Matrix & AI <span class="kbd-hint">Ctrl+3</span></button>
     </div>
     <button class="nav-btn" onclick="checkUpdate()" title="Check for updates" aria-label="Check for updates"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 9.4 7.55 4.24"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="M3.29 7 12 12l8.71-5M12 22V12"/></svg></button>
-    <button class="nav-btn" onclick="toggleTheme()" title="Toggle dark/light theme" aria-label="Toggle dark/light theme"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg></button>
+    <button class="nav-btn" onclick="toggleTheme()" title="Toggle dark/light theme" aria-label="Toggle dark/light theme"><svg class="icon" id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg></button>
+    <a class="nav-btn" href="https://github.com/CW-Software-Apps/resx-lint" target="_blank" title="Documentation" aria-label="Open documentation"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg></a>
   </header>
 
   <div class="main-area" id="mainArea">
+    <div id="initialLoading" style="display:flex;align-items:center;justify-content:center;height:200px;color:var(--ink-2);font-size:14px">
+      <span class="progress-ring" style="margin-right:10px"></span> Loading...
+    </div>
 
     <!-- ====== PROJECTS EXPLORER VIEW ====== -->
     <div id="view-projects">
-      <div class="card" style="margin-bottom:20px;padding:16px 20px">
-        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
-          <div style="display:flex;align-items:center;gap:12px">
-            <h2 style="font-size:18px;font-weight:700">My Projects</h2>
+      <div class="card mb-20 p-16">
+        <div class="flex-between">
+          <div class="flex-row">
+            <h2 class="fs-18 fw-700">My Projects</h2>
             <span class="badge badge-info" id="savedProjectCount" style="padding:3px 10px;font-size:12px">0</span>
           </div>
           <div style="display:flex;gap:8px;align-items:center">
@@ -555,12 +582,12 @@
         </div>
       </div>
 
-      <div id="lintProgress" style="display:none;margin-bottom:16px">
-        <div class="card" style="padding:20px">
-          <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+      <div id="lintProgress" style="display:none">
+        <div class="card p-20">
+          <div class="flex-row mb-12">
             <span class="progress-ring"></span>
-            <span style="font-size:14px;flex:1" id="progressMessage">Initializing lint audit...</span>
-            <button class="btn btn-secondary btn-sm" id="abortLintBtn" onclick="abortLint()" style="flex-shrink:0" title="Cancel running audit">Abort</button>
+            <span class="fs-14 flex-1" id="progressMessage">Initializing lint audit...</span>
+            <button class="btn btn-secondary btn-sm shrink-0" id="abortLintBtn" onclick="abortLint()" title="Cancel running audit">Abort</button>
           </div>
           <div class="step-progress" id="stepProgress">
             <div class="step-dot" data-step="1"></div>
@@ -572,11 +599,11 @@
           </div>
           <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--ink-2)">
             <span>Duplicates</span>
-            <span>Base .resx</span>
+            <span>Base</span>
             <span>Languages</span>
             <span>XAML</span>
             <span>C#</span>
-            <span>Designer.cs</span>
+            <span>Designer</span>
           </div>
         </div>
       </div>
@@ -654,8 +681,8 @@
 </div>
 
 <!-- AI Config Modal -->
-<div class="ai-config-modal" id="aiModal" role="dialog" aria-modal="true" aria-label="AI Translation Configuration">
-  <div class="ai-config-panel">
+<div class="modal" id="aiModal" role="dialog" aria-modal="true" aria-label="AI Translation Configuration">
+  <div class="modal-panel-lg">
     <h3 style="margin-bottom:16px;font-size:17px;font-weight:600"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="14" x="4" y="6" rx="2"/><path d="M12 6V2"/><path d="M9 14h6"/><path d="M12 17v-3"/></svg> AI Translation Studio</h3>
     <div style="display:grid;gap:14px">
       <div>
@@ -700,8 +727,8 @@
 </div>
 
 <!-- Add Project Modal -->
-<div class="ai-config-modal" id="addProjectModal" role="dialog" aria-modal="true" aria-label="Add Project">
-  <div class="ai-config-panel" style="max-width:520px">
+<div class="modal" id="addProjectModal" role="dialog" aria-modal="true" aria-label="Add Project">
+  <div class="modal-panel-lg" style="max-width:520px">
     <h3 style="margin-bottom:16px;font-size:17px;font-weight:600">＋ Add Project</h3>
     <div style="display:grid;gap:14px">
       <div>
@@ -717,7 +744,7 @@
 </div>
 
 <!-- Update Modal Popup -->
-<div class="ai-config-modal" id="updateModal">
+<div class="modal" id="updateModal">
   <div class="ai-config-panel" style="max-width:540px">
     <h3 style="margin-bottom:12px;font-size:17px;font-weight:600;display:flex;align-items:center;gap:8px">
       <span><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 9.4 7.55 4.24"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="M3.29 7 12 12l8.71-5M12 22V12"/></svg> resx-lint Update</span>
@@ -801,9 +828,22 @@ function toggleTheme() {
   const next = cur === 'dark' ? 'light' : 'dark';
   html.setAttribute('data-theme', next);
   localStorage.setItem('resx-lint-theme', next);
+  updateThemeIcon(next);
+}
+function updateThemeIcon(theme) {
+  const icon = document.getElementById('themeIcon');
+  if (!icon) return;
+  if (theme === 'light') {
+    icon.innerHTML = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+  } else {
+    icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+  }
 }
 const savedTheme = localStorage.getItem('resx-lint-theme');
-if (savedTheme) document.documentElement.setAttribute('data-theme', savedTheme);
+if (savedTheme) {
+  document.documentElement.setAttribute('data-theme', savedTheme);
+  updateThemeIcon(savedTheme);
+}
 
 // ====== SAVED PROJECTS ======
 function getSavedProjects() {
@@ -1384,13 +1424,13 @@ function renderLintResults(r) {
   ];
   let summaryHtml = '';
   for (let row = 0; row < 2; row++) {
-    summaryHtml += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:10px">';
+    summaryHtml += '<div class="grid-3 mb-10">';
     for (let col = 0; col < 3; col++) {
       const i = items[row * 3 + col];
       if (i) summaryHtml += `
-        <div class="card" style="text-align:center;padding:16px">
-          <div style="font-size:24px;font-weight:700">${i.value}</div>
-          <div style="font-size:13px;color:var(--ink-2);margin-bottom:6px">${i.label}</div>
+        <div class="card text-center p-16">
+          <div class="fs-24 fw-700">${i.value}</div>
+          <div class="c-ink-2 fs-14 mb-6">${i.label}</div>
           <span class="badge ${i.cls}">${i.label}</span>
         </div>`;
     }
@@ -1560,10 +1600,10 @@ function autoResize(el) {
   });
 }
 
+const _escDiv = document.createElement('div');
 function escHtml(s) {
-  const d = document.createElement('div');
-  d.textContent = s;
-  return d.innerHTML;
+  _escDiv.textContent = s;
+  return _escDiv.innerHTML;
 }
 
 async function confirmDiscard() {
@@ -1812,6 +1852,7 @@ async function aiTranslateAll() {
 
 // ====== INIT ======
 document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('initialLoading').style.display = 'none';
   renderSavedProjects();
 });
 </script>
