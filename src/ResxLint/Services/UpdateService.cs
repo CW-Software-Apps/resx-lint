@@ -76,50 +76,34 @@ class UpdateService
         try
         {
             var info = await CheckAsync();
+            var currentPid = Environment.ProcessId;
 
-            var psi = new ProcessStartInfo("dotnet", "tool update --global ResxLint")
+            var scriptPath = Path.Combine(Path.GetTempPath(), $"update_resxlint_{Guid.NewGuid():N}.bat");
+            var scriptContent = $@"@echo off
+timeout /t 2 /nobreak > nul
+taskkill /F /PID {currentPid} > nul 2>&1
+dotnet tool update --global ResxLint
+start resx-lint
+(goto) 2>nul & del ""%~f0""
+";
+
+            await File.WriteAllTextAsync(scriptPath, scriptContent);
+
+            var psi = new ProcessStartInfo("cmd.exe", $"/c \"{scriptPath}\"")
             {
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
+                CreateNoWindow = true,
                 UseShellExecute = false,
-                CreateNoWindow = true
+                WindowStyle = ProcessWindowStyle.Hidden
             };
 
-            using var proc = Process.Start(psi);
-            if (proc == null)
-                return new InstallResult { Success = false, CurrentVersion = CurrentVersion, Error = "Não foi possível iniciar o processo dotnet tool." };
-
-            var output = await proc.StandardOutput.ReadToEndAsync();
-            var error = await proc.StandardError.ReadToEndAsync();
-            await proc.WaitForExitAsync();
-
-            var fullOutput = string.IsNullOrWhiteSpace(error) ? output : $"{output}\n{error}";
-
-            if (proc.ExitCode != 0)
-            {
-                var errMessage = $"Command failed with exit code {proc.ExitCode}";
-                if (fullOutput.Contains("Access to the path", StringComparison.OrdinalIgnoreCase) ||
-                    fullOutput.Contains("denied", StringComparison.OrdinalIgnoreCase))
-                {
-                    errMessage = "File lock detected: resx-lint is currently running. Close the running terminal process (Ctrl+C) and run 'dotnet tool update --global ResxLint'.";
-                }
-
-                return new InstallResult
-                {
-                    Success = false,
-                    CurrentVersion = CurrentVersion,
-                    TargetVersion = info.LatestVersion ?? "",
-                    CommandOutput = fullOutput.Trim(),
-                    Error = errMessage
-                };
-            }
+            Process.Start(psi);
 
             return new InstallResult
             {
                 Success = true,
                 CurrentVersion = CurrentVersion,
                 TargetVersion = info.LatestVersion ?? "",
-                CommandOutput = fullOutput.Trim()
+                CommandOutput = $"[Auto-Kill Updater Initiated]\nTarget Process PID: {currentPid}\n\n1. Stopping current resx-lint process (releasing file lock)...\n2. Executing 'dotnet tool update --global ResxLint'...\n3. Automatically restarting resx-lint in 3 seconds!"
             };
         }
         catch (Exception ex)
