@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>resx-lint — Intelligent RESX Localization & Translation Studio</title>
+<title>resx-lint — Translation Audit & Editor</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2308a2a8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='10'/><path d='M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z'/></svg>">
 <script src="/js/signalr.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -92,7 +92,7 @@
   .logo {
     width: 36px; height: 36px;
     border-radius: var(--radius-md);
-    background: linear-gradient(135deg, oklch(0.65 0.19 210), oklch(0.55 0.19 210));
+    background: oklch(0.65 0.19 210);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -381,7 +381,6 @@
     display: none;
     align-items: center;
     justify-content: center;
-    backdrop-filter: blur(6px);
   }
   .modal-overlay.open { display: flex; }
   .modal-panel {
@@ -403,7 +402,6 @@
     display: none;
     align-items: center;
     justify-content: center;
-    backdrop-filter: blur(6px);
   }
   .ai-config-modal.open { display: flex; }
   .ai-config-panel {
@@ -496,8 +494,8 @@
       <button class="nav-btn" data-view="lint" onclick="switchView('lint')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg> Audit & Lint <span class="kbd-hint">Ctrl+2</span></button>
       <button class="nav-btn" data-view="editor" onclick="switchView('editor')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg> Translation Matrix & AI <span class="kbd-hint">Ctrl+3</span></button>
     </div>
-    <button class="nav-btn" onclick="checkUpdate()" title="Check for updates"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 9.4 7.55 4.24"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="M3.29 7 12 12l8.71-5M12 22V12"/></svg></button>
-    <button class="nav-btn" onclick="toggleTheme()" title="Toggle dark/light theme"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg></button>
+    <button class="nav-btn" onclick="checkUpdate()" title="Check for updates" aria-label="Check for updates"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 9.4 7.55 4.24"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="M3.29 7 12 12l8.71-5M12 22V12"/></svg></button>
+    <button class="nav-btn" onclick="toggleTheme()" title="Toggle dark/light theme" aria-label="Toggle dark/light theme"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg></button>
   </header>
 
   <div class="main-area" id="mainArea">
@@ -561,7 +559,8 @@
         <div class="card" style="padding:20px">
           <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
             <span class="progress-ring"></span>
-            <span style="font-size:14px" id="progressMessage">Initializing lint audit...</span>
+            <span style="font-size:14px;flex:1" id="progressMessage">Initializing lint audit...</span>
+            <button class="btn btn-secondary btn-sm" id="abortLintBtn" onclick="abortLint()" style="flex-shrink:0" title="Cancel running audit">Abort</button>
           </div>
           <div class="step-progress" id="stepProgress">
             <div class="step-dot" data-step="1"></div>
@@ -621,15 +620,15 @@
         <div id="editorToolbar" class="filter-bar">
           <input class="input-field" id="editorSearch" placeholder="Search keys or text values..." style="max-width:280px;font-family:var(--font)" oninput="filterEditor()">
           <span style="color:var(--ink-2);font-size:13px;font-weight:500">Status Filter:</span>
-          <label class="filter-chip active" data-filter="ok" onclick="toggleFilter(this)"><input type="checkbox" checked> <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-10 10L5 11"/></svg> OK</label>
-          <label class="filter-chip active" data-filter="missing" onclick="toggleFilter(this)"><input type="checkbox" checked> <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg> Missing</label>
-          <label class="filter-chip active" data-filter="placeholder" onclick="toggleFilter(this)"><input type="checkbox" checked> <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg> Placeholders</label>
-          <label class="filter-chip active" data-filter="identical" onclick="toggleFilter(this)"><input type="checkbox" checked> <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><path d="M12 12v4M12 8h.01"/></svg> Identical</label>
+          <button class="filter-chip active" role="checkbox" aria-checked="true" data-filter="ok" onclick="toggleFilter(this)"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-10 10L5 11"/></svg> OK</button>
+          <button class="filter-chip active" role="checkbox" aria-checked="true" data-filter="missing" onclick="toggleFilter(this)"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg> Missing</button>
+          <button class="filter-chip active" role="checkbox" aria-checked="true" data-filter="placeholder" onclick="toggleFilter(this)"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg> Placeholders</button>
+          <button class="filter-chip active" role="checkbox" aria-checked="true" data-filter="identical" onclick="toggleFilter(this)"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><path d="M12 12v4M12 8h.01"/></svg> Identical</button>
           <span style="color:var(--ink-2);font-size:13px;margin-left:auto" id="editorCount"></span>
         </div>
         <div id="editorGrid" class="editor-grid"></div>
         <div style="margin-top:14px;display:flex;gap:10px;justify-content:end">
-          <button class="btn btn-secondary" onclick="loadEditor()">Discard Changes</button>
+          <button class="btn btn-secondary" onclick="confirmDiscard()">Discard Changes</button>
           <button class="btn btn-primary" onclick="saveEditor()"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8"/><path d="M7 3v5h8"/></svg> Save Changes</button>
         </div>
       </div>
@@ -644,7 +643,7 @@
 </div>
 
 <!-- Alert/Confirm Modal -->
-<div class="modal-overlay" id="alertModal">
+<div class="modal-overlay" id="alertModal" role="dialog" aria-modal="true" aria-label="Alert">
   <div class="modal-panel alert-panel">
     <div class="alert-msg"></div>
     <div class="alert-actions">
@@ -655,7 +654,7 @@
 </div>
 
 <!-- AI Config Modal -->
-<div class="ai-config-modal" id="aiModal">
+<div class="ai-config-modal" id="aiModal" role="dialog" aria-modal="true" aria-label="AI Translation Configuration">
   <div class="ai-config-panel">
     <h3 style="margin-bottom:16px;font-size:17px;font-weight:600"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="14" x="4" y="6" rx="2"/><path d="M12 6V2"/><path d="M9 14h6"/><path d="M12 17v-3"/></svg> AI Translation Studio</h3>
     <div style="display:grid;gap:14px">
@@ -701,7 +700,7 @@
 </div>
 
 <!-- Add Project Modal -->
-<div class="ai-config-modal" id="addProjectModal">
+<div class="ai-config-modal" id="addProjectModal" role="dialog" aria-modal="true" aria-label="Add Project">
   <div class="ai-config-panel" style="max-width:520px">
     <h3 style="margin-bottom:16px;font-size:17px;font-weight:600">＋ Add Project</h3>
     <div style="display:grid;gap:14px">
@@ -1248,7 +1247,9 @@ let toastTimer;
 function showToast(msg, isError) {
   const t = document.getElementById('toast');
   t.textContent = msg;
-  t.style.borderLeft = isError ? '4px solid var(--critical)' : '4px solid var(--positive)';
+  t.style.background = isError ? 'var(--critical-bg)' : 'var(--positive-bg)';
+  t.style.borderColor = isError ? 'var(--critical)' : 'var(--positive)';
+  t.style.borderLeft = '';
   t.classList.add('show');
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => t.classList.remove('show'), 3500);
@@ -1322,11 +1323,14 @@ async function runLint() {
   document.getElementById('lintResults').style.display = 'none';
   document.getElementById('lintEmpty').style.display = 'none';
   document.getElementById('runLintBtn').disabled = true;
+  document.getElementById('abortLintBtn').style.display = '';
   document.getElementById('progressMessage').textContent = 'Connecting...';
   setStepProgress(0, 6);
 
+  let conn;
+  _lintAborted = false;
   try {
-    const conn = await ensureConnection();
+    conn = await ensureConnection();
 
     conn.off('LintProgress');
     conn.off('LintComplete');
@@ -1334,29 +1338,38 @@ async function runLint() {
 
     const result = await new Promise((resolve, reject) => {
       conn.on('LintProgress', data => {
+        if (_lintAborted) return;
         document.getElementById('progressMessage').textContent = data.message;
         setStepProgress(data.step, data.totalSteps);
       });
       conn.on('LintComplete', data => {
-        resolve(data);
+        if (!_lintAborted) resolve(data);
       });
       conn.on('LintError', err => {
-        reject(new Error(err));
+        if (!_lintAborted) reject(new Error(err));
       });
       conn.invoke('RunLint', { projectDir: dir, resxFile }).catch(reject);
-      setTimeout(() => reject(new Error('Audit timed out after 120s')), 120000);
+      setTimeout(() => { if (!_lintAborted) reject(new Error('Audit timed out after 120s')); }, 120000);
     });
 
     lintResult = result;
     renderLintResults(result);
   } catch (e) {
-    showToast(e.message, true);
+    if (e?.message !== 'Aborted') showToast(e.message, true);
     document.getElementById('lintEmpty').style.display = '';
   } finally {
     document.getElementById('lintProgress').style.display = 'none';
     document.getElementById('runLintBtn').disabled = false;
+    document.getElementById('abortLintBtn').style.display = 'none';
     setStepProgress(0, 6);
   }
+}
+
+let _lintAborted = false;
+function abortLint() {
+  _lintAborted = true;
+  document.getElementById('progressMessage').textContent = 'Cancelling...';
+  document.getElementById('abortLintBtn').disabled = true;
 }
 
 function renderLintResults(r) {
@@ -1369,13 +1382,21 @@ function renderLintResults(r) {
     { label: 'Auto-fixes', value: r.summary.autoFixesApplied, cls: r.summary.autoFixesApplied > 0 ? 'badge-positive' : 'badge-neutral' },
     { label: 'Missing', value: r.summary.missingTranslations, cls: r.summary.missingTranslations > 0 ? 'badge-critical' : 'badge-neutral' },
   ];
-  cards.innerHTML = items.map(i => `
-    <div class="card" style="text-align:center;padding:16px">
-      <div style="font-size:24px;font-weight:700">${i.value}</div>
-      <div style="font-size:13px;color:var(--ink-2);margin-bottom:6px">${i.label}</div>
-      <span class="badge ${i.cls}">${i.label}</span>
-    </div>
-  `).join('');
+  let summaryHtml = '';
+  for (let row = 0; row < 2; row++) {
+    summaryHtml += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:10px">';
+    for (let col = 0; col < 3; col++) {
+      const i = items[row * 3 + col];
+      if (i) summaryHtml += `
+        <div class="card" style="text-align:center;padding:16px">
+          <div style="font-size:24px;font-weight:700">${i.value}</div>
+          <div style="font-size:13px;color:var(--ink-2);margin-bottom:6px">${i.label}</div>
+          <span class="badge ${i.cls}">${i.label}</span>
+        </div>`;
+    }
+    summaryHtml += '</div>';
+  }
+  cards.innerHTML = summaryHtml;
 
   const fixable = r.issues.filter(i => i.canAutoFix);
   document.getElementById('autoFixBar').style.display = fixable.length > 0 ? '' : 'none';
@@ -1545,6 +1566,12 @@ function escHtml(s) {
   return d.innerHTML;
 }
 
+async function confirmDiscard() {
+  if (Object.keys(dirtyCells).length === 0) { loadEditor(); return; }
+  if (!await showConfirm('Discard all unsaved changes?')) return;
+  loadEditor();
+}
+
 function markDirty(el) {
   const key = el.dataset.key;
   const lang = el.dataset.lang;
@@ -1568,9 +1595,8 @@ function revertCell(key, lang) {
 }
 
 function toggleFilter(el) {
-  el.classList.toggle('active');
-  const cb = el.querySelector('input');
-  if (cb) cb.checked = el.classList.contains('active');
+  const active = el.classList.toggle('active');
+  el.setAttribute('aria-checked', active);
   if (editorData) renderEditor();
 }
 
