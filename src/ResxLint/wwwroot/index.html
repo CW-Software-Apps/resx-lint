@@ -2270,6 +2270,14 @@ function renderLintResults(r) {
   summaryHtml += '</div>';
   cards.innerHTML = summaryHtml;
 
+  const langFlags = (r.languages || []).map(l => {
+    const isBase = l === r.languages[0];
+    return `<span class="lang-tag${isBase ? ' lang-tag-base' : ''}" title="${l}">${isBase ? '<span class="lang-tag-base-badge">base</span>' : ''}${localeToFlag(l)} ${l}</span>`;
+  }).join(' ');
+  if (langFlags) {
+    cards.innerHTML += `<div class="lang-flags" style="margin-top:8px">${langFlags}</div>`;
+  }
+
   const fixable = r.issues.filter(i => i.canAutoFix);
   document.getElementById('autoFixBar').style.display = fixable.length > 0 ? '' : 'none';
 
@@ -2366,6 +2374,13 @@ function toggleIssueGroup(bodyId, headerEl) {
 }
 
 async function openIssueInTranslate(filterMode, key) {
+  const resxFile = document.getElementById('resxFileSelect')?.value || currentActiveResxFile;
+  if (!resxFile) return showToast('Select a .resx file first', true);
+  currentActiveResxFile = resxFile;
+
+  const sel = document.getElementById('editorResxSelect');
+  if (sel) sel.value = resxFile;
+
   switchView('editor');
 
   if (!editorData) {
