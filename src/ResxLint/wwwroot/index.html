@@ -1615,22 +1615,20 @@ let currentActiveProjectDir = '';
 let currentActiveResxFile = '';
 
 function updateHeaderProjectSelector() {
-  const list = getSavedProjects();
   const selProj = document.getElementById('headerProjectSelect');
   const iconWrap = document.getElementById('headerProjectIcon');
   if (!selProj) return;
 
-  const curVal = currentActiveProjectDir || selProj.value;
+  const list = getSavedProjects();
+  const curVal = currentActiveProjectDir;
+
   selProj.innerHTML = '<option value="">— Select project —</option>' + list.map(p => {
-    const parts = p.path.replace(/\\/g, '/').split('/').filter(Boolean);
-    const shortPath = parts.length >= 2 ? parts.slice(-2).join('/') : (parts[0] || '');
-    const label = shortPath ? `${p.name}  [${shortPath}]` : p.name;
-    return `<option value="${escHtml(p.path)}">${escHtml(label)}</option>`;
+    const iconChar = p.icon ? '📦 ' : '📁 ';
+    return `<option value="${escHtml(p.path)}">${iconChar}${escHtml(p.name)}</option>`;
   }).join('');
 
   if (curVal && list.some(p => p.path === curVal)) {
     selProj.value = curVal;
-    currentActiveProjectDir = curVal;
     const proj = list.find(p => p.path === curVal);
     if (proj && proj.icon) {
       iconWrap.innerHTML = `<img src="/api/project/icon-file?file=${encodeURIComponent(proj.icon)}" alt="" onerror="this.parentElement.innerHTML='${icon('folder')}'">`;
@@ -1813,18 +1811,16 @@ function updateSelectOptions(files) {
   });
 
   uniqueFiles.forEach(f => {
-    // Build a clean, concise display name for the resx file option
+    // Determine relative path clean
     let subfolder = f.relativeFolder || '';
-    if (!subfolder && f.resxFile) {
-      const parts = f.resxFile.replace(/\\/g, '/').split('/');
-      if (parts.length >= 2) subfolder = parts[parts.length - 2];
+    if (subfolder.endsWith(f.baseName)) {
+      const idx = subfolder.lastIndexOf(f.baseName);
+      subfolder = subfolder.substring(0, idx).replace(/[/\\]+$/, '');
     }
-    // Clean up duplicated names in subfolder path (e.g. "Resources/Localization" -> "Resources")
-    const folderName = subfolder.replace(new RegExp(`[/\\\\]?${f.baseName}$`, 'i'), '');
-    const pathLabel = folderName ? `${folderName}/${f.baseName}.resx` : `${f.baseName}.resx`;
-    
+    const pathLabel = subfolder ? `${subfolder}/${f.baseName}.resx` : `${f.baseName}.resx`;
+
     const label = `${f.projectName} › ${pathLabel} (${(f.languages || []).length} langs)`;
-    const headerLabel = `${pathLabel} (${(f.languages || []).length} langs)`;
+    const headerLabel = `${f.projectName} › ${pathLabel} (${(f.languages || []).length} langs)`;
 
     const opt1 = document.createElement('option');
     opt1.value = f.resxFile;
