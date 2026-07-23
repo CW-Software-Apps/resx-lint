@@ -42,11 +42,11 @@
 
 | Projects Dashboard | Translation Matrix |
 |---|---|
-| ![Projects dashboard with language flags](screenshots/projects.jpg) | ![Editor grid with language columns and flags](screenshots/editor.jpg) |
+| [![Projects dashboard with language flags](screenshots/projects.jpg)](screenshots/projects.jpg) | [![Editor grid with language columns and flags](screenshots/editor.jpg)](screenshots/editor.jpg) |
 
 | Lint Results | AI Translation Config |
 |---|---|
-| ![Lint results with summary cards and language flags](screenshots/lint.jpg) | ![AI batch translate configuration modal](screenshots/aiconfig.jpg) |
+| [![Lint results with summary cards and language flags](screenshots/lint.jpg)](screenshots/lint.jpg) | [![AI batch translate configuration modal](screenshots/aiconfig.jpg)](screenshots/aiconfig.jpg) |
 
 ---
 
