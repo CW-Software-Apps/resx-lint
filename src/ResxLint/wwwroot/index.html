@@ -24,16 +24,16 @@
     --accent: oklch(0.65 0.19 210);
     --accent-hover: oklch(0.72 0.19 210);
     --accent-soft: oklch(0.65 0.19 210 / 0.15);
-    --positive: oklch(0.60 0.17 210);
-    --positive-bg: oklch(0.60 0.17 210 / 0.14);
-    --critical: oklch(0.58 0.22 210);
-    --critical-bg: oklch(0.58 0.22 210 / 0.14);
-    --warning: oklch(0.72 0.16 210);
-    --warning-bg: oklch(0.72 0.16 210 / 0.14);
-    --neutral: oklch(0.55 0.025 210);
-    --neutral-bg: oklch(0.55 0.025 210 / 0.14);
-    --info: oklch(0.62 0.12 210);
-    --info-bg: oklch(0.62 0.12 210 / 0.14);
+    --positive: oklch(0.72 0.17 145);
+    --positive-bg: oklch(0.72 0.17 145 / 0.18);
+    --critical: oklch(0.66 0.21 25);
+    --critical-bg: oklch(0.66 0.21 25 / 0.18);
+    --warning: oklch(0.80 0.16 85);
+    --warning-bg: oklch(0.80 0.16 85 / 0.18);
+    --neutral: oklch(0.62 0.02 260);
+    --neutral-bg: oklch(0.62 0.02 260 / 0.18);
+    --info: oklch(0.62 0.12 230);
+    --info-bg: oklch(0.62 0.12 230 / 0.14);
     --radius-sm: 6px;
     --radius-md: 10px;
     --radius-lg: 14px;
@@ -53,16 +53,16 @@
     --accent: oklch(0.52 0.19 210);
     --accent-hover: oklch(0.46 0.19 210);
     --accent-soft: oklch(0.52 0.19 210 / 0.12);
-    --positive: oklch(0.50 0.17 210);
-    --positive-bg: oklch(0.50 0.17 210 / 0.12);
-    --critical: oklch(0.50 0.22 210);
-    --critical-bg: oklch(0.50 0.22 210 / 0.12);
-    --warning: oklch(0.62 0.18 210);
-    --warning-bg: oklch(0.62 0.18 210 / 0.12);
-    --neutral: oklch(0.55 0.025 210);
-    --neutral-bg: oklch(0.55 0.025 260 / 0.12);
-    --info: oklch(0.50 0.14 210);
-    --info-bg: oklch(0.50 0.14 210 / 0.12);
+    --positive: oklch(0.55 0.16 145);
+    --positive-bg: oklch(0.55 0.16 145 / 0.16);
+    --critical: oklch(0.55 0.20 25);
+    --critical-bg: oklch(0.55 0.20 25 / 0.16);
+    --warning: oklch(0.62 0.16 80);
+    --warning-bg: oklch(0.62 0.16 80 / 0.18);
+    --neutral: oklch(0.50 0.02 260);
+    --neutral-bg: oklch(0.50 0.02 260 / 0.14);
+    --info: oklch(0.50 0.14 230);
+    --info-bg: oklch(0.50 0.14 230 / 0.12);
   }
 
   html, body { height: 100%; }
@@ -2304,7 +2304,14 @@ function renderEditor() {
   editorVirtual.langs = langs;
   editorVirtual.defaultLang = getDefaultLang();
 
-  let colHtml = '<colgroup><col style="width:220px">';
+  // Language columns stretch to fill the available width (down to a 300px floor, past which
+  // horizontal scroll kicks in) instead of always sitting at a fixed 300px and leaving a big
+  // dead strip on the right when there are only 2-3 languages.
+  const keyColWidth = 220;
+  const availableWidth = grid.clientWidth || (keyColWidth + langs.length * 300);
+  const langColWidth = Math.max(300, Math.floor((availableWidth - keyColWidth) / Math.max(1, langs.length)));
+
+  let colHtml = `<colgroup><col style="width:${keyColWidth}px">`;
   let headerHtml = '<thead><tr><th class="key-col">Key Name</th>';
   langs.forEach(l => {
     const isBase = l === 'base';
@@ -2320,7 +2327,7 @@ function renderEditor() {
       }
     }
     const flag = localeToFlag(langCode);
-    colHtml += '<col style="width:300px">';
+    colHtml += `<col style="width:${langColWidth}px">`;
     headerHtml += `<th><span class="lang-flag" title="${langCode}">${flag}</span> ${langCode}${isBase ? ' (base)' : ''}${badge}${aiBtn}</th>`;
   });
   colHtml += '</colgroup>';
