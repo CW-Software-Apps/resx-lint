@@ -121,14 +121,15 @@
     background: var(--surface-2);
     border: 1px solid var(--border);
     border-radius: var(--radius-md);
-    padding: 4px 8px;
-    min-width: 140px;
+    padding: 4px 10px;
+    min-width: 200px;
     flex: 1 1 auto;
-    max-width: 380px;
+    max-width: 600px;
+    order: 2;
     transition: border-color .15s;
   }
-  @media (max-width: 768px) {
-    .active-project-bar { max-width: 100%; order: 3; flex-basis: 100%; }
+  @media (max-width: 900px) {
+    .active-project-bar { order: 10; flex-basis: 100%; max-width: 100%; margin-top: 4px; }
     .kbd-hint { display: none; }
   }
   .active-project-bar:hover {
@@ -780,12 +781,12 @@
       <button class="nav-btn active" data-view="projects" onclick="switchView('projects')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg> Projects <span class="kbd-hint">Ctrl+1</span></button>
       <button class="nav-btn" data-view="lint" onclick="switchView('lint')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg> Audit & Lint <span class="kbd-hint">Ctrl+2</span></button>
       <button class="nav-btn" data-view="editor" onclick="switchView('editor')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg> Translation Matrix & AI <span class="kbd-hint">Ctrl+3</span></button>
+      <button class="nav-btn" onclick="checkUpdate()" title="Check for updates (NuGet)" aria-label="Check for updates"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 9.4 7.55 4.24"/><path d="M21 16V8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><path d="M3.29 7 12 12l8.71-5M12 22V12"/></svg></button>
+      <button class="nav-btn" onclick="toggleTheme()" title="Toggle Dark/Light Mode" aria-label="Toggle Dark/Light Mode"><svg class="icon" id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg></button>
+      <a class="nav-btn" href="https://github.com/CW-Software-Apps/resx-lint" target="_blank" title="Documentation & Source Code on GitHub" aria-label="Open documentation"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg></a>
+      <button class="nav-btn" id="defaultLangBtn" onclick="configureDefaultLang()" title="Set Default Base Language (Current base language reference)" aria-label="Set default base language"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></button>
+      <button class="nav-btn" id="sfxBtn" onclick="toggleSfx()" title="Toggle Sound Effects (On/Off)" aria-label="Toggle sound effects">🔊</button>
     </div>
-    <button class="nav-btn" onclick="checkUpdate()" title="Check for updates" aria-label="Check for updates"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 9.4 7.55 4.24"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="M3.29 7 12 12l8.71-5M12 22V12"/></svg></button>
-    <button class="nav-btn" onclick="toggleTheme()" title="Toggle dark/light theme" aria-label="Toggle dark/light theme"><svg class="icon" id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg></button>
-    <a class="nav-btn" href="https://github.com/CW-Software-Apps/resx-lint" target="_blank" title="Documentation" aria-label="Open documentation"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg></a>
-    <button class="nav-btn" id="defaultLangBtn" onclick="configureDefaultLang()" title="Set default base language" aria-label="Set default base language"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></button>
-    <button class="nav-btn" id="sfxBtn" onclick="toggleSfx()" title="Toggle sound effects" aria-label="Toggle sound effects">🔇</button>
   </header>
 
   <div class="main-area" id="mainArea">
@@ -901,8 +902,8 @@
           <button class="btn btn-primary" id="loadMatrixBtn" onclick="loadEditor()">Load Matrix</button>
           <button class="btn btn-secondary" onclick="openAddKeyModal()"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg> Add Term</button>
           <button class="btn btn-secondary" onclick="openAiConfig()"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="14" x="4" y="6" rx="2"/><path d="M12 6V2"/><path d="M9 14h6"/><path d="M12 17v-3"/></svg> AI Batch Translate</button>
-          <button class="btn btn-secondary" id="exportExcelBtn" onclick="exportExcel()" disabled title="Export the loaded matrix to Excel"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg> Export Excel</button>
-          <button class="btn btn-secondary" id="importExcelBtn" onclick="document.getElementById('importExcelInput').click()" disabled title="Import translations from an Excel file"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></svg> Import Excel</button>
+          <button class="btn btn-secondary" id="exportExcelBtn" onclick="exportExcel()" disabled title="Export the loaded matrix to an Excel spreadsheet (.xlsx)"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:#107c41"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/><line x1="10" y1="9" x2="10" y2="9"/></svg> Export Excel</button>
+          <button class="btn btn-secondary" id="importExcelBtn" onclick="document.getElementById('importExcelInput').click()" disabled title="Import translations from an Excel spreadsheet (.xlsx)"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:#107c41"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M12 18v-6"/><path d="m9 15 3 3 3-3"/></svg> Import Excel</button>
           <input type="file" id="importExcelInput" accept=".xlsx" style="display:none" onchange="importExcel(this.files[0])">
           <button class="btn btn-secondary" onclick="configureDefaultLang()" title="Set default base language">⚙ Default Lang</button>
 
@@ -1206,7 +1207,10 @@ function localeToFlag(code) {
 let _sfxEnabled = localStorage.getItem('resx-lint-sfx') !== 'off';
 function updateSfxBtn() {
   const btn = document.getElementById('sfxBtn');
-  if (btn) btn.innerHTML = _sfxEnabled ? '🔊' : '🔇';
+  if (btn) {
+    btn.innerHTML = _sfxEnabled ? '🔊' : '🔇';
+    btn.title = _sfxEnabled ? 'Mute sound effects' : 'Unmute sound effects';
+  }
 }
 function toggleSfx() {
   _sfxEnabled = !_sfxEnabled;
@@ -1374,6 +1378,7 @@ if (savedTheme) {
   updateThemeIcon(savedTheme);
 }
 updateDefaultLangBtn();
+updateSfxBtn();
 
 // ====== SAVED PROJECTS ======
 function getSavedProjects() {
@@ -1701,9 +1706,12 @@ function onHeaderResxChange(resxFile) {
   // Update audit view info label
   const lintInfo = document.getElementById('lintResxInfo');
   if (lintInfo) {
+    const list = getSavedProjects();
+    const proj = list.find(p => p.path === currentActiveProjectDir);
+    const projBadge = proj ? `<span class="badge badge-info" style="margin-right:6px;font-size:12px">📦 ${escHtml(proj.name)}</span>` : '';
     if (resxFile) {
       const fileName = resxFile.split(/[\\/]/).pop();
-      lintInfo.innerHTML = `${icon('file')} Ready to audit: <strong>${escHtml(fileName)}</strong>`;
+      lintInfo.innerHTML = `${projBadge}${icon('file')} Ready to audit: <strong>${escHtml(fileName)}</strong>`;
       lintInfo.style.color = 'var(--ink)';
     } else {
       lintInfo.textContent = 'Select a project in the header to start an audit.';
@@ -2693,6 +2701,28 @@ function updateDirtyUI() {
     } else {
       topPending.style.display = 'none';
     }
+  }
+
+  // Update top banner in editor content if present
+  let topWarning = document.getElementById('editorPendingBanner');
+  const editorToolbar = document.getElementById('editorToolbar');
+  if (totalEdits > 0) {
+    if (!topWarning && editorToolbar) {
+      topWarning = document.createElement('div');
+      topWarning.id = 'editorPendingBanner';
+      topWarning.className = 'save-bar-sticky';
+      editorToolbar.parentNode.insertBefore(topWarning, editorToolbar);
+    }
+    if (topWarning) {
+      topWarning.innerHTML = `<span><strong style="color:oklch(0.78 0.19 80);font-size:14px">⚠️ ${totalEdits} unsaved edit(s) pending.</strong> Click Save Changes to write to disk.</span>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-secondary btn-sm" onclick="confirmDiscard()">Discard</button>
+          <button class="btn btn-primary btn-sm" onclick="saveEditor()" style="font-weight:700">Save ${totalEdits} Edits</button>
+        </div>`;
+      topWarning.style.display = 'flex';
+    }
+  } else if (topWarning) {
+    topWarning.style.display = 'none';
   }
 
   // Update status bar
