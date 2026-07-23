@@ -88,44 +88,54 @@ class UpdateService
             // version piped everything to `nul` and hid the window, so any failure (dotnet
             // update erroring, "resx-lint" not resolving on PATH, etc.) was completely silent:
             // the window just vanished and nothing came back up, with zero diagnostic trail.
-            var scriptPath = Path.Combine(Path.GetTempPath(), $"update_resxlint_{Guid.NewGuid():N}.bat");
-            var scriptContent = $@"@echo off
-title resx-lint updater
-echo ============================================
-echo   resx-lint auto-update
-echo ============================================
-echo.
-echo Waiting for resx-lint to close (PID {currentPid})...
-timeout /t 2 /nobreak > nul
-taskkill /F /PID {currentPid} > nul 2>&1
-echo.
-echo Updating to the latest version...
-echo.
-dotnet tool update --global ResxLint
-if %errorlevel% neq 0 (
-    echo.
-    echo ============================================
-    echo   Update command failed ^(exit code %errorlevel%^).
-    echo   resx-lint will still try to restart with whatever version is installed.
-    echo ============================================
-    timeout /t 5
-)
-echo.
-echo Restarting: {restartCommand}
-start """" {restartCommand}
-if %errorlevel% neq 0 (
-    echo.
-    echo Could not launch 'resx-lint' automatically — it may not be on PATH.
-    echo Open a new terminal and run 'resx-lint' manually.
-    echo.
-    pause
-    goto :cleanup
-)
-timeout /t 1 /nobreak > nul
-:cleanup
-(goto) 2>nul & del ""%~f0""
-";
+            // Build the .bat using Replace instead of $@"..." interpolation to avoid C# conflicts
+            // with batch-file syntax: embedded double-quotes, curly braces, and % signs would all
+            // break inside a verbatim interpolated string.
+            var scriptContent =
+                "@echo off\r\n" +
+                "title resx-lint updater\r\n" +
+                "echo ============================================\r\n" +
+                "echo   resx-lint auto-update\r\n" +
+                "echo ============================================\r\n" +
+                "echo.\r\n" +
+                $"echo Waiting for resx-lint to close (PID {currentPid})...\r\n" +
+                $"taskkill /F /PID {currentPid} >nul 2>&1\r\n" +
+                ":wait_loop\r\n" +
+                $"tasklist /FI \"PID eq {currentPid}\" 2>nul | find \"{currentPid}\" >nul\r\n" +
+                "if %errorlevel%==0 (\r\n" +
+                "    ping 127.0.0.1 -n 2 >nul\r\n" +
+                "    goto wait_loop\r\n" +
+                ")\r\n" +
+                "echo Process exited. Waiting for file handles to release...\r\n" +
+                "ping 127.0.0.1 -n 3 >nul\r\n" +
+                "echo.\r\n" +
+                "echo Updating to the latest version...\r\n" +
+                "echo.\r\n" +
+                "dotnet tool update --global ResxLint\r\n" +
+                "if %errorlevel% neq 0 (\r\n" +
+                "    echo.\r\n" +
+                "    echo ============================================\r\n" +
+                "    echo   Update command failed (exit code %errorlevel%).\r\n" +
+                "    echo   resx-lint will still try to restart with whatever version is installed.\r\n" +
+                "    echo ============================================\r\n" +
+                "    ping 127.0.0.1 -n 6 >nul\r\n" +
+                ")\r\n" +
+                "echo.\r\n" +
+                $"echo Restarting: {restartCommand}\r\n" +
+                $"start \"\" {restartCommand}\r\n" +
+                "if %errorlevel% neq 0 (\r\n" +
+                "    echo.\r\n" +
+                "    echo Could not launch 'resx-lint' automatically -- it may not be on PATH.\r\n" +
+                "    echo Open a new terminal and run 'resx-lint' manually.\r\n" +
+                "    echo.\r\n" +
+                "    pause\r\n" +
+                "    goto :cleanup\r\n" +
+                ")\r\n" +
+                "ping 127.0.0.1 -n 2 >nul\r\n" +
+                ":cleanup\r\n" +
+                "(goto) 2>nul & del \"%~f0\"\r\n";
 
+            var scriptPath = Path.Combine(Path.GetTempPath(), $"update_resxlint_{Guid.NewGuid():N}.bat");
             await File.WriteAllTextAsync(scriptPath, scriptContent);
 
             var psi = new ProcessStartInfo("cmd.exe", $"/c \"{scriptPath}\"")

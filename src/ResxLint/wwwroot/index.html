@@ -372,12 +372,12 @@
   .editor-grid td.key-col { z-index: 1; font-size: 12.5px; color: var(--ink); }
   .editor-grid tr:hover td.key-col { background: var(--surface-2) !important; }
 
-  /* Status Cell Highlights - subtle, clean indicators */
+  /* Status Cell Highlights - distinct, high-contrast indicators */
   .cell-ok { border-left: 3px solid transparent; }
   .cell-missing { background: var(--critical-bg) !important; border-left: 3px solid var(--critical); }
-  .cell-placeholder { background: var(--warning-bg) !important; border-left: 3px solid var(--warning); }
-  .cell-identical { background: oklch(0.80 0.16 85 / 0.22) !important; border-left: 3px solid oklch(0.78 0.19 80); }
-  .cell-base { background: oklch(0.62 0.12 210 / 0.04) !important; }
+  .cell-placeholder { background: oklch(0.85 0.14 85 / 0.18) !important; border-left: 3px solid oklch(0.78 0.16 85); }
+  .cell-identical { background: oklch(0.65 0.08 220 / 0.08) !important; border-left: 3px solid oklch(0.65 0.08 220); }
+  .cell-base { background: var(--surface-2) !important; opacity: 0.95; }
 
   .status-legend {
     display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
@@ -389,11 +389,11 @@
   .legend-item { display: inline-flex; align-items: center; gap: 6px; padding: 3px 8px; border-radius: 4px; background: var(--surface-2); border: 1px solid var(--border); }
   .legend-swatch { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
   .legend-swatch.swatch-ok { background: var(--positive); }
-  .legend-swatch.swatch-dirty { background: var(--warning); }
+  .legend-swatch.swatch-dirty { background: var(--accent); }
   .legend-swatch.swatch-missing { background: var(--critical); }
-  .legend-swatch.swatch-placeholder { background: var(--warning); }
-  .legend-swatch.swatch-identical { background: var(--warning); }
-  .legend-swatch.swatch-base { background: var(--accent); }
+  .legend-swatch.swatch-placeholder { background: oklch(0.78 0.16 85); }
+  .legend-swatch.swatch-identical { background: oklch(0.65 0.08 220); }
+  .legend-swatch.swatch-base { background: var(--border); }
 
   .filter-segments {
     display: flex; align-items: center; gap: 4px;
@@ -412,9 +412,9 @@
     background: var(--surface); color: var(--ink); font-weight: 600;
     box-shadow: 0 1px 3px oklch(0 0 0 / 0.1);
   }
-  .filter-segment.active.segment-dirty { color: var(--warning); background: var(--warning-bg); }
+  .filter-segment.active.segment-dirty { color: var(--accent); background: var(--accent-soft); }
   .filter-segment.active.segment-critical { color: var(--critical); background: var(--critical-bg); }
-  .filter-segment.active.segment-warning { color: var(--warning); background: var(--warning-bg); }
+  .filter-segment.active.segment-warning { color: oklch(0.78 0.16 85); background: oklch(0.85 0.14 85 / 0.18); }
   .filter-segment.active.segment-problems { color: var(--accent); background: var(--accent-soft); }
 
   .cell-edit {
@@ -435,8 +435,21 @@
   }
   .cell-edit:hover { border-color: var(--border); background: var(--surface-2); }
   .cell-edit:focus { border-color: var(--accent); background: var(--surface); box-shadow: 0 0 0 2px var(--accent-soft); }
-  .cell-dirty { position: relative; }
-  .cell-dirty .cell-edit { border-color: var(--warning) !important; background: oklch(0.85 0.08 80 / 0.1) !important; padding-right: 28px; }
+
+  /* Cell Unsaved Edit (Dirty) — distinct Blue/Accent style with high-contrast text */
+  .cell-dirty {
+    position: relative;
+    background: var(--accent-soft) !important;
+    border-left: 3px solid var(--accent) !important;
+  }
+  .cell-dirty .cell-edit {
+    border-color: var(--accent) !important;
+    background: var(--surface) !important;
+    color: var(--ink) !important;
+    font-weight: 600;
+    padding-right: 28px;
+    box-shadow: 0 0 0 2px var(--accent-soft);
+  }
   .cell-revert {
     position: absolute; top: 6px; right: 6px; width: 20px; height: 20px;
     display: flex; align-items: center; justify-content: center;
@@ -445,6 +458,20 @@
     opacity: 0; transition: opacity .12s;
   }
   td:hover .cell-revert { opacity: 1; }
+
+  /* Unsaved edits sticky banner / save button highlight */
+  .save-bar-sticky {
+    position: sticky; top: 0; z-index: 20;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 18px; margin-bottom: 12px;
+    background: oklch(0.22 0.06 80); border: 1px solid oklch(0.78 0.19 80 / 0.6);
+    border-radius: var(--radius-md); box-shadow: 0 4px 16px oklch(0 0 0 / 0.3);
+    animation: slideDown .2s ease-out;
+  }
+  [data-theme="light"] .save-bar-sticky {
+    background: oklch(0.96 0.06 85); border-color: oklch(0.70 0.18 80);
+  }
+  @keyframes slideDown { from { transform: translateY(-10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
   .filter-bar {
     display: flex;
@@ -868,11 +895,18 @@
       <div class="card" style="margin-bottom:16px">
         <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center">
           <button class="btn btn-primary" id="loadMatrixBtn" onclick="loadEditor()">Load Matrix</button>
+          <button class="btn btn-secondary" onclick="openAddKeyModal()"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg> Add Term</button>
           <button class="btn btn-secondary" onclick="openAiConfig()"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="14" x="4" y="6" rx="2"/><path d="M12 6V2"/><path d="M9 14h6"/><path d="M12 17v-3"/></svg> AI Batch Translate</button>
           <button class="btn btn-secondary" id="exportExcelBtn" onclick="exportExcel()" disabled title="Export the loaded matrix to Excel"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg> Export Excel</button>
           <button class="btn btn-secondary" id="importExcelBtn" onclick="document.getElementById('importExcelInput').click()" disabled title="Import translations from an Excel file"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></svg> Import Excel</button>
           <input type="file" id="importExcelInput" accept=".xlsx" style="display:none" onchange="importExcel(this.files[0])">
           <button class="btn btn-secondary" onclick="configureDefaultLang()" title="Set default base language">⚙ Default Lang</button>
+
+          <!-- High-visibility Save button directly in header toolbar when edits exist -->
+          <button class="btn btn-warning" id="topSaveBtn" onclick="saveEditor()" style="display:none;margin-left:auto;background:oklch(0.78 0.19 80);color:#000;font-weight:700;box-shadow:0 0 12px oklch(0.78 0.19 80 / 0.5)">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8"/><path d="M7 3v5h8"/></svg>
+            Save <span id="topSaveCount">0</span> Changes
+          </button>
         </div>
       </div>
 
@@ -981,6 +1015,27 @@
       </div>
       <div id="aiProgress" style="display:none;font-size:13px;color:var(--ink-2);text-align:center;padding:8px">
         <span class="progress-ring"></span> Translating missing keys...
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Key Modal -->
+<div class="modal" id="addKeyModal" role="dialog" aria-modal="true" aria-label="Add New Term">
+  <div class="modal-panel-lg" style="max-width:480px">
+    <h3 style="margin-bottom:16px;font-size:17px;font-weight:600">＋ Add New Translation Term</h3>
+    <div style="display:grid;gap:14px">
+      <div>
+        <label style="font-size:12px;color:var(--ink-2);display:block;margin-bottom:4px">Key Name (e.g. SaveButtonText)</label>
+        <input class="input-field" id="newKeyName" placeholder="KeyName" style="font-family:var(--mono)" autofocus>
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--ink-2);display:block;margin-bottom:4px">Base Value (Default Language)</label>
+        <input class="input-field" id="newKeyValue" placeholder="Text value in base language..." style="font-family:var(--font)">
+      </div>
+      <div style="display:flex;gap:10px;margin-top:8px">
+        <button class="btn btn-primary" onclick="addNewKeySubmit()">＋ Add Term</button>
+        <button class="btn btn-secondary" onclick="closeAddKeyModal()">Cancel</button>
       </div>
     </div>
   </div>
@@ -1735,13 +1790,30 @@ function updateSelectOptions(files) {
   const selHeader = document.getElementById('headerResxSelect');
   const sepHeader = document.getElementById('headerSep');
 
-  selLint.innerHTML = '<option value="">\u2014 select .resx \u2014</option>';
-  selEditor.innerHTML = '<option value="">\u2014 select .resx \u2014</option>';
-  if (selHeader) selHeader.innerHTML = '<option value="">\u2014 select .resx \u2014</option>';
+  selLint.innerHTML = '<option value="">— select .resx —</option>';
+  selEditor.innerHTML = '<option value="">— select .resx —</option>';
+  if (selHeader) selHeader.innerHTML = '<option value="">— select .resx —</option>';
 
-  files.forEach(f => {
-    const label = `${f.projectName} \u203A ${f.baseName}.resx (${(f.languages || []).length} languages)`;
-    const headerLabel = `${f.baseName}.resx (${(f.languages || []).length} langs)`;
+  // Deduplicate files by resxFile path
+  const uniqueFiles = [];
+  const seenPaths = new Set();
+  (files || []).forEach(f => {
+    if (f.resxFile && !seenPaths.has(f.resxFile)) {
+      seenPaths.add(f.resxFile);
+      uniqueFiles.push(f);
+    }
+  });
+
+  uniqueFiles.forEach(f => {
+    // If relativeFolder is empty or '.', extract the parent folder name from resxFile
+    let folder = f.relativeFolder || '';
+    if (!folder && f.resxFile) {
+      const parts = f.resxFile.replace(/\\/g, '/').split('/');
+      if (parts.length >= 2) folder = parts[parts.length - 2];
+    }
+    const folderPrefix = folder ? `${folder}/` : '';
+    const label = `${f.projectName} › ${folderPrefix}${f.baseName}.resx (${(f.languages || []).length} languages)`;
+    const headerLabel = `${folderPrefix}${f.baseName}.resx (${(f.languages || []).length} langs)`;
 
     const opt1 = document.createElement('option');
     opt1.value = f.resxFile;
@@ -1761,7 +1833,7 @@ function updateSelectOptions(files) {
     }
   });
 
-  if (selHeader && files.length > 0) {
+  if (selHeader && uniqueFiles.length > 0) {
     selHeader.style.display = '';
     if (sepHeader) sepHeader.style.display = '';
     if (currentActiveResxFile) selHeader.value = currentActiveResxFile;
@@ -2195,15 +2267,15 @@ function toggleIssueGroup(bodyId, headerEl) {
   headerEl.setAttribute('aria-expanded', isOpen);
 }
 
-function openIssueInTranslate(filterMode, key) {
-  // Switch to editor view
+async function openIssueInTranslate(filterMode, key) {
   switchView('editor');
 
-  // Wait a frame for the view to be visible, then apply the search + filter
+  if (!editorData) {
+    await loadEditor();
+  }
+
   requestAnimationFrame(() => {
-    // Set filter mode
     setFilterMode(filterMode);
-    // Set the search to the key name so the row is visible and highlighted
     const searchTop = document.getElementById('editorSearch');
     if (searchTop) {
       searchTop.value = key;
@@ -2534,18 +2606,16 @@ function renderVisibleEditorRows() {
       const originalVal = tv.value || '';
       const pending = dirtyCells[l]?.[k.name];
       const val = pending !== undefined ? pending : originalVal;
-      const isEditable = l !== 'base';
-      const dataAttrs = `data-key="${k.name}" data-lang="${l}" data-original="${encodeURIComponent(originalVal)}"`;
+      const isEditable = true; // All columns including base are editable!
+      const encodedOrig = encodeURIComponent(originalVal);
       if (isEditable) {
         const isDirty = pending !== undefined;
         html += `<td class="${cls}${isDirty ? ' cell-dirty' : ''}">`;
-        html += `<textarea class="cell-edit" ${dataAttrs} onchange="markDirty(this)" rows="1">${escHtml(val)}</textarea>`;
+        html += `<textarea class="cell-edit" data-key="${escHtml(k.name)}" data-lang="${escHtml(l)}" data-original="${encodedOrig}" oninput="markDirty(this)" onchange="markDirty(this)" rows="1">${escHtml(val)}</textarea>`;
         if (isDirty) {
           html += `<button class="cell-revert" onclick="revertCell('${k.name}','${l}')" title="Revert to original">${icon('x')}</button>`;
         }
         html += `</td>`;
-      } else {
-        html += `<td class="${cls}" style="opacity:0.7;font-size:12px">${escHtml(val) || '—'}</td>`;
       }
     });
     html += '</tr>';
@@ -2583,15 +2653,53 @@ function markDirty(el) {
   const lang = el.dataset.lang;
   const orig = decodeURIComponent(el.dataset.original);
   const val = el.value;
+  const td = el.closest('td');
+
   if (!dirtyCells[lang]) dirtyCells[lang] = {};
   if (val === orig) {
     delete dirtyCells[lang][key];
     if (Object.keys(dirtyCells[lang]).length === 0) delete dirtyCells[lang];
+    if (td) td.classList.remove('cell-dirty');
   } else {
     dirtyCells[lang][key] = val;
+    if (td) td.classList.add('cell-dirty');
   }
+
+  updateDirtyUI();
+}
+
+function updateDirtyUI() {
+  const totalEdits = Object.values(dirtyCells).reduce((acc, obj) => acc + Object.keys(obj).length, 0);
+
+  // Top prominent Save button
+  const topSaveBtn = document.getElementById('topSaveBtn');
+  const topSaveCount = document.getElementById('topSaveCount');
+  if (topSaveBtn && topSaveCount) {
+    if (totalEdits > 0) {
+      topSaveBtn.style.display = 'inline-flex';
+      topSaveCount.textContent = totalEdits;
+    } else {
+      topSaveBtn.style.display = 'none';
+    }
+  }
+
+  // Update status bar
   const status = document.getElementById('editorSaveStatus');
-  if (status) status.innerHTML = 'Edits stay in your browser until you click <strong>Save Changes</strong> — nothing is written to disk before that.';
+  if (status) {
+    if (totalEdits > 0) {
+      status.innerHTML = `<strong style="color:oklch(0.78 0.19 80);font-size:13px">⚠️ ${totalEdits} unsaved edit(s) pending.</strong> Click <strong>Save Changes</strong> to write to disk.`;
+    } else {
+      status.innerHTML = 'Edits stay in your browser until you click <strong>Save Changes</strong> — nothing is written to disk before that.';
+    }
+  }
+
+  // Refresh counts in toolbar
+  const dirtyCountEl = document.querySelector('.chip-count[data-count="dirty"]');
+  if (dirtyCountEl) {
+    const dirtyKeySet = new Set();
+    Object.values(dirtyCells).forEach(dict => Object.keys(dict).forEach(k => dirtyKeySet.add(k)));
+    dirtyCountEl.textContent = dirtyKeySet.size;
+  }
 }
 
 function revertCell(key, lang) {
@@ -2599,6 +2707,7 @@ function revertCell(key, lang) {
     delete dirtyCells[lang][key];
     if (Object.keys(dirtyCells[lang]).length === 0) delete dirtyCells[lang];
   }
+  updateDirtyUI();
   renderEditor();
 }
 
@@ -2659,6 +2768,7 @@ async function saveEditor() {
   }
 
   dirtyCells = {};
+  updateDirtyUI();
   saveBtn.innerHTML = origText;
   saveBtn.disabled = false;
   playSfx('done');
@@ -2666,6 +2776,58 @@ async function saveEditor() {
   const status = document.getElementById('editorSaveStatus');
   if (status) status.innerHTML = `${icon('check')} Saved ${saved} translation(s) to disk at ${new Date().toLocaleTimeString()}.`;
   await loadEditor();
+}
+
+// ====== ADD TERM MODAL ======
+function openAddKeyModal() {
+  if (!editorData) return showToast('Load a .resx file first', true);
+  document.getElementById('newKeyName').value = '';
+  document.getElementById('newKeyValue').value = '';
+  document.getElementById('addKeyModal').classList.add('open');
+  document.getElementById('newKeyName').focus();
+}
+
+function closeAddKeyModal() {
+  document.getElementById('addKeyModal').classList.remove('open');
+}
+
+async function addNewKeySubmit() {
+  const nameInput = document.getElementById('newKeyName');
+  const valInput = document.getElementById('newKeyValue');
+  const key = nameInput.value.trim();
+  const value = valInput.value.trim();
+
+  if (!key) return showToast('Key name is required', true);
+  if (!/^[a-zA-Z0-9_\.] visually+$/.test(key) && !/^[a-zA-Z0-9_\.]+$/.test(key)) {
+    // Valid key check
+  }
+  if (editorKeys.some(k => k.name.toLowerCase() === key.toLowerCase())) {
+    return showToast(`Key '${key}' already exists`, true);
+  }
+
+  const resxFile = currentActiveResxFile || document.getElementById('editorResxSelect')?.value || '';
+  if (!resxFile) return showToast('No .resx file selected', true);
+
+  try {
+    // Save to base .resx
+    await api('/api/translate/save', {
+      method: 'POST',
+      body: JSON.stringify({ resxFile, language: 'base', updates: { [key]: value } })
+    });
+    closeAddKeyModal();
+    showToast(`Added new key '${key}' successfully!`);
+    playSfx('done');
+    await loadEditor();
+
+    // Scroll/search to the new key
+    const searchTop = document.getElementById('editorSearch');
+    if (searchTop) {
+      searchTop.value = key;
+      filterEditor();
+    }
+  } catch (e) {
+    showToast(`Failed to add key: ${e.message}`, true);
+  }
 }
 
 // ====== AI TRANSLATION ======

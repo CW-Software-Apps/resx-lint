@@ -68,8 +68,16 @@ if (cmdArgs.Length > 0 && cmdArgs[0] is "--check-update" or "-u")
     if (info.IsUpdateAvailable)
     {
         Console.ForegroundColor = ConsoleColor.Cyan;
-        Console.WriteLine($"Update available! Download: {info.DownloadUrl}");
+        Console.WriteLine($"Update available: {info.CurrentVersion} → {info.LatestVersion}");
         Console.ResetColor();
+        Console.WriteLine();
+        Console.WriteLine("To update, run:");
+        Console.ForegroundColor = ConsoleColor.White;
+        Console.WriteLine("  dotnet tool update --global ResxLint");
+        Console.ResetColor();
+        Console.WriteLine();
+        Console.WriteLine("Or, if you started resx-lint via the web UI, click the");
+        Console.WriteLine("version badge in the top bar and choose 'Install Update'.");
     }
     else
     {

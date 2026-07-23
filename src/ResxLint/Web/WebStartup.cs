@@ -127,12 +127,12 @@ class WebStartup
                         }
                     }
 
-                    var projName = FindProjectName(dirPath, inputDir);
-                    var relFolder = Path.GetRelativePath(inputDir, dirPath);
+                    var (projName, projDir) = FindProjectInfo(dirPath, inputDir);
+                    var relFolder = string.IsNullOrEmpty(projDir) ? "" : Path.GetRelativePath(projDir, dirPath);
 
                     results.Add(new ProjectResxInfo(
                         ProjectName: projName,
-                        RelativeFolder: relFolder == "." ? "" : relFolder,
+                        RelativeFolder: (relFolder == "." || relFolder == "") ? "" : relFolder,
                         ResxFile: baseFile,
                         BaseName: baseName,
                         Languages: [.. languages],
@@ -446,26 +446,23 @@ class WebStartup
         return start;
     }
 
-    static string FindProjectName(string dirPath, string rootDir)
+    static (string Name, string Dir) FindProjectInfo(string dirPath, string rootDir)
     {
         try
         {
             var current = new DirectoryInfo(dirPath);
-            var root = new DirectoryInfo(rootDir);
             while (current != null)
             {
                 var csproj = current.GetFiles("*.csproj").FirstOrDefault();
                 if (csproj != null)
-                    return Path.GetFileNameWithoutExtension(csproj.Name);
+                    return (Path.GetFileNameWithoutExtension(csproj.Name), current.FullName);
 
-                if (current.FullName.Equals(root.FullName, StringComparison.OrdinalIgnoreCase) || current.Parent == null)
-                    break;
-
+                if (current.Parent == null) break;
                 current = current.Parent;
             }
         }
         catch { }
-        return Path.GetFileName(dirPath);
+        return (Path.GetFileName(dirPath), dirPath);
     }
 
     static bool IsCultureCode(string code)
