@@ -2582,6 +2582,42 @@ function renderEditor() {
   });
 
   const dirtyCellTotal = Object.values(dirtyCells).reduce((a, c) => a + Object.keys(c).length, 0);
+
+function getLiveMissingCount(langCode) {
+  if (!editorKeys) return 0;
+  let count = 0;
+  for (const k of editorKeys) {
+    const pending = dirtyCells[langCode]?.[k.name];
+    if (pending !== undefined) {
+      if (!pending || pending.trim() === '') count++;
+    } else {
+      const tv = k.translations[langCode];
+      if (!tv || !tv.value || tv.value.trim() === '') count++;
+    }
+  }
+  return count;
+}
+
+function updateMissingBadges() {
+  document.querySelectorAll('[data-lang-th]').forEach(th => {
+    const langCode = th.dataset.langTh;
+    const missing = getLiveMissingCount(langCode);
+    let badge = th.querySelector('.badge-critical');
+    if (missing > 0) {
+      if (badge) {
+        badge.textContent = `${missing} missing`;
+      } else {
+        const b = document.createElement('span');
+        b.className = 'badge badge-critical';
+        b.style.cssText = 'margin-left:6px';
+        b.textContent = `${missing} missing`;
+        th.appendChild(b);
+      }
+    } else if (badge) {
+      badge.remove();
+    }
+  });
+}
   const unsavedInfo = dirtyCellTotal > 0
     ? ` · <span class="badge badge-warning" style="margin-left:4px">${icon('edit')} ${dirtyCellTotal} unsaved edit${dirtyCellTotal === 1 ? '' : 's'}</span>`
     : '';
@@ -2623,7 +2659,7 @@ function renderEditor() {
     let badge = '';
     let aiBtn = '';
     if (info) {
-      const missing = info.missingKeys || 0;
+      const missing = getLiveMissingCount(l);
       if (missing > 0) {
         badge = `<span class="badge badge-critical" style="margin-left:6px">${missing} missing</span>`;
         aiBtn = `<button class="btn btn-primary btn-sm" style="margin-left:6px;padding:2px 8px;font-size:11px" onclick="quickAiTranslateLang('${l}')" title="Translate ${l} with AI">${icon('bolt')} AI</button>`;
@@ -2631,7 +2667,7 @@ function renderEditor() {
     }
     const flag = localeToFlag(langCode);
     colHtml += `<col style="width:${langColWidth}px">`;
-    headerHtml += `<th><span class="lang-flag" title="${langCode}">${flag}</span> ${langCode}${isBase ? ' (base)' : ''}${badge}${aiBtn}</th>`;
+    headerHtml += `<th data-lang-th="${l}"><span class="lang-flag" title="${langCode}">${flag}</span> ${langCode}${isBase ? ' (base)' : ''}${badge}${aiBtn}</th>`;
   });
   colHtml += '</colgroup>';
   headerHtml += '</tr></thead>';
@@ -2762,6 +2798,7 @@ function markDirty(el) {
   }
 
   updateDirtyUI();
+  updateMissingBadges();
 }
 
 function updateDirtyUI() {
