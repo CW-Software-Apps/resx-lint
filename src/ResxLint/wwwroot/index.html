@@ -2585,6 +2585,7 @@ function renderEditor() {
 
 function getLiveMissingCount(langCode) {
   if (!editorKeys) return 0;
+  if (langCode === 'base') return 0;
   let count = 0;
   for (const k of editorKeys) {
     const pending = dirtyCells[langCode]?.[k.name];
