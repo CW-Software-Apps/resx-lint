@@ -128,8 +128,9 @@
     border: 1px solid var(--border);
     border-radius: var(--radius-md);
     padding: 4px 10px;
-    margin-left: 8px;
-    max-width: 480px;
+    min-width: 0;
+    flex: 1 1 auto;
+    max-width: 450px;
     transition: border-color .15s;
   }
   .active-project-bar:hover {
@@ -159,6 +160,7 @@
     align-items: center;
     gap: 6px;
     min-width: 0;
+    flex: 1;
   }
   .header-project-select, .header-resx-select {
     background: transparent;
@@ -168,7 +170,8 @@
     font-weight: 600;
     outline: none;
     cursor: pointer;
-    max-width: 180px;
+    min-width: 60px;
+    flex: 1;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -902,11 +905,16 @@
           <input type="file" id="importExcelInput" accept=".xlsx" style="display:none" onchange="importExcel(this.files[0])">
           <button class="btn btn-secondary" onclick="configureDefaultLang()" title="Set default base language">⚙ Default Lang</button>
 
-          <!-- High-visibility Save button directly in header toolbar when edits exist -->
-          <button class="btn btn-warning" id="topSaveBtn" onclick="saveEditor()" style="display:none;margin-left:auto;background:oklch(0.78 0.19 80);color:#000;font-weight:700;box-shadow:0 0 12px oklch(0.78 0.19 80 / 0.5)">
-            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8"/><path d="M7 3v5h8"/></svg>
-            Save <span id="topSaveCount">0</span> Changes
-          </button>
+          <!-- High-visibility Save & Discard buttons directly in header toolbar when edits exist -->
+          <div id="topPendingActions" style="display:none;margin-left:auto;align-items:center;gap:8px">
+            <button class="btn btn-secondary btn-sm" onclick="confirmDiscard()" style="border-color:var(--border)">
+              Discard Changes
+            </button>
+            <button class="btn btn-primary btn-sm" id="topSaveBtn" onclick="saveEditor()" style="font-weight:700">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8"/><path d="M7 3v5h8"/></svg>
+              Save <span id="topSaveCount">0</span> Changes
+            </button>
+          </div>
         </div>
       </div>
 
@@ -1805,30 +1813,36 @@ function updateSelectOptions(files) {
   });
 
   uniqueFiles.forEach(f => {
-    // If relativeFolder is empty or '.', extract the parent folder name from resxFile
-    let folder = f.relativeFolder || '';
-    if (!folder && f.resxFile) {
+    // Build a clean, concise display name for the resx file option
+    let subfolder = f.relativeFolder || '';
+    if (!subfolder && f.resxFile) {
       const parts = f.resxFile.replace(/\\/g, '/').split('/');
-      if (parts.length >= 2) folder = parts[parts.length - 2];
+      if (parts.length >= 2) subfolder = parts[parts.length - 2];
     }
-    const folderPrefix = folder ? `${folder}/` : '';
-    const label = `${f.projectName} › ${folderPrefix}${f.baseName}.resx (${(f.languages || []).length} languages)`;
-    const headerLabel = `${folderPrefix}${f.baseName}.resx (${(f.languages || []).length} langs)`;
+    // Clean up duplicated names in subfolder path (e.g. "Resources/Localization" -> "Resources")
+    const folderName = subfolder.replace(new RegExp(`[/\\\\]?${f.baseName}$`, 'i'), '');
+    const pathLabel = folderName ? `${folderName}/${f.baseName}.resx` : `${f.baseName}.resx`;
+    
+    const label = `${f.projectName} › ${pathLabel} (${(f.languages || []).length} langs)`;
+    const headerLabel = `${pathLabel} (${(f.languages || []).length} langs)`;
 
     const opt1 = document.createElement('option');
     opt1.value = f.resxFile;
     opt1.textContent = label;
+    opt1.title = f.resxFile;
     selLint.appendChild(opt1);
 
     const opt2 = document.createElement('option');
     opt2.value = f.resxFile;
     opt2.textContent = label;
+    opt2.title = f.resxFile;
     selEditor.appendChild(opt2);
 
     if (selHeader) {
       const opt3 = document.createElement('option');
       opt3.value = f.resxFile;
       opt3.textContent = headerLabel;
+      opt3.title = f.resxFile;
       selHeader.appendChild(opt3);
     }
   });
@@ -2671,15 +2685,15 @@ function markDirty(el) {
 function updateDirtyUI() {
   const totalEdits = Object.values(dirtyCells).reduce((acc, obj) => acc + Object.keys(obj).length, 0);
 
-  // Top prominent Save button
-  const topSaveBtn = document.getElementById('topSaveBtn');
+  // Top pending actions wrapper (Save + Discard)
+  const topPending = document.getElementById('topPendingActions');
   const topSaveCount = document.getElementById('topSaveCount');
-  if (topSaveBtn && topSaveCount) {
+  if (topPending && topSaveCount) {
     if (totalEdits > 0) {
-      topSaveBtn.style.display = 'inline-flex';
+      topPending.style.display = 'inline-flex';
       topSaveCount.textContent = totalEdits;
     } else {
-      topSaveBtn.style.display = 'none';
+      topPending.style.display = 'none';
     }
   }
 
