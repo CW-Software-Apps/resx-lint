@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -13,7 +13,7 @@
 
     <!-- NuGet package metadata -->
     <PackageId>ResxLint</PackageId>
-    <Version>2.4.39</Version>
+    <Version>2.4.40</Version>
     <Authors>CW-Software-Apps</Authors>
     <Description>Validates .resx translation keys against XAML and C# usage. Auto-fixes duplicates, missing Designer.cs properties, and orphaned language keys. Includes Web UI dashboard and visual translation editor.</Description>
     <PackageTags>resx;localization;maui;dotnet;lint;i18n;translation;editor</PackageTags>
