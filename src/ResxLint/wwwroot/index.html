@@ -2575,9 +2575,24 @@ function renderEditor() {
 
   const filteredKeys = searchedKeys.filter(k => {
     if (currentFilterMode === 'dirty') return dirtyKeySet.has(k.name);
-    if (currentFilterMode === 'missing') return Object.values(k.translations).some(t => t.status === 'missing');
+    if (currentFilterMode === 'missing') {
+      for (const l of editorLanguages) {
+        const pending = dirtyCells[l.code]?.[k.name];
+        if (pending !== undefined) { if (!pending || pending.trim() === '') return true; }
+        else { const tv = k.translations[l.code]; if (!tv || !tv.value || tv.value.trim() === '') return true; }
+      }
+      return false;
+    }
     if (currentFilterMode === 'placeholder') return Object.values(k.translations).some(t => t.status === 'placeholder');
-    if (currentFilterMode === 'problems') return Object.values(k.translations).some(t => t.status === 'missing' || t.status === 'placeholder');
+    if (currentFilterMode === 'problems') {
+      for (const l of editorLanguages) {
+        const pending = dirtyCells[l.code]?.[k.name];
+        if (pending !== undefined) { if (!pending || pending.trim() === '') return true; }
+        else { const tv = k.translations[l.code]; if (!tv || !tv.value || tv.value.trim() === '') return true; }
+      }
+      if (Object.values(k.translations).some(t => t.status === 'placeholder')) return true;
+      return false;
+    }
     return true; // 'all'
   });
 
@@ -2666,6 +2681,36 @@ function getLiveMissingCount(langCode) {
     }
   }
   return count;
+}
+
+function updateFilterCounts() {
+  if (!editorKeys || !editorLanguages) return;
+  const dirtyKeySet = new Set();
+  Object.values(dirtyCells).forEach(dict => Object.keys(dict).forEach(k => dirtyKeySet.add(k)));
+  let missing = 0, placeholder = 0, problems = 0;
+  for (const k of editorKeys) {
+    let hasMissing = false, hasPlaceholder = false;
+    for (const l of editorLanguages) {
+      const code = l.code;
+      const pending = dirtyCells[code]?.[k.name];
+      if (pending !== undefined) {
+        if (!pending || pending.trim() === '') { hasMissing = true; continue; }
+      } else {
+        const tv = k.translations[code];
+        if (!tv || !tv.value || tv.value.trim() === '') { hasMissing = true; continue; }
+      }
+      const tv = k.translations[code];
+      if (tv && tv.status === 'placeholder') hasPlaceholder = true;
+    }
+    if (hasMissing) missing++;
+    if (hasPlaceholder) placeholder++;
+    if (hasMissing || hasPlaceholder) problems++;
+  }
+  const map = { all: editorKeys.length, dirty: dirtyKeySet.size, missing, placeholder, problems };
+  document.querySelectorAll('.chip-count').forEach(el => {
+    const key = el.dataset.count;
+    if (key in map) el.textContent = map[key];
+  });
 }
 
 function updateMissingBadges() {
@@ -2799,7 +2844,9 @@ function markDirty(el) {
   }
 
   updateDirtyUI();
+  updateFilterCounts();
   updateMissingBadges();
+  if (currentFilterMode !== 'all') renderEditor();
 }
 
 function updateDirtyUI() {
