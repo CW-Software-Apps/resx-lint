@@ -77,45 +77,38 @@
     display: grid;
     grid-template-rows: 60px 1fr;
     height: 100vh;
-  }
-
   header {
     background: var(--surface);
     border-bottom: 1px solid var(--border);
     display: flex;
     align-items: center;
-    padding: 0 24px;
-    gap: 16px;
+    padding: 8px 16px;
+    gap: 10px;
     z-index: 10;
+    flex-wrap: wrap;
   }
 
-  .logo {
-    width: 36px; height: 36px;
-    border-radius: var(--radius-md);
-    background: oklch(0.65 0.19 210);
+  .logo-title-wrap {
     display: flex;
     align-items: center;
-    justify-content: center;
-    font-weight: 700;
-    font-size: 15px;
-    color: #fff;
+    gap: 8px;
     flex-shrink: 0;
-    box-shadow: 0 4px 12px oklch(0.65 0.19 210 / 0.3);
   }
 
   .nav-btn {
     background: none;
     border: none;
     color: var(--ink-2);
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 500;
-    padding: 8px 16px;
+    padding: 6px 12px;
     border-radius: var(--radius-sm);
     cursor: pointer;
     transition: all .15s;
     display: flex;
     align-items: center;
     gap: 6px;
+    white-space: nowrap;
   }
   .nav-btn:hover { color: var(--ink); background: var(--surface-2); }
   .nav-btn.active { color: #fff; background: var(--accent); font-weight: 600; }
@@ -123,15 +116,19 @@
   .active-project-bar {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     background: var(--surface-2);
     border: 1px solid var(--border);
     border-radius: var(--radius-md);
-    padding: 4px 10px;
-    min-width: 0;
+    padding: 4px 8px;
+    min-width: 140px;
     flex: 1 1 auto;
-    max-width: 450px;
+    max-width: 380px;
     transition: border-color .15s;
+  }
+  @media (max-width: 768px) {
+    .active-project-bar { max-width: 100%; order: 3; flex-basis: 100%; }
+    .kbd-hint { display: none; }
   }
   .active-project-bar:hover {
     border-color: var(--accent);
@@ -418,6 +415,7 @@
   .filter-segment.active.segment-dirty { color: var(--accent); background: var(--accent-soft); }
   .filter-segment.active.segment-critical { color: var(--critical); background: var(--critical-bg); }
   .filter-segment.active.segment-warning { color: oklch(0.78 0.16 85); background: oklch(0.85 0.14 85 / 0.18); }
+  .filter-segment.active.segment-identical { color: oklch(0.65 0.08 220); background: oklch(0.65 0.08 220 / 0.15); }
   .filter-segment.active.segment-problems { color: var(--accent); background: var(--accent-soft); }
 
   .cell-edit {
@@ -757,9 +755,11 @@
 <body>
 <div class="app-layout">
   <header>
-    <div class="logo">RL</div>
-    <span style="font-weight:700;font-size:16px;letter-spacing:-0.02em">resx-lint</span>
-    <span class="version-badge" id="versionBadge" style="cursor:pointer" onclick="checkUpdate()" title="Check for updates">v—</span>
+    <div class="logo-title-wrap">
+      <div class="logo">RL</div>
+      <span style="font-weight:700;font-size:16px;letter-spacing:-0.02em">resx-lint</span>
+      <span class="version-badge" id="versionBadge" style="cursor:pointer" onclick="checkUpdate()" title="Check for updates">v—</span>
+    </div>
     
     <div class="active-project-bar" id="activeProjectBar" title="Active Project & Resx File">
       <div class="active-project-icon" id="headerProjectIcon">
@@ -927,7 +927,7 @@
             <button class="filter-segment segment-problems" data-filter="problems" onclick="setFilterMode('problems')" title="Keys with any issue: Missing, Placeholder or Same as Base"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg> Any Issue <span class="chip-count" data-count="problems">0</span></button>
             <button class="filter-segment segment-critical" data-filter="missing" onclick="setFilterMode('missing')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg> Missing <span class="chip-count" data-count="missing">0</span></button>
             <button class="filter-segment segment-warning" data-filter="placeholder" onclick="setFilterMode('placeholder')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg> Placeholders <span class="chip-count" data-count="placeholder">0</span></button>
-            <button class="filter-segment segment-warning" data-filter="identical" onclick="setFilterMode('identical')" title="≥1 language has the same value as the base — possibly not translated yet"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> = Base <span class="chip-count" data-count="identical">0</span></button>
+            <button class="filter-segment segment-identical" data-filter="identical" onclick="setFilterMode('identical')" title="≥1 language has the same value as the base — possibly not translated yet"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> = Base <span class="chip-count" data-count="identical">0</span></button>
           </div>
           <span style="color:var(--ink-2);font-size:13px;margin-left:auto" id="editorCount"></span>
         </div>
@@ -2611,22 +2611,23 @@ function renderVisibleEditorRows() {
     html += `<tr><td class="key-col" style="font-family:var(--mono);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${k.name}">${k.name}</td>`;
     langs.forEach(l => {
       const tv = k.translations[l];
-      if (!tv) { html += `<td class="cell-missing"></td>`; return; }
-      const cls = `cell-${tv.status}`;
-      const originalVal = tv.value || '';
+      const originalVal = tv ? (tv.value || '') : '';
       const pending = dirtyCells[l]?.[k.name];
       const val = pending !== undefined ? pending : originalVal;
-      const isEditable = true; // All columns including base are editable!
+      const isEditable = true;
       const encodedOrig = encodeURIComponent(originalVal);
-      if (isEditable) {
-        const isDirty = pending !== undefined;
-        html += `<td class="${cls}${isDirty ? ' cell-dirty' : ''}">`;
-        html += `<textarea class="cell-edit" data-key="${escHtml(k.name)}" data-lang="${escHtml(l)}" data-original="${encodedOrig}" oninput="markDirty(this)" onchange="markDirty(this)" rows="1">${escHtml(val)}</textarea>`;
-        if (isDirty) {
-          html += `<button class="cell-revert" onclick="revertCell('${k.name}','${l}')" title="Revert to original">${icon('x')}</button>`;
-        }
-        html += `</td>`;
+
+      // Determine cell status dynamically — if text is empty/whitespace, it's MISSING (red)!
+      const isMissing = !val || val.trim() === '';
+      const isDirty = pending !== undefined;
+      const baseCls = isMissing ? 'cell-missing' : (tv ? `cell-${tv.status}` : 'cell-missing');
+
+      html += `<td class="${baseCls}${isDirty ? ' cell-dirty' : ''}">`;
+      html += `<textarea class="cell-edit" data-key="${escHtml(k.name)}" data-lang="${escHtml(l)}" data-original="${encodedOrig}" oninput="markDirty(this)" onchange="markDirty(this)" rows="1" placeholder="[Missing translation]">${escHtml(val)}</textarea>`;
+      if (isDirty) {
+        html += `<button class="cell-revert" onclick="revertCell('${k.name}','${l}')" title="Revert to original">${icon('x')}</button>`;
       }
+      html += `</td>`;
     });
     html += '</tr>';
   }
