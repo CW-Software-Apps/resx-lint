@@ -756,36 +756,40 @@
 </head>
 <body>
 <div class="app-layout">
-  <header>
-    <div class="logo-title-wrap">
-      <div class="logo">RL</div>
-      <span style="font-weight:700;font-size:16px;letter-spacing:-0.02em">resx-lint</span>
-      <span class="version-badge" id="versionBadge" style="cursor:pointer" onclick="checkUpdate()" title="Check for updates">v—</span>
+  <header style="flex-direction:column;align-items:stretch;padding:8px 16px;gap:6px">
+    <div style="display:flex;align-items:center;justify-content:space-between;width:100%;gap:12px;flex-wrap:nowrap">
+      <div class="logo-title-wrap">
+        <div class="logo">RL</div>
+        <span style="font-weight:700;font-size:16px;letter-spacing:-0.02em">resx-lint</span>
+        <span class="version-badge" id="versionBadge" style="cursor:pointer" onclick="checkUpdate()" title="Check for updates">v—</span>
+      </div>
+      
+      <div class="tab-bar" style="display:flex;align-items:center;gap:6px">
+        <button class="nav-btn active" data-view="projects" onclick="switchView('projects')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg> Projects <span class="kbd-hint">Ctrl+1</span></button>
+        <button class="nav-btn" data-view="lint" onclick="switchView('lint')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg> Audit & Lint <span class="kbd-hint">Ctrl+2</span></button>
+        <button class="nav-btn" data-view="editor" onclick="switchView('editor')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg> Translation Matrix & AI <span class="kbd-hint">Ctrl+3</span></button>
+        <button class="nav-btn" onclick="checkUpdate()" title="Check for updates (NuGet)" aria-label="Check for updates"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 9.4 7.55 4.24"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="M3.29 7 12 12l8.71-5M12 22V12"/></svg></button>
+        <button class="nav-btn" onclick="toggleTheme()" title="Toggle Dark/Light Mode" aria-label="Toggle Dark/Light Mode"><svg class="icon" id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg></button>
+        <a class="nav-btn" href="https://github.com/CW-Software-Apps/resx-lint" target="_blank" title="Documentation & Source Code on GitHub" aria-label="Open documentation"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg></a>
+        <button class="nav-btn" id="defaultLangBtn" onclick="configureDefaultLang()" title="Set Default Base Language (Current base language reference)" aria-label="Set default base language"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></button>
+        <button class="nav-btn" id="sfxBtn" onclick="toggleSfx()" title="Toggle Sound Effects (On/Off)" aria-label="Toggle sound effects">🔊</button>
+      </div>
     </div>
-    
-    <div class="active-project-bar" id="activeProjectBar" title="Active Project & Resx File">
+
+    <!-- Line 2: Dedicated full-width active project selector -->
+    <div class="active-project-bar" id="activeProjectBar" title="Active Project & Resx File" style="width:100%;max-width:100%">
       <div class="active-project-icon" id="headerProjectIcon">
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
       </div>
-      <div class="active-project-selects">
-        <select class="header-project-select" id="headerProjectSelect" onchange="onHeaderProjectChange(this.value)">
+      <div class="active-project-selects" style="flex:1;display:flex;align-items:center;gap:6px">
+        <select class="header-project-select" id="headerProjectSelect" onchange="onHeaderProjectChange(this.value)" style="flex:1">
           <option value="">— Select project —</option>
         </select>
         <span class="active-project-sep" id="headerSep" style="display:none;color:var(--ink-2);font-size:12px">›</span>
-        <select class="header-resx-select" id="headerResxSelect" onchange="onHeaderResxChange(this.value)" style="display:none">
+        <select class="header-resx-select" id="headerResxSelect" onchange="onHeaderResxChange(this.value)" style="display:none;flex:1.5">
           <option value="">— Select .resx —</option>
         </select>
       </div>
-    </div>
-    <div class="tab-bar">
-      <button class="nav-btn active" data-view="projects" onclick="switchView('projects')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg> Projects <span class="kbd-hint">Ctrl+1</span></button>
-      <button class="nav-btn" data-view="lint" onclick="switchView('lint')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg> Audit & Lint <span class="kbd-hint">Ctrl+2</span></button>
-      <button class="nav-btn" data-view="editor" onclick="switchView('editor')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg> Translation Matrix & AI <span class="kbd-hint">Ctrl+3</span></button>
-      <button class="nav-btn" onclick="checkUpdate()" title="Check for updates (NuGet)" aria-label="Check for updates"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 9.4 7.55 4.24"/><path d="M21 16V8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><path d="M3.29 7 12 12l8.71-5M12 22V12"/></svg></button>
-      <button class="nav-btn" onclick="toggleTheme()" title="Toggle Dark/Light Mode" aria-label="Toggle Dark/Light Mode"><svg class="icon" id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg></button>
-      <a class="nav-btn" href="https://github.com/CW-Software-Apps/resx-lint" target="_blank" title="Documentation & Source Code on GitHub" aria-label="Open documentation"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg></a>
-      <button class="nav-btn" id="defaultLangBtn" onclick="configureDefaultLang()" title="Set Default Base Language (Current base language reference)" aria-label="Set default base language"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></button>
-      <button class="nav-btn" id="sfxBtn" onclick="toggleSfx()" title="Toggle Sound Effects (On/Off)" aria-label="Toggle sound effects">🔊</button>
     </div>
   </header>
 
