@@ -756,40 +756,22 @@
 </head>
 <body>
 <div class="app-layout">
-  <header style="flex-direction:column;align-items:stretch;padding:8px 16px;gap:6px">
-    <div style="display:flex;align-items:center;justify-content:space-between;width:100%;gap:12px;flex-wrap:nowrap">
-      <div class="logo-title-wrap">
-        <div class="logo">RL</div>
-        <span style="font-weight:700;font-size:16px;letter-spacing:-0.02em">resx-lint</span>
-        <span class="version-badge" id="versionBadge" style="cursor:pointer" onclick="checkUpdate()" title="Check for updates">v—</span>
-      </div>
-      
-      <div class="tab-bar" style="display:flex;align-items:center;gap:6px">
-        <button class="nav-btn active" data-view="projects" onclick="switchView('projects')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg> Projects <span class="kbd-hint">Ctrl+1</span></button>
-        <button class="nav-btn" data-view="lint" onclick="switchView('lint')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg> Audit & Lint <span class="kbd-hint">Ctrl+2</span></button>
-        <button class="nav-btn" data-view="editor" onclick="switchView('editor')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg> Translation Matrix & AI <span class="kbd-hint">Ctrl+3</span></button>
-        <button class="nav-btn" onclick="checkUpdate()" title="Check for updates (NuGet)" aria-label="Check for updates"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 9.4 7.55 4.24"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="M3.29 7 12 12l8.71-5M12 22V12"/></svg></button>
-        <button class="nav-btn" onclick="toggleTheme()" title="Toggle Dark/Light Mode" aria-label="Toggle Dark/Light Mode"><svg class="icon" id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg></button>
-        <a class="nav-btn" href="https://github.com/CW-Software-Apps/resx-lint" target="_blank" title="Documentation & Source Code on GitHub" aria-label="Open documentation"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg></a>
-        <button class="nav-btn" id="defaultLangBtn" onclick="configureDefaultLang()" title="Set Default Base Language (Current base language reference)" aria-label="Set default base language"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></button>
-        <button class="nav-btn" id="sfxBtn" onclick="toggleSfx()" title="Toggle Sound Effects (On/Off)" aria-label="Toggle sound effects">🔊</button>
-      </div>
+  <header>
+    <div class="logo-title-wrap">
+      <div class="logo">RL</div>
+      <span style="font-weight:700;font-size:16px;letter-spacing:-0.02em">resx-lint</span>
+      <span class="version-badge" id="versionBadge" style="cursor:pointer" onclick="checkUpdate()" title="Check for updates">v—</span>
     </div>
-
-    <!-- Line 2: Dedicated full-width active project selector -->
-    <div class="active-project-bar" id="activeProjectBar" title="Active Project & Resx File" style="width:100%;max-width:100%">
-      <div class="active-project-icon" id="headerProjectIcon">
-        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
-      </div>
-      <div class="active-project-selects" style="flex:1;display:flex;align-items:center;gap:6px">
-        <select class="header-project-select" id="headerProjectSelect" onchange="onHeaderProjectChange(this.value)" style="flex:1">
-          <option value="">— Select project —</option>
-        </select>
-        <span class="active-project-sep" id="headerSep" style="display:none;color:var(--ink-2);font-size:12px">›</span>
-        <select class="header-resx-select" id="headerResxSelect" onchange="onHeaderResxChange(this.value)" style="display:none;flex:1.5">
-          <option value="">— Select .resx —</option>
-        </select>
-      </div>
+    
+    <div class="tab-bar" style="display:flex;align-items:center;gap:6px;margin-left:auto">
+      <button class="nav-btn active" data-view="projects" onclick="switchView('projects')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg> Projects <span class="kbd-hint">Ctrl+1</span></button>
+      <button class="nav-btn" data-view="lint" onclick="switchView('lint')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg> Audit & Lint <span class="kbd-hint">Ctrl+2</span></button>
+      <button class="nav-btn" data-view="editor" onclick="switchView('editor')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1-4-10z"/></svg> Translation Matrix & AI <span class="kbd-hint">Ctrl+3</span></button>
+      <button class="nav-btn" onclick="checkUpdate()" title="Check for updates (NuGet)" aria-label="Check for updates"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 9.4 7.55 4.24"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="M3.29 7 12 12l8.71-5M12 22V12"/></svg></button>
+      <button class="nav-btn" onclick="toggleTheme()" title="Toggle Dark/Light Mode" aria-label="Toggle Dark/Light Mode"><svg class="icon" id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg></button>
+      <a class="nav-btn" href="https://github.com/CW-Software-Apps/resx-lint" target="_blank" title="Documentation & Source Code on GitHub" aria-label="Open documentation"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg></a>
+      <button class="nav-btn" id="defaultLangBtn" onclick="configureDefaultLang()" title="Set Default Base Language (Current base language reference)" aria-label="Set default base language"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></button>
+      <button class="nav-btn" id="sfxBtn" onclick="toggleSfx()" title="Toggle Sound Effects (On/Off)" aria-label="Toggle sound effects">🔊</button>
     </div>
   </header>
 
@@ -838,12 +820,23 @@
 
     <!-- ====== LINT DASHBOARD VIEW ====== -->
     <div id="view-lint" style="display:none">
-      <!-- Hidden fields — selection is controlled by the header project bar -->
       <input type="hidden" id="projectDir">
-      <select id="resxFileSelect" style="display:none"><option value="">— select .resx —</option></select>
       <div class="card" style="margin-bottom:20px;padding:12px 18px">
-        <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center">
-          <span id="lintResxInfo" style="flex:1;font-size:13px;color:var(--ink-2)">Select a project in the header to start an audit.</span>
+        <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center">
+          <div class="active-project-bar" style="flex:1;min-width:300px">
+            <div class="active-project-icon" id="lintProjectIcon">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+            </div>
+            <div style="flex:1;display:flex;align-items:center;gap:6px">
+              <select class="header-project-select" id="headerProjectSelect" onchange="onHeaderProjectChange(this.value)" style="flex:1">
+                <option value="">— Select project —</option>
+              </select>
+              <span class="active-project-sep" id="headerSep" style="display:none;color:var(--ink-2);font-size:12px">›</span>
+              <select class="header-resx-select" id="resxFileSelect" onchange="onHeaderResxChange(this.value)" style="display:none;flex:1.5">
+                <option value="">— Select .resx —</option>
+              </select>
+            </div>
+          </div>
           <button class="btn btn-secondary btn-sm" onclick="scanProject()" title="Re-scan project directory for .resx files"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M21 21v-5h-5"/></svg> Re-scan</button>
           <button class="btn btn-primary" onclick="runLint()" id="runLintBtn"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg> Run Audit</button>
         </div>
@@ -899,11 +892,25 @@
 
     <!-- ====== TRANSLATION EDITOR VIEW ====== -->
     <div id="view-editor" style="display:none">
-      <!-- Hidden select — selection is controlled by the header project bar -->
-      <select id="editorResxSelect" style="display:none"><option value="">— select a .resx file —</option></select>
       <div class="card" style="margin-bottom:16px">
-        <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center">
+        <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-bottom:12px">
+          <div class="active-project-bar" style="flex:1;min-width:300px">
+            <div class="active-project-icon" id="editorProjectIcon">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+            </div>
+            <div style="flex:1;display:flex;align-items:center;gap:6px">
+              <select class="header-project-select" id="editorProjectSelect" onchange="onHeaderProjectChange(this.value)" style="flex:1">
+                <option value="">— Select project —</option>
+              </select>
+              <span class="active-project-sep" id="editorSep" style="display:none;color:var(--ink-2);font-size:12px">›</span>
+              <select class="header-resx-select" id="editorResxSelect" onchange="onHeaderResxChange(this.value)" style="display:none;flex:1.5">
+                <option value="">— Select .resx —</option>
+              </select>
+            </div>
+          </div>
           <button class="btn btn-primary" id="loadMatrixBtn" onclick="loadEditor()">Load Matrix</button>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center">
           <button class="btn btn-secondary" onclick="openAddKeyModal()"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg> Add Term</button>
           <button class="btn btn-secondary" onclick="openAiConfig()"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="14" x="4" y="6" rx="2"/><path d="M12 6V2"/><path d="M9 14h6"/><path d="M12 17v-3"/></svg> AI Batch Translate</button>
           <button class="btn btn-secondary" id="exportExcelBtn" onclick="exportExcel()" disabled title="Export the loaded matrix to an Excel spreadsheet (.xlsx)"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:#107c41"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/><line x1="10" y1="9" x2="10" y2="9"/></svg> Export Excel</button>
@@ -1625,56 +1632,59 @@ let currentActiveProjectDir = '';
 let currentActiveResxFile = '';
 
 function updateHeaderProjectSelector() {
-  const selProj = document.getElementById('headerProjectSelect');
-  const iconWrap = document.getElementById('headerProjectIcon');
-  if (!selProj) return;
+  const selProj1 = document.getElementById('headerProjectSelect');
+  const selProj2 = document.getElementById('editorProjectSelect');
+  const iconWrap1 = document.getElementById('lintProjectIcon');
+  const iconWrap2 = document.getElementById('editorProjectIcon');
 
   const list = getSavedProjects();
   const curVal = currentActiveProjectDir;
 
-  selProj.innerHTML = '<option value="">— Select project —</option>' + list.map(p => {
+  const optionsHtml = '<option value="">— Select project —</option>' + list.map(p => {
     const iconChar = p.icon ? '📦 ' : '📁 ';
     return `<option value="${escHtml(p.path)}">${iconChar}${escHtml(p.name)}</option>`;
   }).join('');
 
-  if (curVal && list.some(p => p.path === curVal)) {
-    selProj.value = curVal;
-    const proj = list.find(p => p.path === curVal);
-    if (proj && proj.icon) {
-      iconWrap.innerHTML = `<img src="/api/project/icon-file?file=${encodeURIComponent(proj.icon)}" alt="" onerror="this.parentElement.innerHTML='${icon('folder')}'">`;
-    } else {
-      iconWrap.innerHTML = icon('folder');
-    }
-  } else {
-    selProj.value = '';
-    iconWrap.innerHTML = icon('folder');
-    document.getElementById('headerResxSelect').style.display = 'none';
-    document.getElementById('headerSep').style.display = 'none';
-  }
+  if (selProj1) selProj1.innerHTML = optionsHtml;
+  if (selProj2) selProj2.innerHTML = optionsHtml;
+
+  const proj = list.find(p => p.path === curVal);
+  const iconHtml = (proj && proj.icon)
+    ? `<img src="/api/project/icon-file?file=${encodeURIComponent(proj.icon)}" alt="" onerror="this.parentElement.innerHTML='${icon('folder')}'">`
+    : icon('folder');
+
+  [selProj1, selProj2].forEach(sel => { if (sel) sel.value = (curVal && list.some(p => p.path === curVal)) ? curVal : ''; });
+  if (iconWrap1) iconWrap1.innerHTML = iconHtml;
+  if (iconWrap2) iconWrap2.innerHTML = iconHtml;
 }
 
 async function onHeaderProjectChange(path) {
   currentActiveProjectDir = path;
   document.getElementById('projectDir').value = path;
-  const iconWrap = document.getElementById('headerProjectIcon');
-  const selResx = document.getElementById('headerResxSelect');
-  const sep = document.getElementById('headerSep');
+  const iconWrap1 = document.getElementById('lintProjectIcon');
+  const iconWrap2 = document.getElementById('editorProjectIcon');
+  const selResx1 = document.getElementById('resxFileSelect');
+  const selResx2 = document.getElementById('editorResxSelect');
+  const sep1 = document.getElementById('headerSep');
+  const sep2 = document.getElementById('editorSep');
 
   if (!path) {
-    iconWrap.innerHTML = icon('folder');
-    selResx.style.display = 'none';
-    sep.style.display = 'none';
+    if (iconWrap1) iconWrap1.innerHTML = icon('folder');
+    if (iconWrap2) iconWrap2.innerHTML = icon('folder');
+    [selResx1, selResx2, sep1, sep2].forEach(el => { if (el) el.style.display = 'none'; });
     updateSelectOptions([]);
     return;
   }
 
   const list = getSavedProjects();
   const proj = list.find(p => p.path === path);
-  if (proj && proj.icon) {
-    iconWrap.innerHTML = `<img src="/api/project/icon-file?file=${encodeURIComponent(proj.icon)}" alt="" onerror="this.parentElement.innerHTML='${icon('folder')}'">`;
-  } else {
-    iconWrap.innerHTML = icon('folder');
-  }
+  const iconHtml = (proj && proj.icon)
+    ? `<img src="/api/project/icon-file?file=${encodeURIComponent(proj.icon)}" alt="" onerror="this.parentElement.innerHTML='${icon('folder')}'">`
+    : icon('folder');
+
+  if (iconWrap1) iconWrap1.innerHTML = iconHtml;
+  if (iconWrap2) iconWrap2.innerHTML = iconHtml;
+  updateHeaderProjectSelector();
 
   try {
     const files = await api(`/api/project/resx-files?dir=${encodeURIComponent(path)}`);
@@ -1682,13 +1692,11 @@ async function onHeaderProjectChange(path) {
     updateSelectOptions(files);
 
     if (files.length > 0) {
-      selResx.style.display = '';
-      sep.style.display = '';
+      [selResx1, selResx2, sep1, sep2].forEach(el => { if (el) el.style.display = ''; });
       const chosenResx = files[0].resxFile;
       onHeaderResxChange(chosenResx);
     } else {
-      selResx.style.display = 'none';
-      sep.style.display = 'none';
+      [selResx1, selResx2, sep1, sep2].forEach(el => { if (el) el.style.display = 'none'; });
       showToast('No .resx files found in this project', true);
     }
   } catch (e) {
@@ -1698,30 +1706,11 @@ async function onHeaderProjectChange(path) {
 
 function onHeaderResxChange(resxFile) {
   currentActiveResxFile = resxFile;
-  const selResx = document.getElementById('headerResxSelect');
-  if (selResx) selResx.value = resxFile;
-
   const selLint = document.getElementById('resxFileSelect');
   if (selLint) selLint.value = resxFile;
 
   const selEditor = document.getElementById('editorResxSelect');
   if (selEditor) selEditor.value = resxFile;
-
-  // Update audit view info label
-  const lintInfo = document.getElementById('lintResxInfo');
-  if (lintInfo) {
-    const list = getSavedProjects();
-    const proj = list.find(p => p.path === currentActiveProjectDir);
-    const projBadge = proj ? `<span class="badge badge-info" style="margin-right:6px;font-size:12px">📦 ${escHtml(proj.name)}</span>` : '';
-    if (resxFile) {
-      const fileName = resxFile.split(/[\\/]/).pop();
-      lintInfo.innerHTML = `${projBadge}${icon('file')} Ready to audit: <strong>${escHtml(fileName)}</strong>`;
-      lintInfo.style.color = 'var(--ink)';
-    } else {
-      lintInfo.textContent = 'Select a project in the header to start an audit.';
-      lintInfo.style.color = 'var(--ink-2)';
-    }
-  }
 
   const curView = document.querySelector('.nav-btn.active')?.dataset.view;
   if (curView === 'editor' && resxFile) {
