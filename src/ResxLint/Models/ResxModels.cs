@@ -36,7 +36,8 @@ record LintSummary(
     int Infos,
     int AutoFixesApplied,
     int Placeholders,
-    int MissingTranslations
+    int MissingTranslations,
+    int IdenticalValues
 );
 
 record ResxTranslationData(

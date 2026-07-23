@@ -263,6 +263,49 @@
   .issue-body { flex: 1; min-width: 0; }
   .issue-code { font-family: var(--mono); font-size: 12px; font-weight: 600; opacity: 0.8; }
   .issue-file { font-family: var(--mono); font-size: 12px; opacity: 0.7; }
+  .issue-open-btn {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 11px; font-weight: 600; padding: 2px 8px;
+    border-radius: 4px; border: 1px solid currentColor; cursor: pointer;
+    background: none; font-family: var(--font); opacity: 0.75;
+    transition: opacity .15s, background .15s;
+    color: inherit; text-decoration: none;
+    margin-top: 4px;
+  }
+  .issue-open-btn:hover { opacity: 1; background: oklch(1 0 0 / 0.08); }
+
+  .issue-group {
+    margin-bottom: 10px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+  }
+  .issue-group-header {
+    display: flex; align-items: center; gap: 10px;
+    padding: 11px 16px;
+    font-size: 14px; font-weight: 600;
+    cursor: pointer;
+    background: var(--surface);
+    border: none; width: 100%; text-align: left;
+    color: var(--ink);
+    transition: background .15s;
+  }
+  .issue-group-header:hover { background: var(--surface-2); }
+  .issue-group-header.fatal { background: var(--critical-bg); color: var(--critical); border-bottom: 1px solid var(--critical); }
+  .issue-group-header.warning { background: var(--warning-bg); color: var(--warning); border-bottom: 1px solid oklch(0.80 0.16 85 / 0.3); }
+  .issue-group-header.info { background: var(--info-bg); color: var(--info); border-bottom: 1px solid var(--info); }
+  .issue-group-header .group-count {
+    font-family: var(--mono); font-size: 11px; font-weight: 700;
+    background: oklch(0 0 0 / 0.1); padding: 1px 7px; border-radius: 10px;
+  }
+  .issue-group-header .group-chevron {
+    margin-left: auto; transition: transform .2s; flex-shrink: 0;
+  }
+  .issue-group-header.collapsed .group-chevron { transform: rotate(-90deg); }
+  .issue-group-body { display: none; }
+  .issue-group-body.open { display: block; }
+  .issue-group-body .issue-item { border-radius: 0; border: none; border-bottom: 1px solid var(--border); margin-bottom: 0; }
+  .issue-group-body .issue-item:last-child { border-bottom: none; }
 
   .editor-grid {
     overflow-x: auto;
@@ -331,10 +374,10 @@
 
   /* Status Cell Highlights - subtle, clean indicators */
   .cell-ok { border-left: 3px solid transparent; }
-  .cell-missing { background: oklch(0.58 0.22 210 / 0.08) !important; border-left: 3px solid var(--critical); }
-  .cell-placeholder { background: oklch(0.72 0.16 210 / 0.08) !important; border-left: 3px solid var(--warning); }
-  .cell-identical { border-left: 3px solid oklch(0.55 0.025 210 / 0.4); }
-  .cell-base { background: oklch(0.62 0.12 210 / 0.03) !important; }
+  .cell-missing { background: var(--critical-bg) !important; border-left: 3px solid var(--critical); }
+  .cell-placeholder { background: var(--warning-bg) !important; border-left: 3px solid var(--warning); }
+  .cell-identical { background: oklch(0.80 0.16 85 / 0.07) !important; border-left: 3px solid var(--warning); }
+  .cell-base { background: oklch(0.62 0.12 210 / 0.04) !important; }
 
   .status-legend {
     display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
@@ -349,7 +392,7 @@
   .legend-swatch.swatch-dirty { background: var(--warning); }
   .legend-swatch.swatch-missing { background: var(--critical); }
   .legend-swatch.swatch-placeholder { background: var(--warning); }
-  .legend-swatch.swatch-identical { background: var(--neutral); }
+  .legend-swatch.swatch-identical { background: var(--warning); }
   .legend-swatch.swatch-base { background: var(--accent); }
 
   .filter-segments {
@@ -371,6 +414,7 @@
   }
   .filter-segment.active.segment-dirty { color: var(--warning); background: var(--warning-bg); }
   .filter-segment.active.segment-critical { color: var(--critical); background: var(--critical-bg); }
+  .filter-segment.active.segment-warning { color: var(--warning); background: var(--warning-bg); }
   .filter-segment.active.segment-problems { color: var(--accent); background: var(--accent-soft); }
 
   .cell-edit {
@@ -847,7 +891,7 @@
             <button class="filter-segment segment-problems" data-filter="problems" onclick="setFilterMode('problems')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg> Problems <span class="chip-count" data-count="problems">0</span></button>
             <button class="filter-segment segment-critical" data-filter="missing" onclick="setFilterMode('missing')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg> Missing <span class="chip-count" data-count="missing">0</span></button>
             <button class="filter-segment segment-warning" data-filter="placeholder" onclick="setFilterMode('placeholder')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg> Placeholders <span class="chip-count" data-count="placeholder">0</span></button>
-            <button class="filter-segment" data-filter="identical" onclick="setFilterMode('identical')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Identical <span class="chip-count" data-count="identical">0</span></button>
+            <button class="filter-segment segment-warning" data-filter="identical" onclick="setFilterMode('identical')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Identical <span class="chip-count" data-count="identical">0</span></button>
           </div>
           <span style="color:var(--ink-2);font-size:13px;margin-left:auto" id="editorCount"></span>
         </div>
@@ -857,7 +901,7 @@
           <span class="legend-item"><span class="legend-swatch swatch-dirty"></span> <strong>Unsaved Edit</strong> — Modified locally (not on disk yet)</span>
           <span class="legend-item"><span class="legend-swatch swatch-missing"></span> <strong>Missing</strong> — Key missing in target .resx file</span>
           <span class="legend-item"><span class="legend-swatch swatch-placeholder"></span> <strong>Placeholder</strong> — Empty or [TRANSLATE] stub</span>
-          <span class="legend-item"><span class="legend-swatch swatch-identical"></span> <strong>Identical</strong> — Same value as base language</span>
+          <span class="legend-item"><span class="legend-swatch swatch-identical"></span> <strong>Identical</strong> — Same value as base (may be untranslated)</span>
           <span class="legend-item"><span class="legend-swatch swatch-base"></span> <strong>Base</strong> — Source reference column</span>
         </div>
         <div id="editorGrid" class="editor-grid"></div>
@@ -2024,28 +2068,25 @@ function abortLint() {
 
 function renderLintResults(r) {
   const cards = document.getElementById('summaryCards');
+  const identicalVal = r.summary.identicalValues ?? 0;
   const items = [
-    { label: 'Total Keys', value: r.totalKeys, cls: 'badge-info' },
-    { label: 'Languages', value: r.languageCount, cls: 'badge-info' },
-    { label: 'Fatal Errors', value: r.summary.fatalErrors, cls: r.summary.fatalErrors > 0 ? 'badge-critical' : 'badge-neutral' },
-    { label: 'Warnings', value: r.summary.warnings, cls: r.summary.warnings > 0 ? 'badge-warning' : 'badge-neutral' },
-    { label: 'Auto-fixes', value: r.summary.autoFixesApplied, cls: r.summary.autoFixesApplied > 0 ? 'badge-positive' : 'badge-neutral' },
-    { label: 'Missing', value: r.summary.missingTranslations, cls: r.summary.missingTranslations > 0 ? 'badge-critical' : 'badge-neutral' },
+    { label: 'Total Keys',  value: r.totalKeys,               cls: 'badge-info' },
+    { label: 'Languages',   value: r.languageCount,            cls: 'badge-info' },
+    { label: 'Fatal Errors',value: r.summary.fatalErrors,      cls: r.summary.fatalErrors  > 0 ? 'badge-critical' : 'badge-neutral' },
+    { label: 'Warnings',    value: r.summary.warnings,         cls: r.summary.warnings     > 0 ? 'badge-warning'  : 'badge-neutral' },
+    { label: 'Missing',     value: r.summary.missingTranslations, cls: r.summary.missingTranslations > 0 ? 'badge-critical' : 'badge-neutral' },
+    { label: 'Identical',   value: identicalVal,               cls: identicalVal           > 0 ? 'badge-warning'  : 'badge-neutral' },
   ];
-  let summaryHtml = '';
-  for (let row = 0; row < 2; row++) {
-    summaryHtml += '<div class="grid-3 mb-10">';
-    for (let col = 0; col < 3; col++) {
-      const i = items[row * 3 + col];
-      if (i) summaryHtml += `
-        <div class="card text-center p-16">
-          <div class="fs-24 fw-700">${i.value}</div>
-          <div class="c-ink-2 fs-14 mb-6">${i.label}</div>
-          <span class="badge ${i.cls}">${i.label}</span>
-        </div>`;
-    }
-    summaryHtml += '</div>';
+  let summaryHtml = '<div class="summary-grid" style="margin-bottom:10px">';
+  for (const i of items) {
+    summaryHtml += `
+      <div class="card text-center p-16">
+        <div class="fs-24 fw-700">${i.value}</div>
+        <div class="c-ink-2 fs-14 mb-6">${i.label}</div>
+        <span class="badge ${i.cls}">${i.label}</span>
+      </div>`;
   }
+  summaryHtml += '</div>';
   cards.innerHTML = summaryHtml;
 
   const fixable = r.issues.filter(i => i.canAutoFix);
@@ -2055,26 +2096,113 @@ function renderLintResults(r) {
   if (r.issues.length === 0) {
     list.innerHTML = '<div class="card" style="text-align:center;padding:24px;color:var(--positive)">' + icon('check') + ' No translation issues found!</div>';
   } else {
-    list.innerHTML = r.issues.map(i => {
-      const sev = i.severity;
+    // Group issues by code
+    const groups = new Map(); // code -> { sev, label, issues[] }
+    const codeLabels = {
+      'TRANS001': 'Key not found in base .resx',
+      'TRANS002': 'Duplicate key',
+      'TRANS003': 'Designer.cs out of sync',
+      'TRANS004': 'Designer.cs extra key',
+      'TRANS005': 'C# reference not found',
+      'TRANS006': 'Missing translation',
+      'TRANS007': 'Placeholder in base',
+      'TRANS008': 'Same value as base language (may be untranslated)',
+    };
+    for (const issue of r.issues) {
+      if (!groups.has(issue.code)) {
+        groups.set(issue.code, {
+          sev: issue.severity,
+          label: codeLabels[issue.code] || issue.code,
+          issues: []
+        });
+      }
+      groups.get(issue.code).issues.push(issue);
+    }
+
+    const chevronSvg = '<svg class="icon group-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>';
+
+    // Map TRANS code -> Translation Matrix filter mode
+    const codeToFilter = {
+      'TRANS006': 'missing',
+      'TRANS007': 'placeholder',
+      'TRANS008': 'identical',
+    };
+
+    let html = '';
+    for (const [code, group] of groups) {
+      const sev = group.sev;
       const sevIcon = sev === 'fatal' ? icon('x') : sev === 'warning' ? icon('alert') : icon('info');
-      const sim = i.similarKeys && i.similarKeys.length > 0
-        ? `<div style="font-size:12px;color:var(--ink-2);margin-top:2px">Similar: ${i.similarKeys.join(', ')}</div>`
-        : '';
-      return `<div class="issue-item ${sev}">
-        <span class="issue-icon">${sevIcon}</span>
-        <div class="issue-body">
-          <div><span class="issue-code">${i.code}</span> ${i.message}</div>
-          <div class="issue-file">${i.file}${i.line > 0 ? `:${i.line}` : ''}</div>
-          ${sim}
+      const filterMode = codeToFilter[code] || null;
+
+      // Build each issue row
+      let issuesHtml = '';
+      for (const i of group.issues) {
+        const sim = i.similarKeys && i.similarKeys.length > 0
+          ? `<div style="font-size:12px;color:var(--ink-2);margin-top:2px">Similar: ${i.similarKeys.join(', ')}</div>`
+          : '';
+        let openBtn = '';
+        if (filterMode && i.key) {
+          openBtn = `<button class="issue-open-btn" onclick="openIssueInTranslate(${JSON.stringify(filterMode)}, ${JSON.stringify(i.key)})" title="Open in Translation Matrix">${icon('globe')} Open in Translate</button>`;
+        }
+        issuesHtml += `<div class="issue-item ${sev}">
+          <span class="issue-icon">${sevIcon}</span>
+          <div class="issue-body">
+            <div><span class="issue-code">${i.code}</span> ${escHtml(i.message)}</div>
+            <div class="issue-file">${escHtml(i.file)}${i.line > 0 ? `:${i.line}` : ''}</div>
+            ${sim}
+            ${openBtn}
+          </div>
+        </div>`;
+      }
+
+      const groupId = `issue-group-${code}`;
+      const bodyId = `issue-body-${code}`;
+      // Start all groups collapsed; open groups with ≤3 issues automatically
+      const startOpen = group.issues.length <= 3;
+      html += `<div class="issue-group">
+        <button class="issue-group-header ${sev}${startOpen ? '' : ' collapsed'}" onclick="toggleIssueGroup('${bodyId}', this)" aria-expanded="${startOpen}">
+          ${sevIcon}
+          <span>${escHtml(group.label)}</span>
+          <span class="group-count">${group.issues.length}</span>
+          ${chevronSvg}
+        </button>
+        <div class="issue-group-body${startOpen ? ' open' : ''}" id="${bodyId}">
+          ${issuesHtml}
         </div>
       </div>`;
-    }).join('');
+    }
+    list.innerHTML = html;
   }
 
   document.getElementById('lintResults').style.display = '';
   document.getElementById('lintEmpty').style.display = 'none';
 }
+
+function toggleIssueGroup(bodyId, headerEl) {
+  const body = document.getElementById(bodyId);
+  if (!body) return;
+  const isOpen = body.classList.toggle('open');
+  headerEl.classList.toggle('collapsed', !isOpen);
+  headerEl.setAttribute('aria-expanded', isOpen);
+}
+
+function openIssueInTranslate(filterMode, key) {
+  // Switch to editor view
+  switchView('editor');
+
+  // Wait a frame for the view to be visible, then apply the search + filter
+  requestAnimationFrame(() => {
+    // Set filter mode
+    setFilterMode(filterMode);
+    // Set the search to the key name so the row is visible and highlighted
+    const searchTop = document.getElementById('editorSearch');
+    if (searchTop) {
+      searchTop.value = key;
+      filterEditor();
+    }
+  });
+}
+
 
 async function previewAutoFix() {
   if (!lintResult) return;

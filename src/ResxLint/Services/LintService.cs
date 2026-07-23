@@ -58,7 +58,8 @@ class LintService
             Infos: _issues.Count(i => i.Severity == "info"),
             AutoFixesApplied: _statsFixed,
             Placeholders: _issues.Count(i => i.Code == "TRANS007"),
-            MissingTranslations: _issues.Count(i => i.Code == "TRANS006")
+            MissingTranslations: _issues.Count(i => i.Code == "TRANS006"),
+            IdenticalValues: _issues.Count(i => i.Code == "TRANS008")
         );
 
         return new LintResult(
@@ -193,9 +194,11 @@ class LintService
 
             if (identical.Count > 0)
             {
-                var preview = string.Join("', '", identical.Take(3));
-                _issues.Add(new LintIssue("TRANS008", "info", langRel, 0, "",
-                    $"{identical.Count} key(s) in [{lang}] have the same value as the base (may be intentional): '{preview}'..."));
+                foreach (var k in identical)
+                {
+                    _issues.Add(new LintIssue("TRANS008", "warning", langRel, 0, k,
+                        $"Key '{k}' in [{lang}] has the same value as base language (may be untranslated)."));
+                }
             }
         }
     }
