@@ -58,8 +58,7 @@ class LintService
             Infos: _issues.Count(i => i.Severity == "info"),
             AutoFixesApplied: _statsFixed,
             Placeholders: _issues.Count(i => i.Code == "TRANS007"),
-            MissingTranslations: _issues.Count(i => i.Code == "TRANS006"),
-            IdenticalValues: _issues.Count(i => i.Code == "TRANS008")
+            MissingTranslations: _issues.Count(i => i.Code == "TRANS006")
         );
 
         return new LintResult(
@@ -182,22 +181,6 @@ class LintService
                     _issues.Add(new LintIssue("TRANS006", "warning", langRel, 0, k,
                         $"Key '{k}' missing translation in [{lang}].",
                         CanAutoFix: false));
-                }
-            }
-
-            var identical = langData.Keys
-                .Where(k => resxSet.Contains(k)
-                    && langData[k] == baseData.GetValueOrDefault(k)
-                    && !PlaceholderRx.IsMatch(langData[k])
-                    && langData[k].Length > 3)
-                .ToList();
-
-            if (identical.Count > 0)
-            {
-                foreach (var k in identical)
-                {
-                    _issues.Add(new LintIssue("TRANS008", "warning", langRel, 0, k,
-                        $"Key '{k}' in [{lang}] has the same value as base language (may be untranslated)."));
                 }
             }
         }
@@ -323,14 +306,9 @@ class LintService
 
             var missing = baseData.Keys.Count(k => !data.ContainsKey(k));
             var placeholders = data.Values.Count(v => PlaceholderRx.IsMatch(v));
-            var identical = data.Count(kvp =>
-                baseData.ContainsKey(kvp.Key) &&
-                kvp.Value == baseData[kvp.Key] &&
-                !PlaceholderRx.IsMatch(kvp.Value) &&
-                kvp.Value.Length > 3);
 
             languages.Add(new ResxLanguageInfo(code, Path.GetFileName(lf),
-                data.Count, missing, placeholders, identical));
+                data.Count, missing, placeholders));
         }
 
         var keys = new List<ResxKeyEntry>();
@@ -345,9 +323,7 @@ class LintService
             {
                 if (data.TryGetValue(kvp.Key, out var val))
                 {
-                    var status = PlaceholderRx.IsMatch(val) ? "placeholder"
-                        : val == kvp.Value && val.Length > 3 ? "identical"
-                        : "ok";
+                    var status = PlaceholderRx.IsMatch(val) ? "placeholder" : "ok";
                     translations[code] = new(val, status);
                 }
                 else

@@ -36,8 +36,7 @@ record LintSummary(
     int Infos,
     int AutoFixesApplied,
     int Placeholders,
-    int MissingTranslations,
-    int IdenticalValues
+    int MissingTranslations
 );
 
 record ResxTranslationData(
@@ -51,8 +50,7 @@ record ResxLanguageInfo(
     string FileName,
     int TotalKeys,
     int MissingKeys,
-    int Placeholders,
-    int IdenticalKeys
+    int Placeholders
 );
 
 record ResxKeyEntry(

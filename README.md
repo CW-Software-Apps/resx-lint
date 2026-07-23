@@ -159,7 +159,6 @@ The tool exits with code `3` on fatal errors, which causes the Docker build to f
 | `TRANS005` | 🔧 Auto-fix | Key exists in a language file but not in the base `.resx` | Added to base with `[TRADUZIR]` placeholder |
 | `TRANS006` | ⚠️ Warning | Key in base `.resx` has no translation in one or more language files | Add translation or escalate with `--fail-on-warnings` |
 | `TRANS007` | ⚠️ Warning | Base `.resx` value is empty or a placeholder like `[TRADUZIR]` | Translation pending |
-| `TRANS008` | ℹ️ Info | Value is identical to the base language in a translated file | May be intentional (proper nouns, numbers, etc.) |
 
 Fatal errors (`TRANS001`, `TRANS004`) stop the build immediately. Auto-fixes (`TRANS002`, `TRANS003`, `TRANS005`) modify files and return exit code `1` so MSBuild restarts the build to re-validate.
 

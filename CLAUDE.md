@@ -36,14 +36,14 @@ Everything lives under `src/ResxLint/`:
 - **`Services/LintService.cs`** — the core engine, run as a fixed 6-step pipeline (`Step1_Duplicates` … `Step6_DesignerCs`) inside `Run()`:
   1. Find/remove duplicate `<data>` keys across all `.resx` files (regex-based, not full XML parsing, for speed).
   2. Load the base `.resx` (`LoadResxData`, XML-based) and flag placeholder/empty values (`TRANS007`).
-  3. Cross-check every `AppResources.*.resx` language file against the base: keys only in a language file get backfilled into the base with a `[TRANSLATE: ...]` placeholder (`TRANS005`); keys missing from a language file are warned (`TRANS006`); identical base/translated values are flagged as info (`TRANS008`).
+  3. Cross-check every `AppResources.*.resx` language file against the base: keys only in a language file get backfilled into the base with a `[TRANSLATE: ...]` placeholder (`TRANS005`); keys missing from a language file are warned (`TRANS006`). There is deliberately no "value identical to base" check (`TRANS008` was removed) — languages like pt-BR/es-ES share too many legitimate cognates for that heuristic to be reliable.
   4. Scan `*.xaml` files for `{maui:Translate Key}` / `{localize:Translate Key}` references not present in the base (`TRANS001`, fatal).
   5. Scan `*.cs` files (excluding `*.Designer.cs`) for `AppResources.Key` references not present in the base (`TRANS004`, fatal).
   6. Diff the base `.resx` against its `Designer.cs` and append missing generated properties (`TRANS003`).
 
   `LintService` also exposes progress via the `OnProgress` event (used to stream step-by-step status to the web UI over SignalR) and two static helpers reused by the web UI's translation editor: `LoadTranslationData` (builds a full per-key/per-language matrix) and `SaveTranslation` (writes an edited value back into the correct `.resx` via `XDocument`).
 
-  Diagnostic codes (`TRANS001`–`TRANS008`) and exit codes are documented in `README.md` — keep both in sync when adding new codes.
+  Diagnostic codes (`TRANS001`–`TRANS007`) and exit codes are documented in `README.md` — keep both in sync when adding new codes.
 
 - **`Web/WebStartup.cs`** — builds and runs a minimal ASP.NET Core app (Kestrel on `localhost`, auto-picks a free port starting from the requested one) serving the static `wwwroot/index.html` SPA plus a `/api/*` minimal-API surface: run lint (`/lint/run`), discover `.resx` groups under a directory (`/project/resx-files`), discover `.csproj`/`.sln` under a root (`/project/discover`), load/save translation data (`/translate/resx-data`, `/translate/save`), AI-assisted translation (`/translate/ai`, `/translate/providers`), auto-fix preview+apply (`/lint/auto-fix`), and self-update (`/update/check`, `/update/install`). Also maps a SignalR hub at `/hubs/lint`.
 
