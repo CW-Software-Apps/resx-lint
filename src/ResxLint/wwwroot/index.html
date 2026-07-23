@@ -2445,6 +2445,8 @@ async function loadEditor() {
     // Let the browser paint the now-visible (empty) grid before the potentially heavy render pass.
     await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
     renderEditor();
+    updateDirtyUI();
+    updateFilterCounts();
   } catch (e) {
     showToast(e.message, true);
     document.getElementById('editorEmpty').style.display = '';
