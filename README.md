@@ -5,7 +5,24 @@
 [![CI](https://img.shields.io/github/actions/workflow/status/CW-Software-Apps/resx-lint/ci.yml?label=CI)](https://github.com/CW-Software-Apps/resx-lint/actions)
 [![MIT License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
-**resx-lint** is a .NET global tool that validates `.resx` localization keys against XAML and C# source files. It catches missing, duplicate, and untranslated keys before they ship — with a full **web UI dashboard** for visual translation editing.
+**resx-lint** is more than a localization checker — it is a complete .resx quality and productivity tool for .NET apps.
+
+It validates your localization keys against both XAML and C#, catching missing, duplicate, orphaned, and untranslated entries before they reach production. That means fewer runtime surprises, cleaner resource files, and a much more reliable localization workflow.
+
+What makes resx-lint stand out is its **AI-powered translation workflow**. When keys are missing or placeholders need to be filled, the built-in web UI can automatically translate them using AI providers (OpenAI, Anthropic, Azure, Google, DeepSeek, or custom endpoints), helping you localize entire resource sets in seconds instead of manually editing each string one by one.
+
+### Key Benefits
+
+- Validates `.resx` files against real application usage in XAML and C#
+- Detects missing, duplicate, orphaned, and untranslated keys
+- Suggests likely matches for typos and naming mistakes
+- Offers automatic translation with AI for missing or incomplete entries
+- Provides a fast, visual web UI editor for reviewing and applying changes
+- Integrates cleanly with CLI, CI, and MSBuild
+- Helps teams keep localization consistent across multiple languages and projects
+- Built for speed and confidence
+
+Whether you are maintaining a single app or a large multilingual product, resx-lint helps you keep translation files clean, accurate, and up to date. You can audit, fix, preview, and translate from one place — with AI doing the heavy lifting when you need to move fast.
 
 ---
 
