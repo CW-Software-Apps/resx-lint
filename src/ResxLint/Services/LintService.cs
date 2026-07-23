@@ -61,12 +61,16 @@ class LintService
             MissingTranslations: _issues.Count(i => i.Code == "TRANS006")
         );
 
+        var baseName = Path.GetFileNameWithoutExtension(_resxFile);
+        var allLangs = new List<string> { baseName };
+        allLangs.AddRange(langFiles.Select(f => Path.GetExtension(Path.GetFileNameWithoutExtension(f)).TrimStart('.')));
+
         return new LintResult(
             SessionId: SessionId,
             TotalKeys: resxSet.Count,
-            LanguageCount: langFiles.Length,
+            LanguageCount: langFiles.Length + 1,
             BaseResx: Rel(_resxFile),
-            Languages: langFiles.Select(f => Path.GetExtension(Path.GetFileNameWithoutExtension(f)).TrimStart('.')).ToArray(),
+            Languages: [.. allLangs],
             Issues: [.. _issues],
             Summary: summary
         );
@@ -174,14 +178,19 @@ class LintService
             }
 
             var missingInLang = resxSet.Where(k => !langData.ContainsKey(k)).ToList();
-            if (missingInLang.Count > 0)
+            foreach (var k in missingInLang)
             {
-                foreach (var k in missingInLang)
-                {
-                    _issues.Add(new LintIssue("TRANS006", "warning", langRel, 0, k,
-                        $"Key '{k}' missing translation in [{lang}].",
-                        CanAutoFix: false));
-                }
+                _issues.Add(new LintIssue("TRANS006", "warning", langRel, 0, k,
+                    $"Key '{k}' missing translation in [{lang}].",
+                    CanAutoFix: false));
+            }
+
+            var emptyInLang = resxSet.Where(k => langData.ContainsKey(k) && string.IsNullOrWhiteSpace(langData[k])).ToList();
+            foreach (var k in emptyInLang)
+            {
+                _issues.Add(new LintIssue("TRANS006", "warning", langRel, 0, k,
+                    $"Key '{k}' has empty value in [{lang}].",
+                    CanAutoFix: false));
             }
         }
     }
