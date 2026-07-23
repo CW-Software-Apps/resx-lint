@@ -474,10 +474,18 @@
   .filter-segment.active.segment-problems { background: oklch(0.62 0.19 300 / 0.15); }
 
   /* Vertical rule separating the state filter (Unsaved), the aggregate filter (Any Issue),
-     and the specific issue-type filters (Missing / Placeholders / = Base) into distinct groups. */
+     the specific issue-type filters (Missing / Placeholders), and Untranslated (= Base text,
+     which is deliberately NOT counted inside "Any Issue" — it's a distinct, softer signal)
+     into their own visual groups. */
   .filter-seg-divider {
     width: 1px; align-self: stretch; margin: 3px 2px;
     background: var(--border); flex-shrink: 0;
+  }
+
+  .editor-count-badge {
+    color: var(--ink-2); font-size: 13px; white-space: nowrap;
+    padding: 5px 10px; background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); margin-left: auto;
   }
 
   .cell-edit {
@@ -1018,13 +1026,15 @@
             <button class="filter-segment active" data-filter="all" onclick="setFilterMode('all')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg> All <span class="chip-count" data-count="all">0</span></button>
             <button class="filter-segment segment-dirty" data-filter="dirty" onclick="setFilterMode('dirty')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg> Unsaved <span class="chip-count" data-count="dirty">0</span></button>
             <span class="filter-seg-divider"></span>
-            <button class="filter-segment segment-problems" data-filter="problems" onclick="setFilterMode('problems')" title="Keys with any issue: Missing, Placeholder or Same as Base"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg> Any Issue <span class="chip-count" data-count="problems">0</span></button>
+            <button class="filter-segment segment-problems" data-filter="problems" onclick="setFilterMode('problems')" title="Keys that are Missing or still a Placeholder stub. Does not include 'Untranslated' — see that filter separately."><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg> Any Issue <span class="chip-count" data-count="problems">0</span></button>
             <span class="filter-seg-divider"></span>
-            <button class="filter-segment segment-critical" data-filter="missing" onclick="setFilterMode('missing')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg> Missing <span class="chip-count" data-count="missing">0</span></button>
-            <button class="filter-segment segment-warning" data-filter="placeholder" onclick="setFilterMode('placeholder')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg> Placeholders <span class="chip-count" data-count="placeholder">0</span></button>
-            <button class="filter-segment segment-identical" data-filter="identical" onclick="setFilterMode('identical')" title="≥1 language has the same value as the base — possibly not translated yet"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> = Base <span class="chip-count" data-count="identical">0</span></button>
+            <button class="filter-segment segment-critical" data-filter="missing" onclick="setFilterMode('missing')" title="Key is not present at all in that language's .resx file"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg> Missing <span class="chip-count" data-count="missing">0</span></button>
+            <button class="filter-segment segment-warning" data-filter="placeholder" onclick="setFilterMode('placeholder')" title="Key exists but the value is empty or still a [TRANSLATE] stub"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg> Placeholders <span class="chip-count" data-count="placeholder">0</span></button>
+            <span class="filter-seg-divider"></span>
+            <button class="filter-segment segment-identical" data-filter="identical" onclick="setFilterMode('identical')" title="The text is word-for-word the same as the Base column in ≥1 language — usually means it was copied over and never actually translated"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Untranslated <span class="chip-count" data-count="identical">0</span></button>
           </div>
-          <span style="color:var(--ink-2);font-size:13px;margin-left:auto" id="editorCount"></span>
+          <span class="filter-seg-divider"></span>
+          <span class="editor-count-badge" id="editorCount"></span>
         </div>
         <div class="status-legend">
           <span class="legend-title"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg> Legend & Highlights:</span>
@@ -1032,8 +1042,8 @@
           <span class="legend-item"><span class="legend-swatch swatch-dirty"></span> <strong>Unsaved Edit</strong> — Modified locally (not on disk yet)</span>
           <span class="legend-item"><span class="legend-swatch swatch-missing"></span> <strong>Missing</strong> — Key missing in target .resx file</span>
           <span class="legend-item"><span class="legend-swatch swatch-placeholder"></span> <strong>Placeholder</strong> — Empty or [TRANSLATE] stub</span>
-          <span class="legend-item"><span class="legend-swatch swatch-identical"></span> <strong>= Base</strong> — Same value as base in ≥1 language (possibly untranslated)</span>
-          <span class="legend-item"><span class="legend-swatch swatch-base"></span> <strong>Base</strong> — Source reference column</span>
+          <span class="legend-item"><span class="legend-swatch swatch-identical"></span> <strong>Untranslated</strong> — Text is identical to the Base column, so it was likely never translated</span>
+          <span class="legend-item"><span class="legend-swatch swatch-base"></span> <strong>Base</strong> — Source reference column (not a status — this is what the other columns are compared against)</span>
         </div>
         <div id="editorGrid" class="editor-grid"></div>
         <div id="editorFilterBottom" class="filter-bar filter-bar-bottom" style="display:none"></div>
@@ -2568,7 +2578,9 @@ function renderEditor() {
     if (hasMissing) statusCounts.missing++;
     if (hasPlaceholder) statusCounts.placeholder++;
     if (hasIdentical) statusCounts.identical++;
-    if (hasMissing || hasPlaceholder || hasIdentical) statusCounts.problems++;
+    // "Any Issue" deliberately excludes "identical" (= Base / Untranslated) — that status is
+    // a softer, separate signal, not bundled into the same aggregate as Missing/Placeholder.
+    if (hasMissing || hasPlaceholder) statusCounts.problems++;
   });
 
   document.querySelectorAll('.chip-count').forEach(el => {
@@ -2581,7 +2593,7 @@ function renderEditor() {
     if (currentFilterMode === 'missing') return Object.values(k.translations).some(t => t.status === 'missing');
     if (currentFilterMode === 'placeholder') return Object.values(k.translations).some(t => t.status === 'placeholder');
     if (currentFilterMode === 'identical') return Object.values(k.translations).some(t => t.status === 'identical');
-    if (currentFilterMode === 'problems') return Object.values(k.translations).some(t => t.status === 'missing' || t.status === 'placeholder' || t.status === 'identical');
+    if (currentFilterMode === 'problems') return Object.values(k.translations).some(t => t.status === 'missing' || t.status === 'placeholder');
     return true; // 'all'
   });
 
