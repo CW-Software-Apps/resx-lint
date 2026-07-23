@@ -5,19 +5,48 @@
 [![CI](https://img.shields.io/github/actions/workflow/status/CW-Software-Apps/resx-lint/ci.yml?label=CI)](https://github.com/CW-Software-Apps/resx-lint/actions)
 [![MIT License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
----
+**resx-lint** is a .NET global tool that validates `.resx` localization keys against XAML and C# source files. It catches missing, duplicate, and untranslated keys before they ship — with a full **web UI dashboard** for visual translation editing.
 
-**resx-lint** is a .NET global tool that validates `.resx` localization keys against your XAML and C# source files. It catches missing keys before they reach production, auto-fixes common problems, and integrates directly into your build pipeline so errors appear inline in Visual Studio, Rider, and any CI output.
+---
 
 ## Features
 
-- **Static analysis** — scans `{maui:Translate Key}` in XAML and `AppResources.Key` in C# and reports missing keys as build errors
-- **Auto-fixes** — removes duplicate keys, adds missing `Designer.cs` properties, and backfills orphaned language entries automatically
-- **MSBuild-native errors** — emits `file(line): error TRANS001: ...` format so VS/Rider show inline squiggles with clickable links
-- **Similar key suggestions** — when a key is missing, suggests the closest matches to help spot typos quickly
-- **`--what-if` mode** — preview every change without touching any file
-- **CI-friendly** — `--fail-on-warnings` escalates warnings to errors for stricter pipelines
-- **Zero dependencies** — single self-contained executable, no extra NuGet packages required
+### 🔍 CLI Linter
+- **Static analysis** — scans `{maui:Translate Key}` in XAML and `AppResources.Key` in C#
+- **Auto-fixes** — removes duplicate keys, adds missing `Designer.cs` properties, backfills orphaned language entries
+- **MSBuild-native errors** — emits `file(line): error TRANS001: ...` for inline squiggles in VS/Rider
+- **Similar key suggestions** — suggests closest matches for typos
+- **`--what-if` mode** — preview every change without touching files
+- **CI-friendly** — `--fail-on-warnings` escalates warnings to errors
+
+### 🖥️ Web UI Dashboard
+- **Translation Matrix Editor** — edit all language cells side-by-side in a virtual-scrolled grid
+- **🇧🇷 Language flags** — locale-to-flag conversion (Regional Indicator Symbols)
+- **Configurable base language** — pick your source language (e.g. `pt-BR`) via searchable picker
+- **Live missing count** — header badges update in real time as you type
+- **AI batch translate** — translate missing/placeholder keys via OpenAI, Anthropic, Azure, Google, DeepSeek, or custom endpoints
+- **Auto-fix preview & apply** — see what changes before writing to disk
+- **Project manager** — save multiple projects, scan for `.resx` files, quick audit
+- **Self-update** — one-click `dotnet tool update` inside the UI
+- **Sound effects** — optional audio feedback on save, translate, and errors
+- **Dark/Light theme** — persistent toggle
+- **🔢 Keyboard shortcuts** — `Ctrl+1/2/3` views, `Ctrl+Enter` audit, `Ctrl+S` save, `Ctrl+F` search, `Esc` close modals
+- **Export/Import Excel** — spreadsheet round-trip for translation managers
+- **Virtual scrolling** — handles 10,000+ keys without freezing
+
+---
+
+## Screenshots
+
+> TODO: Replace these placeholders with actual screenshots.
+
+| Projects Dashboard | Translation Matrix |
+|---|---|
+| `[Screenshot: project list with language flags, rescan button, quick audit]` | `[Screenshot: editor grid showing language columns with flags, missing badges, filter bar]` |
+
+| Lint Results | AI Translation Config |
+|---|---|
+| `[Screenshot: lint summary cards, issue list with auto-fix bar]` | `[Screenshot: AI provider selector, API key, target language]` |
 
 ---
 
@@ -32,11 +61,11 @@ dotnet tool install --global ResxLint
 ### Per-repo (recommended for teams and CI)
 
 ```bash
-dotnet new tool-manifest        # creates .config/dotnet-tools.json — commit this file
+dotnet new tool-manifest
 dotnet tool install ResxLint
 ```
 
-New devs and CI agents just run once:
+New devs and CI agents just run:
 
 ```bash
 dotnet tool restore
@@ -46,6 +75,18 @@ dotnet tool restore
 
 ## Usage
 
+### Interactive Mode
+
+```bash
+resx-lint
+```
+
+Shows a 3-second prompt:
+- Press **W** → opens the **Web UI** at `http://localhost:7950`
+- Wait 3s → auto-detects a `.resx` in the current directory and runs the CLI lint
+
+### CLI Lint
+
 ```bash
 resx-lint --project-dir <dir> --resx-file <path> [options]
 ```
@@ -53,19 +94,38 @@ resx-lint --project-dir <dir> --resx-file <path> [options]
 | Option | Description |
 |---|---|
 | `--project-dir <dir>` | Root of the project (where `.xaml` and `.cs` files live) |
-| `--resx-file <path>` | Path to the base `.resx` file (e.g. `Resources/AppResources.resx`) |
+| `--resx-file <path>` | Path to the base `.resx` file |
 | `--what-if` | Preview all changes without writing any files |
 | `--fail-on-warnings` | Treat TRANS006 and TRANS007 as fatal errors |
-| `--quiet` | Suppress ✓ OK and ℹ INFO messages — only show problems |
+| `--quiet` | Suppress ✅ OK and ℹ INFO messages |
 | `--help` | Show help and exit |
+
+### Web UI
+
+```bash
+resx-lint --serve
+```
+
+Or press **W** in interactive mode. Opens at `http://localhost:7950`.
+
+| Option | Description |
+|---|---|
+| `--port <port>` | Custom port (default: 7950) |
+| `--no-open` | Don't open browser automatically |
+
+### Update Check
+
+```bash
+resx-lint --check-update
+```
+
+Or click the version badge in the Web UI header.
 
 ---
 
 ## MSBuild Integration
 
-Drop this target into your `.csproj` to validate on every build.
-
-The snippet below checks whether `resx-lint` is installed **before** running it and emits a clear, actionable error message if it is not — instead of the cryptic `exited with code 9009` you'd get otherwise:
+Add this target to your `.csproj` to run validation on every build:
 
 ```xml
 <Target Name="ValidateTranslationKeys" BeforeTargets="BeforeBuild">
@@ -91,18 +151,11 @@ The snippet below checks whether `resx-lint` is installed **before** running it 
 </Target>
 ```
 
-> **Linux / CI / Docker:** Always use **forward slashes** (`/`) in the `--resx-file` path.
-> Backslashes (`\`) are Windows-only separators — on Linux the path is treated as a literal string and the file is not found, producing exit code 2.
-> `$(MSBuildProjectDirectory)/Resources/AppResources.resx` works on both Windows and Linux.
+> **Linux / CI / Docker:** Always use **forward slashes** in the `--resx-file` path. `$(MSBuildProjectDirectory)/Resources/AppResources.resx` works on both Windows and Linux.
 
-If the tool is missing, the build stops with:
+If the tool is not installed, the build stops with a clear message instead of the cryptic `exited with code 9009`.
 
-```
-error : resx-lint is not installed. Run: dotnet tool install --global ResxLint
-        Docs: https://github.com/CW-Software-Apps/resx-lint
-```
-
-For strict mode (warnings become errors), add `--fail-on-warnings` to the `Exec` command.
+For strict mode, add `--fail-on-warnings` to the `Exec` command.
 
 ---
 
@@ -111,40 +164,23 @@ For strict mode (warnings become errors), add `--fail-on-warnings` to the `Exec`
 ### GitHub Actions
 
 ```yaml
-- name: Setup .NET
-  uses: actions/setup-dotnet@v4
-  with:
-    dotnet-version: '10.x'
-
-- name: Restore tools
-  run: dotnet tool restore        # reads .config/dotnet-tools.json
-
 - name: Validate translations
   run: resx-lint --project-dir . --resx-file Resources/AppResources.resx --fail-on-warnings
 ```
 
-### Docker / Coolify / Self-hosted
-
-If your CI/CD builds via Docker (e.g. Coolify on Hostinger), install the tool in your `Dockerfile` and run it before `dotnet publish`:
+### Docker / Coolify
 
 ```dockerfile
-# Install resx-lint
 RUN dotnet tool install --global ResxLint
 ENV PATH="${PATH}:/root/.dotnet/tools"
 
-# Copy sources
 COPY [".", "/src/app"]
+RUN resx-lint --project-dir /src/app --resx-file /src/YourLibrary/Resources/AppResources.resx
 
-# ✅ Validate translations — fails the Docker build if keys are missing
-RUN resx-lint \
-    --project-dir /src/app \
-    --resx-file /src/YourLibrary/Resources/AppResources.resx
-
-# Build
 RUN dotnet publish MyApp.csproj -f net10.0-android -c Release
 ```
 
-The tool exits with code `3` on fatal errors, which causes the Docker build to fail and stops the Coolify deployment before a broken build reaches production.
+Exit code `3` on fatal errors stops the Docker build, preventing broken deployments.
 
 ---
 
@@ -156,9 +192,9 @@ The tool exits with code `3` on fatal errors, which causes the Docker build to f
 | `TRANS002` | 🔧 Auto-fix | Duplicate key found in a `.resx` file | Extra occurrences removed |
 | `TRANS003` | 🔧 Auto-fix | Key in base `.resx` has no corresponding property in `Designer.cs` | Property added automatically |
 | `TRANS004` | ❌ Fatal | Key accessed as `AppResources.Key` (C#) not found in base `.resx` | Fix manually |
-| `TRANS005` | 🔧 Auto-fix | Key exists in a language file but not in the base `.resx` | Added to base with `[TRADUZIR]` placeholder |
+| `TRANS005` | 🔧 Auto-fix | Key exists in a language file but not in the base `.resx` | Added to base with `[TRANSLATE]` placeholder |
 | `TRANS006` | ⚠️ Warning | Key in base `.resx` has no translation in one or more language files | Add translation or escalate with `--fail-on-warnings` |
-| `TRANS007` | ⚠️ Warning | Base `.resx` value is empty or a placeholder like `[TRADUZIR]` | Translation pending |
+| `TRANS007` | ⚠️ Warning | Base `.resx` value is empty or a placeholder like `[TRANSLATE]` | Translation pending |
 
 Fatal errors (`TRANS001`, `TRANS004`) stop the build immediately. Auto-fixes (`TRANS002`, `TRANS003`, `TRANS005`) modify files and return exit code `1` so MSBuild restarts the build to re-validate.
 
