@@ -376,7 +376,7 @@
   .cell-ok { border-left: 3px solid transparent; }
   .cell-missing { background: var(--critical-bg) !important; border-left: 3px solid var(--critical); }
   .cell-placeholder { background: var(--warning-bg) !important; border-left: 3px solid var(--warning); }
-  .cell-identical { background: oklch(0.80 0.16 85 / 0.07) !important; border-left: 3px solid var(--warning); }
+  .cell-identical { background: oklch(0.80 0.16 85 / 0.22) !important; border-left: 3px solid oklch(0.78 0.19 80); }
   .cell-base { background: oklch(0.62 0.12 210 / 0.04) !important; }
 
   .status-legend {
@@ -802,17 +802,13 @@
 
     <!-- ====== LINT DASHBOARD VIEW ====== -->
     <div id="view-lint" style="display:none">
-      <div class="card" style="margin-bottom:20px">
-        <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:end">
-          <div style="flex:2;min-width:220px">
-            <label style="font-size:12px;color:var(--ink-2);display:block;margin-bottom:4px">Project Directory</label>
-            <input class="input-field" id="projectDir" placeholder="e.g. C:\Projects\MyApp">
-          </div>
-          <div style="flex:1;min-width:200px">
-            <label style="font-size:12px;color:var(--ink-2);display:block;margin-bottom:4px">Resource File (.resx)</label>
-            <select class="input-field" id="resxFileSelect" onchange="onHeaderResxChange(this.value)"><option value="">— select .resx —</option></select>
-          </div>
-          <button class="btn btn-secondary" onclick="scanProject()">Scan</button>
+      <!-- Hidden fields — selection is controlled by the header project bar -->
+      <input type="hidden" id="projectDir">
+      <select id="resxFileSelect" style="display:none"><option value="">— select .resx —</option></select>
+      <div class="card" style="margin-bottom:20px;padding:12px 18px">
+        <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center">
+          <span id="lintResxInfo" style="flex:1;font-size:13px;color:var(--ink-2)">Select a project in the header to start an audit.</span>
+          <button class="btn btn-secondary btn-sm" onclick="scanProject()" title="Re-scan project directory for .resx files"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M21 21v-5h-5"/></svg> Re-scan</button>
           <button class="btn btn-primary" onclick="runLint()" id="runLintBtn"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg> Run Audit</button>
         </div>
       </div>
@@ -867,12 +863,10 @@
 
     <!-- ====== TRANSLATION EDITOR VIEW ====== -->
     <div id="view-editor" style="display:none">
+      <!-- Hidden select — selection is controlled by the header project bar -->
+      <select id="editorResxSelect" style="display:none"><option value="">— select a .resx file —</option></select>
       <div class="card" style="margin-bottom:16px">
-        <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:end">
-          <div style="flex:2;min-width:220px">
-            <label style="font-size:12px;color:var(--ink-2);display:block;margin-bottom:4px">Selected Resource File (.resx)</label>
-            <select class="input-field" id="editorResxSelect" onchange="onHeaderResxChange(this.value)"><option value="">— select a .resx file —</option></select>
-          </div>
+        <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center">
           <button class="btn btn-primary" id="loadMatrixBtn" onclick="loadEditor()">Load Matrix</button>
           <button class="btn btn-secondary" onclick="openAiConfig()"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="14" x="4" y="6" rx="2"/><path d="M12 6V2"/><path d="M9 14h6"/><path d="M12 17v-3"/></svg> AI Batch Translate</button>
           <button class="btn btn-secondary" id="exportExcelBtn" onclick="exportExcel()" disabled title="Export the loaded matrix to Excel"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg> Export Excel</button>
@@ -888,10 +882,10 @@
           <div class="filter-segments" id="filterSegments">
             <button class="filter-segment active" data-filter="all" onclick="setFilterMode('all')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg> All <span class="chip-count" data-count="all">0</span></button>
             <button class="filter-segment segment-dirty" data-filter="dirty" onclick="setFilterMode('dirty')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg> Unsaved <span class="chip-count" data-count="dirty">0</span></button>
-            <button class="filter-segment segment-problems" data-filter="problems" onclick="setFilterMode('problems')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg> Problems <span class="chip-count" data-count="problems">0</span></button>
+            <button class="filter-segment segment-problems" data-filter="problems" onclick="setFilterMode('problems')" title="Keys with any issue: Missing, Placeholder or Same as Base"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg> Any Issue <span class="chip-count" data-count="problems">0</span></button>
             <button class="filter-segment segment-critical" data-filter="missing" onclick="setFilterMode('missing')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg> Missing <span class="chip-count" data-count="missing">0</span></button>
             <button class="filter-segment segment-warning" data-filter="placeholder" onclick="setFilterMode('placeholder')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg> Placeholders <span class="chip-count" data-count="placeholder">0</span></button>
-            <button class="filter-segment segment-warning" data-filter="identical" onclick="setFilterMode('identical')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Identical <span class="chip-count" data-count="identical">0</span></button>
+            <button class="filter-segment segment-warning" data-filter="identical" onclick="setFilterMode('identical')" title="≥1 language has the same value as the base — possibly not translated yet"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> = Base <span class="chip-count" data-count="identical">0</span></button>
           </div>
           <span style="color:var(--ink-2);font-size:13px;margin-left:auto" id="editorCount"></span>
         </div>
@@ -901,7 +895,7 @@
           <span class="legend-item"><span class="legend-swatch swatch-dirty"></span> <strong>Unsaved Edit</strong> — Modified locally (not on disk yet)</span>
           <span class="legend-item"><span class="legend-swatch swatch-missing"></span> <strong>Missing</strong> — Key missing in target .resx file</span>
           <span class="legend-item"><span class="legend-swatch swatch-placeholder"></span> <strong>Placeholder</strong> — Empty or [TRANSLATE] stub</span>
-          <span class="legend-item"><span class="legend-swatch swatch-identical"></span> <strong>Identical</strong> — Same value as base (may be untranslated)</span>
+          <span class="legend-item"><span class="legend-swatch swatch-identical"></span> <strong>= Base</strong> — Same value as base in ≥1 language (possibly untranslated)</span>
           <span class="legend-item"><span class="legend-swatch swatch-base"></span> <strong>Base</strong> — Source reference column</span>
         </div>
         <div id="editorGrid" class="editor-grid"></div>
@@ -1564,9 +1558,12 @@ function updateHeaderProjectSelector() {
   if (!selProj) return;
 
   const curVal = currentActiveProjectDir || selProj.value;
-  selProj.innerHTML = '<option value="">— Select project —</option>' + list.map(p => 
-    `<option value="${escHtml(p.path)}">${escHtml(p.name)}</option>`
-  ).join('');
+  selProj.innerHTML = '<option value="">— Select project —</option>' + list.map(p => {
+    const parts = p.path.replace(/\\/g, '/').split('/').filter(Boolean);
+    const shortPath = parts.length >= 2 ? parts.slice(-2).join('/') : (parts[0] || '');
+    const label = shortPath ? `${p.name}  [${shortPath}]` : p.name;
+    return `<option value="${escHtml(p.path)}">${escHtml(label)}</option>`;
+  }).join('');
 
   if (curVal && list.some(p => p.path === curVal)) {
     selProj.value = curVal;
@@ -1638,6 +1635,19 @@ function onHeaderResxChange(resxFile) {
 
   const selEditor = document.getElementById('editorResxSelect');
   if (selEditor) selEditor.value = resxFile;
+
+  // Update audit view info label
+  const lintInfo = document.getElementById('lintResxInfo');
+  if (lintInfo) {
+    if (resxFile) {
+      const fileName = resxFile.split(/[\\/]/).pop();
+      lintInfo.innerHTML = `${icon('file')} Ready to audit: <strong>${escHtml(fileName)}</strong>`;
+      lintInfo.style.color = 'var(--ink)';
+    } else {
+      lintInfo.textContent = 'Select a project in the header to start an audit.';
+      lintInfo.style.color = 'var(--ink-2)';
+    }
+  }
 
   const curView = document.querySelector('.nav-btn.active')?.dataset.view;
   if (curView === 'editor' && resxFile) {
@@ -1980,9 +1990,8 @@ async function scanProject() {
 }
 
 function getProjectDir() {
-  let d = document.getElementById('projectDir').value.trim();
-  if (!d) d = '.';
-  return d;
+  const d = currentActiveProjectDir || document.getElementById('projectDir')?.value?.trim() || '';
+  return d || '.';
 }
 
 // ====== SIGNALR ======
@@ -2010,8 +2019,8 @@ function setStepProgress(step, total) {
 
 async function runLint() {
   const dir = getProjectDir();
-  const resxFile = document.getElementById('resxFileSelect').value;
-  if (!resxFile) return showToast('Select a .resx file first', true);
+  const resxFile = currentActiveResxFile || document.getElementById('resxFileSelect')?.value || '';
+  if (!resxFile) return showToast('Select a project and .resx file in the header first', true);
 
   document.getElementById('lintProgress').style.display = '';
   document.getElementById('lintResults').style.display = 'none';
@@ -2207,7 +2216,7 @@ function openIssueInTranslate(filterMode, key) {
 async function previewAutoFix() {
   if (!lintResult) return;
   const dir = getProjectDir();
-  const resxFile = document.getElementById('resxFileSelect').value;
+  const resxFile = currentActiveResxFile || document.getElementById('resxFileSelect')?.value || '';
   try {
     // Read-only: WhatIf run on the server, never writes to disk.
     const data = await api(`/api/lint/auto-fix/preview?projectDir=${encodeURIComponent(dir)}&resxFile=${encodeURIComponent(resxFile)}`);
@@ -2225,7 +2234,7 @@ async function applyAutoFix() {
   if (!await showConfirm('Apply all auto-fixes? This will modify files on disk.')) return;
 
   const dir = getProjectDir();
-  const resxFile = document.getElementById('resxFileSelect').value;
+  const resxFile = currentActiveResxFile || document.getElementById('resxFileSelect')?.value || '';
   try {
     const data = await api(`/api/lint/auto-fix/apply?projectDir=${encodeURIComponent(dir)}&resxFile=${encodeURIComponent(resxFile)}`, { method: 'POST' });
     lintResult = data.result;
@@ -2238,9 +2247,8 @@ async function applyAutoFix() {
 
 // ====== TRANSLATION EDITOR ======
 async function loadEditor() {
-  const sel = document.getElementById('editorResxSelect');
-  const resxFile = sel.value;
-  if (!resxFile) return showToast('Select a .resx file', true);
+  const resxFile = currentActiveResxFile || document.getElementById('editorResxSelect')?.value || '';
+  if (!resxFile) return showToast('Select a project and .resx file in the header first', true);
 
   document.getElementById('editorContent').style.display = 'none';
   document.getElementById('editorEmpty').style.display = 'none';
@@ -2280,7 +2288,7 @@ async function loadEditor() {
 
 async function exportExcel() {
   if (!editorData) return;
-  const resxFile = document.getElementById('editorResxSelect').value;
+  const resxFile = currentActiveResxFile || document.getElementById('editorResxSelect')?.value || '';
   const btn = document.getElementById('exportExcelBtn');
   const orig = btn.innerHTML;
   btn.disabled = true;
@@ -2316,7 +2324,7 @@ async function exportExcel() {
 async function importExcel(file) {
   const input = document.getElementById('importExcelInput');
   if (!file || !editorData) { input.value = ''; return; }
-  const resxFile = document.getElementById('editorResxSelect').value;
+  const resxFile = currentActiveResxFile || document.getElementById('editorResxSelect')?.value || '';
   const btn = document.getElementById('importExcelBtn');
   const orig = btn.innerHTML;
   btn.disabled = true;
@@ -2624,8 +2632,7 @@ function filterEditor() {
 }
 
 async function saveEditor() {
-  const sel = document.getElementById('editorResxSelect');
-  const resxFile = sel.value;
+  const resxFile = currentActiveResxFile || document.getElementById('editorResxSelect')?.value || '';
   if (!resxFile) return;
   const langs = Object.keys(dirtyCells);
   if (langs.length === 0) return showToast('No changes to save');
