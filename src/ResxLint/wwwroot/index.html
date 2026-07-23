@@ -116,24 +116,15 @@
 
   .active-project-bar {
     display: flex;
-    align-items: center;
+    align-items: stretch;
     gap: 6px;
-    background: var(--surface-2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    padding: 4px 10px;
     min-width: 200px;
     flex: 1 1 auto;
-    max-width: 600px;
-    order: 2;
-    transition: border-color .15s;
+    max-width: 640px;
   }
   @media (max-width: 900px) {
     .active-project-bar { order: 10; flex-basis: 100%; max-width: 100%; margin-top: 4px; }
     .kbd-hint { display: none; }
-  }
-  .active-project-bar:hover {
-    border-color: var(--accent);
   }
   .active-project-icon {
     width: 24px;
@@ -154,12 +145,52 @@
     height: 100%;
     object-fit: cover;
   }
-  .active-project-selects {
+  /* Each selector (project / resx file) renders as its own labeled chip, with its own
+     background and border, so the two dropdowns read as distinct fields instead of
+     one run-on breadcrumb. */
+  .selector-seg {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
     min-width: 0;
     flex: 1;
+    padding: 5px 10px;
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    transition: border-color .15s;
+  }
+  .selector-seg:focus-within {
+    border-color: var(--accent);
+  }
+  .selector-seg-resx {
+    background: var(--accent-soft);
+    border-color: color-mix(in oklch, var(--accent) 35%, var(--border));
+    flex: 1.4;
+  }
+  .selector-seg-body {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    flex: 1;
+    line-height: 1.2;
+  }
+  .selector-seg-label {
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: var(--ink-2);
+  }
+  .selector-seg-resx .selector-seg-label {
+    color: var(--accent);
+  }
+  .active-project-sep {
+    display: flex;
+    align-items: center;
+    color: var(--ink-2);
+    flex-shrink: 0;
+    padding: 0 4px;
   }
   .header-project-select, .header-resx-select {
     background: transparent;
@@ -169,12 +200,12 @@
     font-weight: 600;
     outline: none;
     cursor: pointer;
-    min-width: 60px;
-    flex: 1;
+    width: 100%;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     font-family: var(--font);
+    padding: 0;
   }
   .header-project-select option, .header-resx-select option {
     background: var(--surface);
@@ -823,18 +854,28 @@
       <input type="hidden" id="projectDir">
       <div class="card" style="margin-bottom:20px;padding:12px 18px">
         <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center">
-          <div class="active-project-bar" style="flex:1;min-width:300px">
-            <div class="active-project-icon" id="lintProjectIcon">
-              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+          <div class="active-project-bar" style="flex:1;min-width:340px">
+            <div class="selector-seg">
+              <div class="active-project-icon" id="lintProjectIcon">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+              </div>
+              <div class="selector-seg-body">
+                <span class="selector-seg-label">Project</span>
+                <select class="header-project-select" id="headerProjectSelect" onchange="onHeaderProjectChange(this.value)">
+                  <option value="">— Select project —</option>
+                </select>
+              </div>
             </div>
-            <div style="flex:1;display:flex;align-items:center;gap:6px">
-              <select class="header-project-select" id="headerProjectSelect" onchange="onHeaderProjectChange(this.value)" style="flex:1">
-                <option value="">— Select project —</option>
-              </select>
-              <span class="active-project-sep" id="headerSep" style="display:none;color:var(--ink-2);font-size:12px">›</span>
-              <select class="header-resx-select" id="resxFileSelect" onchange="onHeaderResxChange(this.value)" style="display:none;flex:1.5">
-                <option value="">— Select .resx —</option>
-              </select>
+            <span class="active-project-sep" id="headerSep" style="display:none">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+            </span>
+            <div class="selector-seg selector-seg-resx" id="resxFileSelectWrap" style="display:none">
+              <div class="selector-seg-body">
+                <span class="selector-seg-label">.resx file</span>
+                <select class="header-resx-select" id="resxFileSelect" onchange="onHeaderResxChange(this.value)">
+                  <option value="">— Select .resx —</option>
+                </select>
+              </div>
             </div>
           </div>
           <button class="btn btn-secondary btn-sm" onclick="scanProject()" title="Re-scan project directory for .resx files"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M21 21v-5h-5"/></svg> Re-scan</button>
@@ -893,22 +934,32 @@
     <!-- ====== TRANSLATION EDITOR VIEW ====== -->
     <div id="view-editor" style="display:none">
       <div class="card" style="margin-bottom:16px">
-        <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-bottom:12px">
-          <div class="active-project-bar" style="flex:1;min-width:300px">
-            <div class="active-project-icon" id="editorProjectIcon">
-              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+        <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;padding-bottom:14px;margin-bottom:14px;border-bottom:1px solid var(--border)">
+          <div class="active-project-bar" style="flex:1;min-width:340px">
+            <div class="selector-seg">
+              <div class="active-project-icon" id="editorProjectIcon">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+              </div>
+              <div class="selector-seg-body">
+                <span class="selector-seg-label">Project</span>
+                <select class="header-project-select" id="editorProjectSelect" onchange="onHeaderProjectChange(this.value)">
+                  <option value="">— Select project —</option>
+                </select>
+              </div>
             </div>
-            <div style="flex:1;display:flex;align-items:center;gap:6px">
-              <select class="header-project-select" id="editorProjectSelect" onchange="onHeaderProjectChange(this.value)" style="flex:1">
-                <option value="">— Select project —</option>
-              </select>
-              <span class="active-project-sep" id="editorSep" style="display:none;color:var(--ink-2);font-size:12px">›</span>
-              <select class="header-resx-select" id="editorResxSelect" onchange="onHeaderResxChange(this.value)" style="display:none;flex:1.5">
-                <option value="">— Select .resx —</option>
-              </select>
+            <span class="active-project-sep" id="editorSep" style="display:none">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+            </span>
+            <div class="selector-seg selector-seg-resx" id="editorResxSelectWrap" style="display:none">
+              <div class="selector-seg-body">
+                <span class="selector-seg-label">.resx file</span>
+                <select class="header-resx-select" id="editorResxSelect" onchange="onHeaderResxChange(this.value)">
+                  <option value="">— Select .resx —</option>
+                </select>
+              </div>
             </div>
           </div>
-          <button class="btn btn-primary" id="loadMatrixBtn" onclick="loadEditor()">Load Matrix</button>
+          <button class="btn btn-secondary" id="loadMatrixBtn" onclick="loadEditor()" title="Manually reload the matrix from disk (this happens automatically when you pick a project/file)">Reload</button>
         </div>
         <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center">
           <button class="btn btn-secondary" onclick="openAddKeyModal()"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg> Add Term</button>
@@ -1663,8 +1714,8 @@ async function onHeaderProjectChange(path) {
   document.getElementById('projectDir').value = path;
   const iconWrap1 = document.getElementById('lintProjectIcon');
   const iconWrap2 = document.getElementById('editorProjectIcon');
-  const selResx1 = document.getElementById('resxFileSelect');
-  const selResx2 = document.getElementById('editorResxSelect');
+  const selResx1 = document.getElementById('resxFileSelectWrap');
+  const selResx2 = document.getElementById('editorResxSelectWrap');
   const sep1 = document.getElementById('headerSep');
   const sep2 = document.getElementById('editorSep');
 
@@ -1712,10 +1763,16 @@ function onHeaderResxChange(resxFile) {
   const selEditor = document.getElementById('editorResxSelect');
   if (selEditor) selEditor.value = resxFile;
 
-  const curView = document.querySelector('.nav-btn.active')?.dataset.view;
-  if (curView === 'editor' && resxFile) {
-    loadEditor();
+  if (!resxFile) return;
+
+  // Picking a project auto-picks its .resx file (above); auto-load the matrix too so the
+  // whole chain — project → file → matrix — completes in one click instead of three.
+  // Unsaved edits are the one case worth interrupting for, since loadEditor() overwrites them.
+  if (Object.keys(dirtyCells).length > 0) {
+    showToast('You have unsaved translation edits — save or discard them before switching files', true);
+    return;
   }
+  loadEditor();
 }
 
 // Cards saved before this version's fixes never got `proj.languages` populated by a rescan
@@ -1787,9 +1844,8 @@ function quickLint(pathEnc) {
 
 function quickEdit(fileUri) {
   const decoded = decodeURIComponent(fileUri);
-  onHeaderResxChange(decoded);
   switchView('editor');
-  loadEditor();
+  onHeaderResxChange(decoded);
 }
 
 function updateSelectOptions(files) {
