@@ -2582,6 +2582,7 @@ function renderEditor() {
   });
 
   const dirtyCellTotal = Object.values(dirtyCells).reduce((a, c) => a + Object.keys(c).length, 0);
+}
 
 function getLiveMissingCount(langCode) {
   if (!editorKeys) return 0;
