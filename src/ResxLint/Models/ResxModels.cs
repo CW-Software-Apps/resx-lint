@@ -104,6 +104,53 @@ record ProjectResxInfo(
     string[] LanguageFiles
 );
 
+record AddKeyRequest(
+    string ResxFile,
+    string Key,
+    string? Value,
+    Dictionary<string, string> Translations,
+    bool Update = false,
+    bool WhatIf = false
+);
+
+record AddKeyResult(
+    bool Success,
+    string? Error,
+    string? Key = null,
+    string? Value = null,
+    List<string>? FilesTouched = null,
+    List<string>? LanguageResults = null,
+    bool WasUpdate = false
+)
+{
+    public static AddKeyResult Fail(string error) => new(false, error);
+
+    public static AddKeyResult Ok(string key, string value, List<string> filesTouched, List<string> languageResults, bool wasUpdate) =>
+        new(true, null, key, value, filesTouched, languageResults, wasUpdate);
+}
+
+record RemoveKeyRequest(
+    string ResxFile,
+    string Key,
+    string? ProjectDir = null,
+    bool Force = false,
+    bool WhatIf = false
+);
+
+record RemoveKeyResult(
+    bool Success,
+    string? Error,
+    string? Key = null,
+    List<string>? FilesTouched = null,
+    string? MatchNote = null
+)
+{
+    public static RemoveKeyResult Fail(string error) => new(false, error);
+
+    public static RemoveKeyResult Ok(string key, List<string> filesTouched, string? matchNote) =>
+        new(true, null, key, filesTouched, matchNote);
+}
+
 record ProgressMessage(
     string SessionId,
     int Step,

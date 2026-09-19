@@ -94,6 +94,16 @@ if (cmdArgs.Length > 0 && (cmdArgs[0] is "--help" or "-h"))
     return 0;
 }
 
+if (cmdArgs.Length > 0 && cmdArgs[0] == "add-key")
+{
+    return RunAddKey(cmdArgs[1..]);
+}
+
+if (cmdArgs.Length > 0 && cmdArgs[0] == "remove-key")
+{
+    return RunRemoveKey(cmdArgs[1..]);
+}
+
 if (cmdArgs.Length == 0)
 {
     Console.Title = $"resx-lint v{UpdateService.CurrentVersion}";
@@ -335,6 +345,8 @@ static void PrintHelp()
         USAGE:
           resx-lint                          Interactive: [W]eb UI, [L]int here, [H]elp, [Q]uit — auto-detects after 3s
           resx-lint --project-dir <dir> --resx-file <path> [options]
+          resx-lint add-key <Key> --resx-file <path> --value "<text>" [options]
+          resx-lint remove-key <Key> --resx-file <path> [options]
           resx-lint --serve [--port <port>] [--no-open]
 
         OPTIONS:
@@ -349,18 +361,225 @@ static void PrintHelp()
           --check-update, -u      Check for updates on NuGet
           --help, -h              Show this help
 
+        ADD-KEY — the safe way for an AI agent (or anyone) to add one translation key.
+        Refuses outright if a case-variant of the key already exists (the #1 way AI
+        sessions silently break localization — see TRANS009), and always writes the base
+        .resx + every sibling language .resx + the Designer.cs property in one call, so a
+        forgotten language file or missing property can't happen. See README.md → "For AI
+        agents" for the full guide and worked examples.
+
+          resx-lint add-key <Key> --resx-file <path> --value "<base text>" [options]
+
+          --lang <code>=<text>     Translation for one language file (repeatable),
+                                   e.g. --lang en-US="Service Type" --lang es-ES="Tipo de Servicio"
+                                   Any sibling language file not covered gets a
+                                   "[TRANSLATE: <base text>]" placeholder instead of being
+                                   left out — never silently skipped.
+          --update                 Allow changing the value of a key that already exists
+                                   under the exact same casing (still refuses on a
+                                   case-variant collision — --update does not bypass that).
+          --what-if                Preview: report what would change, write nothing.
+
+        REMOVE-KEY — deletes one exact key from the base .resx, every sibling language
+        .resx, and its Designer.cs property, in one call. Use it to resolve a TRANS009
+        finding (two case-variant keys) once you've decided which one to keep — never
+        guesses between two coexisting variants itself.
+
+          resx-lint remove-key <Key> --resx-file <path> [options]
+
+          --project-dir <dir>      If given, refuses to remove a key still referenced in
+                                   any .xaml/.cs under this directory (safety check).
+                                   Omit it to skip the check (e.g. resx-only workspaces).
+          --force                  Remove even if --project-dir found live references.
+          --what-if                Preview: report what would be removed, write nothing.
+
+          Case-insensitive as a lookup convenience only: 'remove-key ok' resolves to 'Ok'
+          if that is the only case-insensitive match. If more than one case-variant exists
+          (e.g. both 'OK' and 'Ok'), it refuses and lists them — pass the exact one to remove.
+
         EXIT CODES:
           0  All OK
           1  Auto-fixes applied — restart the build
-          2  Invalid parameters
-          3  Fatal errors (TRANS001, TRANS004)
+          2  Invalid parameters, or add-key/remove-key refused (collision, not found, in use)
+          3  Fatal errors (TRANS001, TRANS004, or an unresolved TRANS009 case-collision)
 
         EXAMPLES:
           resx-lint                          Interactive mode (press W for web, or auto-CLI)
           resx-lint --project-dir . --resx-file Resources\AppResources.resx
+          resx-lint add-key TipoDeServico --resx-file Resources\AppResources.resx --value "Tipo de Serviço" --lang en-US="Service Type" --lang es-ES="Tipo de Servicio"
+          resx-lint remove-key TipoDeServiCO --resx-file Resources\AppResources.resx --project-dir .
           resx-lint --serve
           resx-lint --check-update
         """);
+}
+
+static int RunAddKey(string[] args)
+{
+    string? key = args.Length > 0 && !args[0].StartsWith("--") ? args[0] : null;
+    string resxFile = "";
+    string? value = null;
+    var translations = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+    bool update = false, whatIf = false;
+
+    var start = key != null ? 1 : 0;
+    for (int i = start; i < args.Length; i++)
+    {
+        switch (args[i])
+        {
+            case "--key" when i + 1 < args.Length:
+                key = args[++i];
+                break;
+            case "--resx-file" when i + 1 < args.Length:
+                resxFile = args[++i];
+                break;
+            case "--value" when i + 1 < args.Length:
+                value = args[++i];
+                break;
+            case "--lang" when i + 1 < args.Length:
+                var pair = args[++i];
+                var eq = pair.IndexOf('=');
+                if (eq <= 0)
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.Error.WriteLine($"ERROR: --lang expects 'code=value', got '{pair}'");
+                    Console.ResetColor();
+                    return 2;
+                }
+                translations[pair[..eq]] = pair[(eq + 1)..];
+                break;
+            case "--update":
+                update = true;
+                break;
+            case "--what-if":
+                whatIf = true;
+                break;
+        }
+    }
+
+    if (string.IsNullOrWhiteSpace(key))
+    {
+        Console.ForegroundColor = ConsoleColor.Red;
+        Console.Error.WriteLine("ERROR: add-key requires a key name (positional or --key <Name>).");
+        Console.ResetColor();
+        return 2;
+    }
+    if (string.IsNullOrWhiteSpace(resxFile) || !File.Exists(resxFile))
+    {
+        Console.ForegroundColor = ConsoleColor.Red;
+        Console.Error.WriteLine($"ERROR: --resx-file is invalid or not found: '{resxFile}'");
+        Console.ResetColor();
+        return 2;
+    }
+
+    var result = AddKeyService.Run(new AddKeyRequest(
+        Path.GetFullPath(resxFile), key!, value, translations, update, whatIf));
+
+    if (!result.Success)
+    {
+        Console.ForegroundColor = ConsoleColor.Red;
+        Console.Error.WriteLine($"ERROR: {result.Error}");
+        Console.ResetColor();
+        return 2;
+    }
+
+    Console.ForegroundColor = whatIf ? ConsoleColor.Cyan : ConsoleColor.Green;
+    Console.WriteLine(whatIf
+        ? $"[what-if] Would {(result.WasUpdate ? "update" : "add")} key '{result.Key}' = \"{result.Value}\""
+        : $"{(result.WasUpdate ? "Updated" : "Added")} key '{result.Key}' = \"{result.Value}\"");
+    Console.ResetColor();
+
+    if (result.LanguageResults is { Count: > 0 })
+    {
+        Console.WriteLine("Languages:");
+        foreach (var lr in result.LanguageResults)
+            Console.WriteLine($"  {lr}");
+    }
+    if (result.FilesTouched is { Count: > 0 })
+        Console.WriteLine($"Files {(whatIf ? "that would be touched" : "touched")}: {string.Join(", ", result.FilesTouched)}");
+
+    Console.WriteLine();
+    Console.WriteLine("Use it as:");
+    Console.ForegroundColor = ConsoleColor.White;
+    Console.WriteLine($"  XAML: {{maui:Translate {result.Key}}}");
+    Console.WriteLine($"  C#:   AppResources.{result.Key}");
+    Console.ResetColor();
+
+    return 0;
+}
+
+static int RunRemoveKey(string[] args)
+{
+    string? key = args.Length > 0 && !args[0].StartsWith("--") ? args[0] : null;
+    string resxFile = "";
+    string? projectDir = null;
+    bool force = false, whatIf = false;
+
+    var start = key != null ? 1 : 0;
+    for (int i = start; i < args.Length; i++)
+    {
+        switch (args[i])
+        {
+            case "--key" when i + 1 < args.Length:
+                key = args[++i];
+                break;
+            case "--resx-file" when i + 1 < args.Length:
+                resxFile = args[++i];
+                break;
+            case "--project-dir" when i + 1 < args.Length:
+                projectDir = args[++i];
+                break;
+            case "--force":
+                force = true;
+                break;
+            case "--what-if":
+                whatIf = true;
+                break;
+        }
+    }
+
+    if (string.IsNullOrWhiteSpace(key))
+    {
+        Console.ForegroundColor = ConsoleColor.Red;
+        Console.Error.WriteLine("ERROR: remove-key requires a key name (positional or --key <Name>).");
+        Console.ResetColor();
+        return 2;
+    }
+    if (string.IsNullOrWhiteSpace(resxFile) || !File.Exists(resxFile))
+    {
+        Console.ForegroundColor = ConsoleColor.Red;
+        Console.Error.WriteLine($"ERROR: --resx-file is invalid or not found: '{resxFile}'");
+        Console.ResetColor();
+        return 2;
+    }
+
+    var result = RemoveKeyService.Run(new RemoveKeyRequest(
+        Path.GetFullPath(resxFile), key!, projectDir, force, whatIf));
+
+    if (!result.Success)
+    {
+        Console.ForegroundColor = ConsoleColor.Red;
+        Console.Error.WriteLine($"ERROR: {result.Error}");
+        Console.ResetColor();
+        return 2;
+    }
+
+    if (result.MatchNote != null)
+    {
+        Console.ForegroundColor = ConsoleColor.DarkGray;
+        Console.WriteLine(result.MatchNote);
+        Console.ResetColor();
+    }
+
+    Console.ForegroundColor = whatIf ? ConsoleColor.Cyan : ConsoleColor.Green;
+    Console.WriteLine(whatIf
+        ? $"[what-if] Would remove key '{result.Key}'"
+        : $"Removed key '{result.Key}'");
+    Console.ResetColor();
+
+    if (result.FilesTouched is { Count: > 0 })
+        Console.WriteLine($"Files {(whatIf ? "that would be touched" : "touched")}: {string.Join(", ", result.FilesTouched)}");
+
+    return 0;
 }
 
 class CliArgs

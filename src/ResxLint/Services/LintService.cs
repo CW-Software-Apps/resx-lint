@@ -35,17 +35,19 @@ class LintService
 
     public LintResult Run()
     {
-        Emit(1, 6, "Checking for duplicate keys...");
+        Emit(1, 7, "Checking for duplicate keys...");
         Step1_Duplicates();
-        Emit(2, 6, $"Loading base .resx...");
+        Emit(2, 7, "Checking for case-only duplicate keys...");
+        Step1b_CaseInsensitiveDuplicates();
+        Emit(3, 7, $"Loading base .resx...");
         var (baseData, resxSet) = Step2_LoadBase();
-        Emit(3, 6, "Checking language files...");
+        Emit(4, 7, "Checking language files...");
         Step3_LanguageFiles(baseData, resxSet);
-        Emit(4, 6, "Validating XAML references...");
+        Emit(5, 7, "Validating XAML references...");
         Step4_XamlReferences(resxSet);
-        Emit(5, 6, "Validating C# references...");
+        Emit(6, 7, "Validating C# references...");
         Step5_CSharpReferences(resxSet);
-        Emit(6, 6, "Checking Designer.cs...");
+        Emit(7, 7, "Checking Designer.cs...");
         Step6_DesignerCs(resxSet);
 
         var resxDir = Path.GetDirectoryName(_resxFile)!;
@@ -117,6 +119,110 @@ class LintService
                 _statsFixed += uniqueDupes.Count;
             }
         }
+    }
+
+    /// <summary>
+    /// Catches the case Step1 (ordinal duplicates) cannot: two distinct keys in the base .resx
+    /// whose names are identical except for casing (e.g. "TipoDeServico" vs "TipoDeServiCO").
+    /// Both compile fine as separate Designer.cs properties and separate resource entries — this
+    /// is exactly the class of bug that silently ships a "[MISSING: Key]" placeholder at runtime
+    /// whenever a XAML/C# reference happens to use the *other* casing than the one a teammate (or
+    /// an AI session) used when they last touched that translation. Resolution needs to know which
+    /// variant is actually referenced, so this runs a lightweight usage scan (same regexes as
+    /// Step4/Step5) rather than guessing from spelling alone.
+    /// </summary>
+    void Step1b_CaseInsensitiveDuplicates()
+    {
+        var baseKeys = LoadResxData(_resxFile).Keys.ToList();
+        var groups = baseKeys
+            .GroupBy(k => k, StringComparer.OrdinalIgnoreCase)
+            .Where(g => g.Count() > 1)
+            .ToList();
+
+        if (groups.Count == 0) return;
+
+        var resxFiles = EnumerateFiles(_projectDir, "*.resx").ToList();
+        var xamlContents = EnumerateFiles(_projectDir, "*.xaml")
+            .Select(f => File.ReadAllText(f, Encoding.UTF8)).ToList();
+        var csContents = EnumerateFiles(_projectDir, "*.cs")
+            .Where(f => !f.EndsWith(".Designer.cs", StringComparison.OrdinalIgnoreCase))
+            .Select(f => File.ReadAllText(f, Encoding.UTF8)).ToList();
+
+        bool IsUsed(string key)
+        {
+            var xamlRx = new Regex($@"\{{(?:maui|localize):Translate\s+{Regex.Escape(key)}\}}");
+            if (xamlContents.Any(c => xamlRx.IsMatch(c))) return true;
+            var csRx = new Regex($@"\bAppResources\.{Regex.Escape(key)}\b");
+            return csContents.Any(c => csRx.IsMatch(c));
+        }
+
+        var rel = Rel(_resxFile);
+
+        foreach (var group in groups)
+        {
+            var variants = group.ToList();
+            var used = variants.Where(IsUsed).ToList();
+
+            if (used.Count == 1)
+            {
+                var keep = used[0];
+                foreach (var key in variants.Where(v => v != keep))
+                {
+                    _issues.Add(new LintIssue("TRANS009", "warning", rel, 0, key,
+                        $"Key '{key}' is a case-only duplicate of '{keep}' and is never referenced (only '{keep}' is). Removing it.",
+                        CanAutoFix: true,
+                        FixDescription: $"Remove unused case-duplicate '{key}' from all .resx files and Designer.cs (keeping '{keep}')"));
+
+                    if (!_whatIf)
+                    {
+                        foreach (var rf in resxFiles)
+                            RemoveDataElement(rf, key);
+                        RemoveDesignerProperty(key);
+                        _statsFixed++;
+                    }
+                }
+            }
+            else
+            {
+                // Neither variant referenced, or *both* are referenced somewhere: guessing which
+                // one to delete could silently break a real, working binding. Flag every variant
+                // and let a human (or an AI reading this output) pick — never auto-fix here.
+                var reason = used.Count == 0
+                    ? "neither is referenced in any .xaml/.cs file — probably dead, but pick one to keep"
+                    : $"more than one is referenced ({string.Join(", ", used)}) — merge those usages onto a single key first";
+                foreach (var key in variants)
+                {
+                    _issues.Add(new LintIssue("TRANS009", used.Count == 0 ? "warning" : "fatal", rel, 0, key,
+                        $"Key '{key}' differs only in casing from {string.Join(", ", variants.Where(v => v != key))} — {reason}.",
+                        CanAutoFix: false));
+                }
+            }
+        }
+    }
+
+    /// <summary>Removes a &lt;data name="key"&gt;...&lt;/data&gt; block (any casing-exact match) from one .resx file, if present.</summary>
+    static void RemoveDataElement(string resxPath, string key)
+    {
+        var doc = XDocument.Load(resxPath);
+        var el = doc.Root!.Elements("data").FirstOrDefault(d => d.Attribute("name")?.Value == key);
+        if (el == null) return;
+        el.Remove();
+        doc.Save(resxPath);
+    }
+
+    /// <summary>Removes the generated <c>public static string Key { get { ... } }</c> block for one key from Designer.cs, if present.</summary>
+    void RemoveDesignerProperty(string key)
+    {
+        var designerFile = Path.ChangeExtension(_resxFile, "Designer.cs");
+        if (!File.Exists(designerFile)) return;
+
+        var content = File.ReadAllText(designerFile, Encoding.UTF8);
+        var propRx = new Regex(
+            $@"[ \t]*public static string {Regex.Escape(key)} \{{\r?\n\s*get \{{\r?\n\s*return ResourceManager\.GetString\(""{Regex.Escape(key)}"", resourceCulture\);\r?\n\s*\}}\r?\n\s*\}}\r?\n\r?\n?",
+            RegexOptions.Multiline);
+        var newContent = propRx.Replace(content, "");
+        if (newContent != content)
+            File.WriteAllText(designerFile, newContent, Encoding.UTF8);
     }
 
     (Dictionary<string, string> baseData, HashSet<string> resxSet) Step2_LoadBase()
